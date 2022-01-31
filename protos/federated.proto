@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+package federated;
+
+// To initialize the model weights on the server that generates the federated average
+// It will have a repeated field for the set of gradient weights received from each 
+// client. "Packed" is set to true to get a more efficient encoding
+message ModelServer {
+  repeated ClientTensor weights = 1 [packed = true];
+} 
+
+// To transmit the informaton related with each client's gradient weights
+message ClientTensor {
+    string name = 1;
+    int32 roundNumber = 2;
+    bytes data_bytes;
+}
+
+message Description {
+  string name = 1;
+  string status = 2;
+  float progress = 3;
+  uint32 totalRounds = 4;
+  uint32 currentRound = 5;
+}
+
+message MessageHeader {
+    string id_sender = 1;
+    string id_receiver = 2;
+    Description description;
+}
+
+service Federation {
+
+}
