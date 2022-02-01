@@ -29,9 +29,9 @@ enum MessageType {
 }
 
 message MessageHeader {
-  optional uint64 id_request = 1;
-  optional uint64 id_response = 2;
-  optional uint64 id_to_request = 3;
+  optional string id_request = 1;
+  optional string id_response = 2;
+  optional string id_to_request = 3;
   MessageType message_type = 4;
 }
 

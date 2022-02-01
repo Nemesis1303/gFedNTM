@@ -15,6 +15,5 @@ RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
     && apt-get -y install --no-install-recommends python3 python3-pip
 
 RUN pip3 install --upgrade pip
-RUN pip3 install grpcio grpcio-tools
-RUN pip3 install timedelta timeloop
+RUN python3 -m pip install -r requirements.txt 
 
