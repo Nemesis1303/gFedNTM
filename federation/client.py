@@ -9,11 +9,11 @@
 #                                IMPORTS                                     #
 ##############################################################################
 # GENERAL IMPORTS
+from __future__ import print_function
 from importlib.metadata import metadata
 import sys, getopt
 import logging
 import time
-from __future__ import print_function
 from timeloop import Timeloop
 from datetime import timedelta
 import grpc
@@ -51,18 +51,18 @@ client = Client("client", 4)
 ##############################################################################
 looper = Timeloop()
 #@looper.job(interval=timedelta(seconds=client.period))
-@looper.job(interval=timedelta(seconds=4))
+@looper.job(interval=timedelta(seconds=2))
 def loop():
-    id_message = "ID" + str(client.id) + "_" + str(round(time.time()))
+    id_message = "ID" + client.id + "_" + str(round(time.time()))
     header = federated_pb2.MessageHeader(id_request = id_message,
                                          message_type = federated_pb2.MessageType.CLIENT_TENSOR_SEND)
-    metada = federated_pb2.MessageAdditionalData(federation_completed = False,
+    metadata = federated_pb2.MessageAdditionalData(federation_completed = False,
                                                  iteration_completed = False,
                                                  current_iteration = 0,
                                                  num_max_iterations = 10)
     gradient_name = "Gradient of " + str(client.id)
     data = federated_pb2.Update(gradientName = gradient_name) # @TODO: Include gradient update
-    request = federated_pb2.ClientTensorRequest(header, metadata, data)
+    request = federated_pb2.ClientTensorRequest(header = header, metadata = metadata, data = data)
     response = client.stub.sendLocalTensor(request)
     logger.info('Client %s received a response to request %s', str(client.id), response.header.id_to_request)
 
@@ -84,7 +84,7 @@ def main(argv):
             print('client.py --id <id> --period <period>')
             sys.exit()
         elif opt in ("-i", "--id"):
-            client.name = arg
+            client.id = arg
         elif opt in ("-p", "--period"):
             client.period = arg
     

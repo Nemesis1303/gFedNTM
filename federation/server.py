@@ -30,7 +30,7 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
                                                     iteration_completed = request.metadata.iteration_completed,
                                                     current_iteration = request.metadata.current_iteration,
                                                     num_max_iterations = request.metadata.num_max_iterations)
-        return federated_pb2.ServerReceivedResponse(header, metadata)
+        return federated_pb2.ServerReceivedResponse(header = header, metadata = metadata)
 
 
 def serve():

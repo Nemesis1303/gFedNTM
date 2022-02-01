@@ -15,5 +15,7 @@ RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
     && apt-get -y install --no-install-recommends python3 python3-pip
 
 RUN pip3 install --upgrade pip
+
+COPY requirements.txt requirements.txt
 RUN python3 -m pip install -r requirements.txt 
 
