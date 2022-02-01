@@ -20,7 +20,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   syntax='proto3',
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_pb=b'\n\x0f\x66\x65\x64\x65rated.proto\x12\tfederated\"3\n\x0bModelServer\x12$\n\tgradients\x18\x01 \x03(\x0b\x32\x11.federated.Update\"0\n\x06Update\x12\x14\n\x0cgradientName\x18\x01 \x01(\t\x12\x10\n\x08gradient\x18\x02 \x01(\x0c\"\x89\x01\n\x15MessageAdditionalData\x12\x1c\n\x14\x66\x65\x64\x65ration_completed\x18\x01 \x01(\x08\x12\x1b\n\x13iteration_completed\x18\x02 \x01(\x08\x12\x19\n\x11\x63urrent_iteration\x18\x03 \x01(\r\x12\x1a\n\x12num_max_iterations\x18\x04 \x01(\r\"\xbd\x01\n\rMessageHeader\x12\x17\n\nid_request\x18\x01 \x01(\tH\x00\x88\x01\x01\x12\x18\n\x0bid_response\x18\x02 \x01(\tH\x01\x88\x01\x01\x12\x1a\n\rid_to_request\x18\x03 \x01(\tH\x02\x88\x01\x01\x12,\n\x0cmessage_type\x18\x04 \x01(\x0e\x32\x16.federated.MessageTypeB\r\n\x0b_id_requestB\x0e\n\x0c_id_responseB\x10\n\x0e_id_to_request\"\x94\x01\n\x13\x43lientTensorRequest\x12(\n\x06header\x18\x01 \x01(\x0b\x32\x18.federated.MessageHeader\x12\x32\n\x08metadata\x18\x02 \x01(\x0b\x32 .federated.MessageAdditionalData\x12\x1f\n\x04\x64\x61ta\x18\x03 \x01(\x0b\x32\x11.federated.Update\"\x9e\x01\n\x1dServerAggregatedTensorRequest\x12(\n\x06header\x18\x01 \x01(\x0b\x32\x18.federated.MessageHeader\x12\x32\n\x08metadata\x18\x02 \x01(\x0b\x32 .federated.MessageAdditionalData\x12\x1f\n\x04\x64\x61ta\x18\x03 \x01(\x0b\x32\x11.federated.Update\"v\n\x16\x43lientReceivedResponse\x12(\n\x06header\x18\x01 \x01(\x0b\x32\x18.federated.MessageHeader\x12\x32\n\x08metadata\x18\x02 \x01(\x0b\x32 .federated.MessageAdditionalData\"v\n\x16ServerReceivedResponse\x12(\n\x06header\x18\x01 \x01(\x0b\x32\x18.federated.MessageHeader\x12\x32\n\x08metadata\x18\x02 \x01(\x0b\x32 .federated.MessageAdditionalData*\x82\x01\n\x0bMessageType\x12\x16\n\x12\x43LIENT_TENSOR_SEND\x10\x00\x12\x1b\n\x17\x43LIENT_CONFIRM_RECEIVED\x10\x01\x12!\n\x1dSERVER_AGGREGATED_TENSOR_SEND\x10\x02\x12\x1b\n\x17SERVER_CONFIRM_RECEIVED\x10\x03\x32\xcb\x01\n\nFederation\x12V\n\x0fsendLocalTensor\x12\x1e.federated.ClientTensorRequest\x1a!.federated.ServerReceivedResponse\"\x00\x12\x65\n\x14sendAggregatedTensor\x12(.federated.ServerAggregatedTensorRequest\x1a!.federated.ClientReceivedResponse\"\x00\x62\x06proto3'
+  serialized_pb=b'\n\x0f\x66\x65\x64\x65rated.proto\x12\tfederated\"3\n\x0bModelServer\x12$\n\tgradients\x18\x01 \x03(\x0b\x32\x11.federated.Update\"}\n\x0bTensorShape\x12\'\n\x03\x64im\x18\x02 \x03(\x0b\x32\x1a.federated.TensorShape.Dim\x12\x14\n\x0cunknown_rank\x18\x03 \x01(\x08\x1a/\n\x03\x44im\x12\x0c\n\x04size\x18\x01 \x01(\x03\x12\x11\n\x04name\x18\x02 \x01(\tH\x00\x88\x01\x01\x42\x07\n\x05_name\"c\n\x06Update\x12\x13\n\x0btensor_name\x18\x01 \x01(\t\x12,\n\x0ctensor_shape\x18\x02 \x01(\x0b\x32\x16.federated.TensorShape\x12\x16\n\x0etensor_content\x18\x03 \x01(\x0c\"\x89\x01\n\x15MessageAdditionalData\x12\x1c\n\x14\x66\x65\x64\x65ration_completed\x18\x01 \x01(\x08\x12\x1b\n\x13iteration_completed\x18\x02 \x01(\x08\x12\x19\n\x11\x63urrent_iteration\x18\x03 \x01(\r\x12\x1a\n\x12num_max_iterations\x18\x04 \x01(\r\"\xbd\x01\n\rMessageHeader\x12\x17\n\nid_request\x18\x01 \x01(\tH\x00\x88\x01\x01\x12\x18\n\x0bid_response\x18\x02 \x01(\tH\x01\x88\x01\x01\x12\x1a\n\rid_to_request\x18\x03 \x01(\tH\x02\x88\x01\x01\x12,\n\x0cmessage_type\x18\x04 \x01(\x0e\x32\x16.federated.MessageTypeB\r\n\x0b_id_requestB\x0e\n\x0c_id_responseB\x10\n\x0e_id_to_request\"\x94\x01\n\x13\x43lientTensorRequest\x12(\n\x06header\x18\x01 \x01(\x0b\x32\x18.federated.MessageHeader\x12\x32\n\x08metadata\x18\x02 \x01(\x0b\x32 .federated.MessageAdditionalData\x12\x1f\n\x04\x64\x61ta\x18\x03 \x01(\x0b\x32\x11.federated.Update\"\x9e\x01\n\x1dServerAggregatedTensorRequest\x12(\n\x06header\x18\x01 \x01(\x0b\x32\x18.federated.MessageHeader\x12\x32\n\x08metadata\x18\x02 \x01(\x0b\x32 .federated.MessageAdditionalData\x12\x1f\n\x04\x64\x61ta\x18\x03 \x01(\x0b\x32\x11.federated.Update\"v\n\x16\x43lientReceivedResponse\x12(\n\x06header\x18\x01 \x01(\x0b\x32\x18.federated.MessageHeader\x12\x32\n\x08metadata\x18\x02 \x01(\x0b\x32 .federated.MessageAdditionalData\"v\n\x16ServerReceivedResponse\x12(\n\x06header\x18\x01 \x01(\x0b\x32\x18.federated.MessageHeader\x12\x32\n\x08metadata\x18\x02 \x01(\x0b\x32 .federated.MessageAdditionalData*\x82\x01\n\x0bMessageType\x12\x16\n\x12\x43LIENT_TENSOR_SEND\x10\x00\x12\x1b\n\x17\x43LIENT_CONFIRM_RECEIVED\x10\x01\x12!\n\x1dSERVER_AGGREGATED_TENSOR_SEND\x10\x02\x12\x1b\n\x17SERVER_CONFIRM_RECEIVED\x10\x03\x32\xcb\x01\n\nFederation\x12V\n\x0fsendLocalTensor\x12\x1e.federated.ClientTensorRequest\x1a!.federated.ServerReceivedResponse\"\x00\x12\x65\n\x14sendAggregatedTensor\x12(.federated.ServerAggregatedTensorRequest\x1a!.federated.ClientReceivedResponse\"\x00\x62\x06proto3'
 )
 
 _MESSAGETYPE = _descriptor.EnumDescriptor(
@@ -53,8 +53,8 @@ _MESSAGETYPE = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   serialized_options=None,
-  serialized_start=1018,
-  serialized_end=1148,
+  serialized_start=1196,
+  serialized_end=1326,
 )
 _sym_db.RegisterEnumDescriptor(_MESSAGETYPE)
 
@@ -98,6 +98,88 @@ _MODELSERVER = _descriptor.Descriptor(
 )
 
 
+_TENSORSHAPE_DIM = _descriptor.Descriptor(
+  name='Dim',
+  full_name='federated.TensorShape.Dim',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='size', full_name='federated.TensorShape.Dim.size', index=0,
+      number=1, type=3, cpp_type=2, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='name', full_name='federated.TensorShape.Dim.name', index=1,
+      number=2, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+    _descriptor.OneofDescriptor(
+      name='_name', full_name='federated.TensorShape.Dim._name',
+      index=0, containing_type=None,
+      create_key=_descriptor._internal_create_key,
+    fields=[]),
+  ],
+  serialized_start=161,
+  serialized_end=208,
+)
+
+_TENSORSHAPE = _descriptor.Descriptor(
+  name='TensorShape',
+  full_name='federated.TensorShape',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='dim', full_name='federated.TensorShape.dim', index=0,
+      number=2, type=11, cpp_type=10, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='unknown_rank', full_name='federated.TensorShape.unknown_rank', index=1,
+      number=3, type=8, cpp_type=7, label=1,
+      has_default_value=False, default_value=False,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[_TENSORSHAPE_DIM, ],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=83,
+  serialized_end=208,
+)
+
+
 _UPDATE = _descriptor.Descriptor(
   name='Update',
   full_name='federated.Update',
@@ -107,15 +189,22 @@ _UPDATE = _descriptor.Descriptor(
   create_key=_descriptor._internal_create_key,
   fields=[
     _descriptor.FieldDescriptor(
-      name='gradientName', full_name='federated.Update.gradientName', index=0,
+      name='tensor_name', full_name='federated.Update.tensor_name', index=0,
       number=1, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=b"".decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
     _descriptor.FieldDescriptor(
-      name='gradient', full_name='federated.Update.gradient', index=1,
-      number=2, type=12, cpp_type=9, label=1,
+      name='tensor_shape', full_name='federated.Update.tensor_shape', index=1,
+      number=2, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='tensor_content', full_name='federated.Update.tensor_content', index=2,
+      number=3, type=12, cpp_type=9, label=1,
       has_default_value=False, default_value=b"",
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
@@ -132,8 +221,8 @@ _UPDATE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=83,
-  serialized_end=131,
+  serialized_start=210,
+  serialized_end=309,
 )
 
 
@@ -185,8 +274,8 @@ _MESSAGEADDITIONALDATA = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=134,
-  serialized_end=271,
+  serialized_start=312,
+  serialized_end=449,
 )
 
 
@@ -253,8 +342,8 @@ _MESSAGEHEADER = _descriptor.Descriptor(
       create_key=_descriptor._internal_create_key,
     fields=[]),
   ],
-  serialized_start=274,
-  serialized_end=463,
+  serialized_start=452,
+  serialized_end=641,
 )
 
 
@@ -299,8 +388,8 @@ _CLIENTTENSORREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=466,
-  serialized_end=614,
+  serialized_start=644,
+  serialized_end=792,
 )
 
 
@@ -345,8 +434,8 @@ _SERVERAGGREGATEDTENSORREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=617,
-  serialized_end=775,
+  serialized_start=795,
+  serialized_end=953,
 )
 
 
@@ -384,8 +473,8 @@ _CLIENTRECEIVEDRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=777,
-  serialized_end=895,
+  serialized_start=955,
+  serialized_end=1073,
 )
 
 
@@ -423,11 +512,17 @@ _SERVERRECEIVEDRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=897,
-  serialized_end=1015,
+  serialized_start=1075,
+  serialized_end=1193,
 )
 
 _MODELSERVER.fields_by_name['gradients'].message_type = _UPDATE
+_TENSORSHAPE_DIM.containing_type = _TENSORSHAPE
+_TENSORSHAPE_DIM.oneofs_by_name['_name'].fields.append(
+  _TENSORSHAPE_DIM.fields_by_name['name'])
+_TENSORSHAPE_DIM.fields_by_name['name'].containing_oneof = _TENSORSHAPE_DIM.oneofs_by_name['_name']
+_TENSORSHAPE.fields_by_name['dim'].message_type = _TENSORSHAPE_DIM
+_UPDATE.fields_by_name['tensor_shape'].message_type = _TENSORSHAPE
 _MESSAGEHEADER.fields_by_name['message_type'].enum_type = _MESSAGETYPE
 _MESSAGEHEADER.oneofs_by_name['_id_request'].fields.append(
   _MESSAGEHEADER.fields_by_name['id_request'])
@@ -449,6 +544,7 @@ _CLIENTRECEIVEDRESPONSE.fields_by_name['metadata'].message_type = _MESSAGEADDITI
 _SERVERRECEIVEDRESPONSE.fields_by_name['header'].message_type = _MESSAGEHEADER
 _SERVERRECEIVEDRESPONSE.fields_by_name['metadata'].message_type = _MESSAGEADDITIONALDATA
 DESCRIPTOR.message_types_by_name['ModelServer'] = _MODELSERVER
+DESCRIPTOR.message_types_by_name['TensorShape'] = _TENSORSHAPE
 DESCRIPTOR.message_types_by_name['Update'] = _UPDATE
 DESCRIPTOR.message_types_by_name['MessageAdditionalData'] = _MESSAGEADDITIONALDATA
 DESCRIPTOR.message_types_by_name['MessageHeader'] = _MESSAGEHEADER
@@ -465,6 +561,21 @@ ModelServer = _reflection.GeneratedProtocolMessageType('ModelServer', (_message.
   # @@protoc_insertion_point(class_scope:federated.ModelServer)
   })
 _sym_db.RegisterMessage(ModelServer)
+
+TensorShape = _reflection.GeneratedProtocolMessageType('TensorShape', (_message.Message,), {
+
+  'Dim' : _reflection.GeneratedProtocolMessageType('Dim', (_message.Message,), {
+    'DESCRIPTOR' : _TENSORSHAPE_DIM,
+    '__module__' : 'federated_pb2'
+    # @@protoc_insertion_point(class_scope:federated.TensorShape.Dim)
+    })
+  ,
+  'DESCRIPTOR' : _TENSORSHAPE,
+  '__module__' : 'federated_pb2'
+  # @@protoc_insertion_point(class_scope:federated.TensorShape)
+  })
+_sym_db.RegisterMessage(TensorShape)
+_sym_db.RegisterMessage(TensorShape.Dim)
 
 Update = _reflection.GeneratedProtocolMessageType('Update', (_message.Message,), {
   'DESCRIPTOR' : _UPDATE,
@@ -524,8 +635,8 @@ _FEDERATION = _descriptor.ServiceDescriptor(
   index=0,
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_start=1151,
-  serialized_end=1354,
+  serialized_start=1329,
+  serialized_end=1532,
   methods=[
   _descriptor.MethodDescriptor(
     name='sendLocalTensor',

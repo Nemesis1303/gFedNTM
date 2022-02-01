@@ -2,7 +2,11 @@
 GRPC based federated learning framework for ProdLDA and Contextualized Topic Models
 
 ## Generate GRPC Python files from proto file
-
+Get into venv:
+```
+source venv/bin/activate
+```
+Generate files:
 ```
 python3 -m grpc_tools.protoc -I ../protos --python_out=. \
         --grpc_python_out=. ../protos/federated.proto

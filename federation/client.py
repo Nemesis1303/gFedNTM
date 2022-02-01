@@ -53,8 +53,8 @@ def loop():
                                                  iteration_completed = False,
                                                  current_iteration = 0,
                                                  num_max_iterations = 10)
-    gradient_name = "Gradient of " + client.id
-    data = federated_pb2.Update(gradientName = gradient_name) # @TODO: Include gradient update
+    update_name = "Update of " + client.id
+    data = federated_pb2.Update(tensor_name = update_name) # @TODO: Include gradient update
     request = federated_pb2.ClientTensorRequest(header = header, metadata = metadata, data = data)
     response = client.stub.sendLocalTensor(request)
     logger.info('Client %s received a response to request %s', str(client.id), response.header.id_to_request)

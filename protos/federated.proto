@@ -2,17 +2,37 @@ syntax = "proto3";
 
 package federated;
 
-/* To initialize the model weights on the server that generates the federated average
- * It will have a repeated field for the set of gradient weights received from each 
- * client. "Packed" is set to true to get a more efficient encoding */
+/* Protocol buffer for initializeing the model weights on the server that generates the federated average
+   It will have a repeated field for the set of gradient weights received from each 
+   client. 
+ */
 message ModelServer {
   repeated Update gradients = 1;
 } 
 
-message Update {
-  string gradientName = 1; // Name of the gradient that is being transmitted, e.g. "doc-topics distribution"
-  bytes gradient = 2;      // Tensor containing the gradient update
-}
+/* Protocol buffer that defines the dimensions of a tensor such as {"input", 30}, {"output", 40} for a 30 x 40 2D tensor.
+   The dimensions follow an "in-memory" layout, meaning that the first entry is the outermost dimensions used to 
+   layout the values, while the last entry is the innermost dimension.
+   Data structre based on the code available at:
+   https://github.com/tensorflow/tensorflow/blob/9590c4c32dd4346ea5c35673336f5912c6072bf2/tensorflow/core/framework/tensor_shape.proto
+ */
+message TensorShape {
+  // One dimension of the tensor.
+  message Dim {
+    int64 size = 1;           // Size of the tensor in that dimension (must be >=1, -1 = "unknown" dimension)
+    optional string name = 2; // Name of the tensor dimension.
+  };
+
+  repeated Dim dim = 2;
+  bool unknown_rank = 3;      // If true, the number of dimensions in the shape is unknown, i.e. "dim.size()" must be 0.
+};
+
+ /* Protocol buffer representing a federated update. */
+ message Update {
+  string tensor_name = 1;       // Name of the gradient that is being transmitted, e.g. "doc-topics distribution"
+  TensorShape tensor_shape = 2; // Shape of the gradient tensor
+  bytes tensor_content = 3;     // Actaul content of the tensor
+};
 
 message MessageAdditionalData {
   bool federation_completed = 1;  // True when the number maximum of iterations has been reached and the server's response has reached the client
