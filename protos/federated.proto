@@ -22,16 +22,15 @@ message TensorShape {
     int64 size = 1;           // Size of the tensor in that dimension (must be >=1, -1 = "unknown" dimension)
     optional string name = 2; // Name of the tensor dimension.
   };
-
   repeated Dim dim = 2;
-  bool unknown_rank = 3;      // If true, the number of dimensions in the shape is unknown, i.e. "dim.size()" must be 0.
 };
 
  /* Protocol buffer representing a federated update. */
  message Update {
   string tensor_name = 1;       // Name of the gradient that is being transmitted, e.g. "doc-topics distribution"
-  //TensorShape tensor_shape = 2; // Shape of the gradient tensor
-  bytes tensor_content = 3;     // Actaul content of the tensor
+  string dtype = 2;             // Type of the tensor data (neccessary for correct deserialization)
+  TensorShape tensor_shape = 3; // Shape of the gradient tensor
+  bytes tensor_content = 4;     // Actual content of the tensor
 };
 
 message MessageAdditionalData {

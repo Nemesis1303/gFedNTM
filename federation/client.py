@@ -48,15 +48,17 @@ class Client:
         header = federated_pb2.MessageHeader(id_request = id_message,
                                             message_type = federated_pb2.MessageType.CLIENT_TENSOR_SEND)
         metadata = federated_pb2.MessageAdditionalData(federation_completed = False,
-                                                    iteration_completed = False,
-                                                    current_iteration = 0,
-                                                    num_max_iterations = 10)
+                                                       iteration_completed = False,
+                                                       current_iteration = 0,
+                                                       num_max_iterations = 10)
         update_name = "Update of " + self.id
         content = torch.tensor(np.array([[3, 3, 3], [3, 3, 3]]))
         conent_bytes = content.numpy().tobytes()
-        #size = federated_pb2.TensorShape(federated_pb2.Dim(content.size(dim=1),"row"),
-        #                                federated_pb2.Dim(content.size(dim=2), "column"),
-        #                                unknown_rank = False)
+        size = federated_pb2.TensorShape()
+        size.dim.extend([federated_pb2.TensorShape.Dim(size = content.size(dim=0), name ="dim1"),
+                         federated_pb2.TensorShape.Dim(size = content.size(dim=1), name ="dim2")])
+        #dtype = str(content.numpy().dtype)
+        #tensor_shape = size
         data = federated_pb2.Update(tensor_name = update_name,
                                     tensor_content = conent_bytes) 
         request = federated_pb2.ClientTensorRequest(header = header, metadata = metadata, data = data)
