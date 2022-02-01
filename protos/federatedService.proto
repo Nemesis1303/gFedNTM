@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package federatedService;
+
+import "federatedMessages.proto";
+
+service Federation {
+
+}
