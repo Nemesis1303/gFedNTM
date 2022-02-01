@@ -19,10 +19,5 @@ python3 server.py
 ## Run client 
 
 ```
-python3 client.py -i <id> -p <period>
-```
-or
-
-```
 python3 client.py --id <id> --period <period>
 ```
