@@ -8,20 +8,41 @@
 ##############################################################################
 #                                IMPORTS                                     #
 ##############################################################################
-# GENERAL IMPORTS
 from concurrent import futures
 import logging
 import grpc
 import time
 
-# LOCAL IMPORTS
 import federated_pb2
 import federated_pb2_grpc
 
-
+##############################################################################
+#                          FEDERATED SERVEER                                 #
+##############################################################################
 class FederatedServer(federated_pb2_grpc.FederationServicer):
+    """[summary]
+
+    Args:
+        federated_pb2_grpc ([type]): [description]
+
+    Returns:
+        [type]: [description]
+    """    """
+    Attributes:
+    ----------
+        * 
+    """
 
     def sendLocalTensor(self, request, context):
+        """[summary]
+
+        Args:
+            request ([type]): [description]
+            context ([type]): [description]
+
+        Returns:
+            [type]: [description]
+        """        
         id_server = "IDS" + "_" + str(round(time.time()))
         header = federated_pb2.MessageHeader(id_response = id_server,
                                              id_to_request = request.header.id_request,
@@ -34,6 +55,8 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
 
 
 def serve():
+    """[summary]
+    """    
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     federated_pb2_grpc.add_FederationServicer_to_server(FederatedServer(), server)
     server.add_insecure_port('[::]:50051')

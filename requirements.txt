@@ -4,3 +4,4 @@ protobuf==3.19.4
 six==1.16.0
 timedelta==2020.12.3
 timeloop==1.0.2
+pytest ~= 5.4

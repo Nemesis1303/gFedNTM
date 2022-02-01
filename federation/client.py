@@ -8,7 +8,6 @@
 ##############################################################################
 #                                IMPORTS                                     #
 ##############################################################################
-# GENERAL IMPORTS
 from __future__ import print_function
 from importlib.metadata import metadata
 import sys, getopt
@@ -18,11 +17,12 @@ from timeloop import Timeloop
 from datetime import timedelta
 import grpc
 
-# LOCAL IMPORTS
 import federated_pb2
 import federated_pb2_grpc
 
-
+##############################################################################
+# DEBUG SETTINGS
+##############################################################################
 FORMAT = '[%(asctime)-15s] [%(filename)s] [%(levelname)s] %(message)s'
 logging.basicConfig(format=FORMAT, level='INFO')
 logger = logging.getLogger('client')
@@ -30,15 +30,9 @@ logger = logging.getLogger('client')
 ##############################################################################
 #                                 CLIENT                                     #
 ##############################################################################
-
 class Client:
-    """
-    Attributes:
-    ----------
-        * id
-        * period
-        * stub
-    """
+    """[summary]
+    """    
     def __init__(self, id, period):
         self.id = id
         self.period = period
@@ -50,8 +44,7 @@ client = Client("client", 4)
 #                                 LOOPER                                     #
 ##############################################################################
 looper = Timeloop()
-#@looper.job(interval=timedelta(seconds=client.period))
-@looper.job(interval=timedelta(seconds=2))
+@looper.job(interval=timedelta(seconds=client.period))
 def loop():
     id_message = "ID" + client.id + "_" + str(round(time.time()))
     header = federated_pb2.MessageHeader(id_request = id_message,
@@ -60,7 +53,7 @@ def loop():
                                                  iteration_completed = False,
                                                  current_iteration = 0,
                                                  num_max_iterations = 10)
-    gradient_name = "Gradient of " + str(client.id)
+    gradient_name = "Gradient of " + client.id
     data = federated_pb2.Update(gradientName = gradient_name) # @TODO: Include gradient update
     request = federated_pb2.ClientTensorRequest(header = header, metadata = metadata, data = data)
     response = client.stub.sendLocalTensor(request)
@@ -88,9 +81,6 @@ def main(argv):
         elif opt in ("-p", "--period"):
             client.period = arg
     
-    # NOTE(gRPC Python Team): .close() is possible on a channel and should be
-    # used in circumstances in which the with statement does not fit the needs
-    # of the code.
     with grpc.insecure_channel('localhost:50051') as channel:
         client.stub = federated_pb2_grpc.FederationStub(channel)
         looper.start(block=True)
