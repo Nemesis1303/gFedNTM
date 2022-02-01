@@ -16,6 +16,8 @@ import time
 from timeloop import Timeloop
 from datetime import timedelta
 import grpc
+import torch
+import numpy as np
 
 import federated_pb2
 import federated_pb2_grpc
@@ -38,26 +40,30 @@ class Client:
         self.period = period
         self.stub = None
 
-client = Client("client", 4)
-
-##############################################################################
-#                                 LOOPER                                     #
-##############################################################################
-looper = Timeloop()
-@looper.job(interval=timedelta(seconds=client.period))
-def loop():
-    id_message = "ID" + client.id + "_" + str(round(time.time()))
-    header = federated_pb2.MessageHeader(id_request = id_message,
-                                         message_type = federated_pb2.MessageType.CLIENT_TENSOR_SEND)
-    metadata = federated_pb2.MessageAdditionalData(federation_completed = False,
-                                                 iteration_completed = False,
-                                                 current_iteration = 0,
-                                                 num_max_iterations = 10)
-    update_name = "Update of " + client.id
-    data = federated_pb2.Update(tensor_name = update_name) # @TODO: Include gradient update
-    request = federated_pb2.ClientTensorRequest(header = header, metadata = metadata, data = data)
-    response = client.stub.sendLocalTensor(request)
-    logger.info('Client %s received a response to request %s', str(client.id), response.header.id_to_request)
+    # looper = Timeloop()
+    # @looper.job(interval=timedelta(seconds=client.period))
+    # TODO: Change to take into account the number of iterations
+    def getAverage(self):
+        id_message = "ID" + self.id + "_" + str(round(time.time()))
+        header = federated_pb2.MessageHeader(id_request = id_message,
+                                            message_type = federated_pb2.MessageType.CLIENT_TENSOR_SEND)
+        metadata = federated_pb2.MessageAdditionalData(federation_completed = False,
+                                                    iteration_completed = False,
+                                                    current_iteration = 0,
+                                                    num_max_iterations = 10)
+        update_name = "Update of " + self.id
+        content = torch.tensor(np.array([[3, 3, 3], [3, 3, 3]]))
+        conent_bytes = content.numpy().tobytes()
+        #size = federated_pb2.TensorShape(federated_pb2.Dim(content.size(dim=1),"row"),
+        #                                federated_pb2.Dim(content.size(dim=2), "column"),
+        #                                unknown_rank = False)
+        data = federated_pb2.Update(tensor_name = update_name,
+                                    tensor_content = conent_bytes) 
+        request = federated_pb2.ClientTensorRequest(header = header, metadata = metadata, data = data)
+        if self.stub:
+            print(self.stub)
+            response = self.stub.sendLocalTensor(request)
+            logger.info('Client %s received a response to request %s', str(self.id), response.header.id_to_request)
 
 
 ##############################################################################
@@ -77,13 +83,16 @@ def main(argv):
             print('client.py --id <id> --period <period>')
             sys.exit()
         elif opt in ("-i", "--id"):
-            client.id = arg
+            client_id = arg
         elif opt in ("-p", "--period"):
-            client.period = arg
+            client_period = arg
+    
+    client = Client(client_id, client_period)
     
     with grpc.insecure_channel('localhost:50051') as channel:
         client.stub = federated_pb2_grpc.FederationStub(channel)
-        looper.start(block=True)
+        # looper.start(block=True)
+        client.getAverage()
 
 if __name__ == '__main__':
     main(sys.argv[1:])

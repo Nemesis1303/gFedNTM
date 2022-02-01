@@ -25,7 +25,7 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
     Args:
         federated_pb2_grpc ([type]): [description]
 
-    Returns:
+    Returns: 
         [type]: [description]
     """    """
     Attributes:
@@ -37,8 +37,8 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
         """[summary]
 
         Args:
-            request ([type]): [description]
-            context ([type]): [description]
+            request ([ClientTensorRequest]): [description]
+            context ([AuthMetadataContext]): [description]
 
         Returns:
             [type]: [description]

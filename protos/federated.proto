@@ -30,7 +30,7 @@ message TensorShape {
  /* Protocol buffer representing a federated update. */
  message Update {
   string tensor_name = 1;       // Name of the gradient that is being transmitted, e.g. "doc-topics distribution"
-  TensorShape tensor_shape = 2; // Shape of the gradient tensor
+  //TensorShape tensor_shape = 2; // Shape of the gradient tensor
   bytes tensor_content = 3;     // Actaul content of the tensor
 };
 
