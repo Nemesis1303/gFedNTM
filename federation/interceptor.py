@@ -14,7 +14,7 @@ from grpc_interceptor import ServerInterceptor
 ##############################################################################
 #                                ERRORLOGGER                                 #
 ##############################################################################
-@TODO
+# TODO: Implement!
 class ErrorLogger(ServerInterceptor):
     def intercept(self, method, request, context, method_name):
         try:

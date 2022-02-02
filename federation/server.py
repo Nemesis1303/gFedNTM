@@ -14,6 +14,7 @@ import grpc
 import time
 import torch
 import threading
+import numpy as np
 
 import federated_pb2
 import federated_pb2_grpc
@@ -46,11 +47,11 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
         """[summary]
 
         Args:
-            * request ([ClientTensorRequest]): [description]
-            * context ([AuthMetadataContext]): [description]
+            * request (ClientTensorRequest): [description]
+            * context (AuthMetadataContext): [description]
 
         Returns:
-            * [type]: [description]
+            * ServerReceivedResponse: [description]
         """
 
         id_server = "IDS" + "_" + str(round(time.time()))
@@ -62,11 +63,11 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
                                                        current_iteration=request.metadata.current_iteration,
                                                        num_max_iterations=request.metadata.num_max_iterations)
         # TODO: Shape needs to be considered after deserialization. Make this convesrsion
-        # deserialized_bytes = np.frombuffer(bytes, dtype=np.int8)
-        # deserialized_x = np.reshape(deserialized_bytes, newshape=(2, 2))
-        # deserialized_tensor = torch.tensor(np.reshape(np.frombuffer(request.data.tensor_content, dytype=np.int64),newshape=(3, 3)))
-        # print("The tensor sent is: ", deserialized_tensor)
-        deserialized_tensor = None
+        deserialized_bytes = np.frombuffer(request.data.tensor_content, dtype=np.int64)
+        deserialized_numpy = np.reshape(deserialized_bytes, newshape=(2, 3))
+        deserialized_tensor = torch.tensor(deserialized_numpy)
+        print("The tensor sent is: ", deserialized_tensor)
+        # deserialized_tensor = None
         self.record_client(context, request.metadata.id_machine, deserialized_tensor,
                            request.metadata.current_iteration, request.header.id_request)
        

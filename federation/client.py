@@ -54,6 +54,7 @@ class Client:
                                                        id_machine = int(self.id))
         update_name = "Update of " + self.id
         content = torch.tensor(np.array([[3, 3, 3], [3, 3, 3]]))
+        print(content.shape)
         conent_bytes = content.numpy().tobytes()
         size = federated_pb2.TensorShape()
         size.dim.extend([federated_pb2.TensorShape.Dim(size=content.size(dim=0), name="dim1"),
