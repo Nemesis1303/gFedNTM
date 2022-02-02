@@ -38,6 +38,7 @@ message MessageAdditionalData {
   bool iteration_completed = 2;   // True when the current iteration's aggregated tensor of gradients has arrived at the client
   uint32 current_iteration = 3;   // Iteration to which the current message data corresponds
   uint32 num_max_iterations = 4;  // Maximum number of iterations that the federation has
+  uint32 id_machine = 5;
 }
 
 enum MessageType {

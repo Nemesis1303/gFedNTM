@@ -1,27 +1,74 @@
+# -*- coding: utf-8 -*-
+"""
+@author: lcalv
+******************************************************************************
+***                         CLASS FEDERATION                               ***
+******************************************************************************
+"""
+##############################################################################
+#                                IMPORTS                                     #
+##############################################################################
 import threading
+import federation_client
 
-class Federation(object):
+
+class Federation:
+    """Class to describe the set  clients that compose a federation.
+    """
+
     def __init__(self):
         self.federation_lock = threading.RLock()
         self.federation = {}
+        self.federation_clients = []
 
-    def connect(self, client):
+    def connect(self, client, id_client, gradient, current_iter, current_id_msg):
+        """Class to register the connection  a client in the federation. As the client gets registered into the federation when it sends a GRPC message to the server, a counter is kept in order to account for the number  times a client has tried to communicate with the server. To do so, we save each client identification obtained from the context as the key  a dictionary, incrementing by one its corresponding value at each time the client connects with the server. Additionally, an object the class FederationClient is added to the list clients in the federation at each time a new client connects to it.
+
+        Args:
+            * client (str): Client idenfication obtained from the context that provides information on the RPC
+            * id_client (int): Id  the client.
+            * gradient (Pytorch.Tensor): Gradient that the client is sending to the server at "current_iter" on "current_id_msg"
+            * current_iter (int): Iteration that corresponds with the gradient that is being sent by the client.
+            * current_id_msg (int): Id  the message at which the gradient is being sent.
+        """
         print("Client {} connecting".format(client))
         with self.federation_lock:
             if client not in self.federation:
                 self.federation[client] = 1
+                new_federation_client = federation_client.FederationClient(id=id_client, federation_key=client,
+                                                                           tensor=gradient, current_iter=current_iter,
+                                                                           current_id_msg=current_id_msg)
+                self.federation_clients.append(new_federation_client)
             else:
                 self.federation[client] += 1
+                # TODO: If the method comes to here is because a new RPC communication has been established; hence the gradient, current_iter and current_id_msg of the corresponding client
 
-    def disconnect(self, client):
+    def disconnect(self, client, id_client):
+        """Class to unregister a client from the federation. As the registration  the user in the federation is described by a counter that relates to the number  times the user has sent a GRPC message to the server, the client is not completely unregister from the federation until this counter is set to 0. At this time, the client is also removed from the list  FederationClient objects that describe the set  clients that are connected in the federationl.
+
+        Args:
+            * client (str): Client idenfication obtained from the context that provides information on the RPC
+            * id_client (int): Id  the client.
+
+        Raises:
+            * RuntimeError: A runtime error is raised when it is attempted to remove a client that has not previously connected to the federation.
+        """
         print("Client {} disconnecting".format(client))
         with self.federation_lock:
             if client not in self.federation:
-                raise RuntimeError("Tried to disconnect client '{}' but it was never connected.".format(client))
+                raise RuntimeError(
+                    "Tried to disconnect client '{}' but it was never connected.".format(client))
             self.federation[client] -= 1
             if self.federation[client] == 0:
                 del self.federation[client]
+                client_to_remove = federation_client.FederationClient.get_pos_by_id(id_client, self.federation_clients)
+                del self.federation_clients[client_to_remove]
 
     def getClients(self):
+        """Get keys of the clients that are connected to the federation.
+
+        Returns:
+            [type]: Client idenfications from all the clients connected to the federation obtained from the context that provides information on the RPC
+        """
         with self.federation_lock:
             return self.federation.keys()
