@@ -13,9 +13,11 @@ import logging
 import grpc
 import time
 import torch 
+import threading
 
 import federated_pb2
 import federated_pb2_grpc
+import federation
 
 ##############################################################################
 #                          FEDERATED SERVEER                                 #
@@ -33,6 +35,14 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
     ----------
         * 
     """
+    def __init__(self):
+        self.federation = federation.Federation()
+    
+    def record_client(self, context):
+        def unregister_client():
+            self.federation.disconnect(context.peer())
+        context.add_callback(unregister_client)
+        self.federation.connect(context.peer())
 
     def sendLocalTensor(self, request, context):
         """[summary]
@@ -44,6 +54,10 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
         Returns:
             [type]: [description]
         """        
+
+        self.record_client(context)
+        print("Clients: {}".format(self.federation.getClients()))
+
         id_server = "IDS" + "_" + str(round(time.time()))
         header = federated_pb2.MessageHeader(id_response = id_server,
                                              id_to_request = request.header.id_request,
