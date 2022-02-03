@@ -41,14 +41,20 @@ class Federation:
                 self.federation_clients.append(new_federation_client)
             else:
                 self.federation[client] += 1
-                # TODO: If the method comes to here is because a new RPC communication has been established; hence the gradient, current_iter and current_id_msg of the corresponding client
 
-    def disconnect(self, client, id_client):
+    def connect_waiting(self, client):
+        print("Client {} connecting waiting".format(client))
+        with self.federation_lock:
+            if client not in self.federation:
+                self.federation[client] = 1
+            else:
+                self.federation[client] += 1
+
+    def disconnect(self, client):
         """Class to unregister a client from the federation. As the registration  the user in the federation is described by a counter that relates to the number  times the user has sent a GRPC message to the server, the client is not completely unregister from the federation until this counter is set to 0. At this time, the client is also removed from the list  FederationClient objects that describe the set  clients that are connected in the federationl.
 
         Args:
             * client (str): Client idenfication obtained from the context that provides information on the RPC
-            * id_client (int): Id  the client.
 
         Raises:
             * RuntimeError: A runtime error is raised when it is attempted to remove a client that has not previously connected to the federation.
@@ -61,8 +67,9 @@ class Federation:
             self.federation[client] -= 1
             if self.federation[client] == 0:
                 del self.federation[client]
-                #client_to_remove = federation_client.FederationClient.get_pos_by_id(id_client, self.federation_clients)
-                #del self.federation_clients[client_to_remove]
+                client_to_remove = federation_client.FederationClient.get_pos_by_key(client, self.federation_clients)
+                if self.federation_clients[client_to_remove].current_iter == self.federation_clients[client_to_remove].current_id_msg:
+                    del self.federation_clients[client_to_remove]
 
     def getClients(self):
         """Get keys of the clients that are connected to the federation.

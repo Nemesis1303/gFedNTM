@@ -22,11 +22,11 @@ class FederationClient:
         self.current_iter = current_iter
         self.current_id_msg = current_id_msg
 
-    def get_pos_by_id(id, federation_clients):
-        """It searchs a client with the specified id over the given list of FederationClient objects
+    def get_pos_by_key(key, federation_clients):
+        """It searchs a client with the specified key over the given list of FederationClient objects
            and when found, it returns its position in the list.
         Args:
-            * id (int): Dictionary id of the client 
+            * key (int): Dictionary id of the client 
             * federation_clients (FederationClient): List of FederationClient objects representing the clients
                                                    that are connected to the client.
 
@@ -34,7 +34,7 @@ class FederationClient:
             * int: Position on the list of the searched client
         """
         for client_pos in range(len(federation_clients)):
-            if id == federation_clients[client_pos].id:
+            if key == federation_clients[client_pos].federation_key:
                 return client_pos
             else:
                 print("No client with specified key was found")

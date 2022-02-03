@@ -21,6 +21,7 @@ import pdb
 import federated_pb2
 import federated_pb2_grpc
 import federation
+import federation_client
 
 FORMAT = '[%(asctime)-15s] [%(filename)s] [%(levelname)s] %(message)s'
 logging.basicConfig(format=FORMAT, level='INFO')
@@ -48,9 +49,17 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
         def unregister_client():
             """No-parameter callable to be called on RPC termination, that invokes the Federation's disconnect method when a client finishes a communication with the server.
             """
-            self.federation.disconnect(context.peer(), id_client)
+            self.federation.disconnect(context.peer())
         context.add_callback(unregister_client)
         self.federation.connect(context.peer(), id_client, gradient, current_iter, current_id_msg)
+    
+    def record_client_waiting(self, context):
+        def unregister_client():
+            """No-parameter callable to be called on RPC termination, that invokes the Federation's disconnect method when a client finishes a communication with the server.
+            """
+            self.federation.disconnect(context.peer())
+        context.add_callback(unregister_client)
+        self.federation.connect_waiting(context.peer())
 
     def sendLocalTensor(self, request, context):
         """[summary]
@@ -76,30 +85,35 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
         return federated_pb2.ServerReceivedResponse(header=header)
     
     def can_send_update(self):
-        #for client in self.federation.federation_clients:
-        #    if self.current_iteration != client.current_iter:
-        print(len(self.federation.federation_clients) >= self.min_num_clients)
         if len(self.federation.federation_clients) < self.min_num_clients:
+            return False
+        if len(self.federation.federation) != len(self.federation.federation_clients):
+            print("Not all the clients have sent their updates yet.")
             return False
         return True
     
     def sendAggregatedTensor(self, request, context):
-        print("llega al servidor")
-        print(self.federation.federation_clients[0])
-        
+        # Record clients waiting
+        self.record_client_waiting(context)
+
         # Wait until all the clients in the federation have sent its current iteration gradient
         wait(lambda: self.can_send_update(), timeout_seconds=120, waiting_for="Update can be sent")
+
         # Calculate average
         clients_tensors = [client.tensor for client in self.federation.federation_clients]
         average_tensor = np.mean(np.stack(clients_tensors), axis=0)
         print("The average tensor is: ", average_tensor)
+
         # Serialize tensor
         content_bytes = average_tensor.tobytes()
         size = federated_pb2.TensorShape()
         size.dim.extend([federated_pb2.TensorShape.Dim(size=average_tensor.shape[0], name="dim1"),
                         federated_pb2.TensorShape.Dim(size=average_tensor.shape[1], name="dim2")])
-        update_name = "Update from iteration " 
-        print(update_name)
+
+        client_to_repond = federation_client.FederationClient.get_pos_by_key(context.peer(), 
+                                                                             self.federation.federation_clients)
+
+        update_name = "Update for client with ID " + str(self.federation.federation_clients[client_to_repond].id) + " for the iteration " + str(self.federation.federation_clients[client_to_repond].current_iter)
         data = federated_pb2.Update(tensor_name=update_name, 
                                     tensor_shape=size, tensor_content=content_bytes)
         # Send update
