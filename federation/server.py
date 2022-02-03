@@ -37,6 +37,7 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
         self.last_update = None
         self.min_num_clients = 2 # TODO: Increase
         self.current_iteration = -1
+        self.id_server = "IDS" + "_" + str(round(time.time()))
 
     def record_client(self, context, id_client, gradient, current_iter, current_id_msg):
         """Method to record the communication between a server and one of the clients in the federation.
@@ -62,24 +63,20 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
             * ServerReceivedResponse: Server's response to confirm a client that its sent gradient was received
         """
 
-        id_server = "IDS" + "_" + str(round(time.time()))
-        header = federated_pb2.MessageHeader(id_response=id_server,
+        header = federated_pb2.MessageHeader(id_response=self.id_server,
                                              id_to_request=request.header.id_request,
                                              message_type=federated_pb2.MessageType.SERVER_CONFIRM_RECEIVED)
-        # TODO: Revise iteration_completed and federation_completed
-        metadata = federated_pb2.MessageAdditionalData(federation_completed=request.metadata.federation_completed,
-                                                       iteration_completed=request.metadata.iteration_completed,
-                                                       current_iteration=request.metadata.current_iteration,
-                                                       num_max_iterations=request.metadata.num_max_iterations)
+        dims = tuple([dim.size for dim in request.data.tensor_shape.dim])
         deserialized_bytes = np.frombuffer(request.data.tensor_content, dtype=np.float64)
-        deserialized_numpy = np.reshape(deserialized_bytes, newshape=(2, 3))
-        deserialized_tensor = torch.tensor(deserialized_numpy)
-        print("The tensor sent is: ", deserialized_tensor)
+        deserialized_numpy = np.reshape(deserialized_bytes, newshape=dims)
+        deserialized_tensor = torch.tensor(deserialized_numpy)     
+
+
         self.record_client(context, request.metadata.id_machine, deserialized_tensor,
                            request.metadata.current_iteration, request.header.id_request)
         
        
-        return federated_pb2.ServerReceivedResponse(header=header, metadata=metadata)
+        return federated_pb2.ServerReceivedResponse(header=header)
     
     def can_send_update(self):
         #for client in self.federation.federation_clients:

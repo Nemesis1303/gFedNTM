@@ -60,8 +60,8 @@ class Client:
         size = federated_pb2.TensorShape()
         size.dim.extend([federated_pb2.TensorShape.Dim(size=content.size(dim=0), name="dim1"),
                          federated_pb2.TensorShape.Dim(size=content.size(dim=1), name="dim2")])
-       
         data = federated_pb2.Update(tensor_name=update_name,
+                                    tensor_shape = size,
                                     tensor_content=conent_bytes)
         request = federated_pb2.ClientTensorRequest(header=header, metadata=metadata, data=data)
         print("Tensor request conformed")
