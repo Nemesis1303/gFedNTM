@@ -2,14 +2,8 @@ syntax = "proto3";
 
 package federated;
 
-/* Protocol buffer for initializeing the model weights on the server that generates the federated average
-   It will have a repeated field for the set of gradient weights received from each 
-   client. 
+/* Empty protocol buffer used in the client to wait for the server's update
  */
-message ModelServer {
-  repeated Update gradients = 1;
-} 
-
 message Empty {}
 
 /* Protocol buffer that defines the dimensions of a tensor such as {"input", 30}, {"output", 40} for a 30 x 40 2D tensor.
@@ -36,11 +30,9 @@ message TensorShape {
 };
 
 message MessageAdditionalData {
-  bool federation_completed = 1;  // True when the number maximum of iterations has been reached and the server's response has reached the client
-  bool iteration_completed = 2;   // True when the current iteration's aggregated tensor of gradients has arrived at the client
-  uint32 current_iteration = 3;   // Iteration to which the current message data corresponds
-  uint32 num_max_iterations = 4;  // Maximum number of iterations that the federation has
-  uint32 id_machine = 5;
+  uint32 current_iteration = 1;   // Iteration to which the current message data corresponds
+  uint32 num_max_iterations = 2;  // Maximum number of iterations that the federation has
+  uint32 id_machine = 3;
 }
 
 enum MessageType {
@@ -82,5 +74,4 @@ message ServerReceivedResponse {
 service Federation {
   rpc sendLocalTensor(ClientTensorRequest) returns (ServerReceivedResponse) {}
   rpc sendAggregatedTensor(Empty) returns (ServerAggregatedTensorRequest) {}
-  // rpc exchangeUpdate(ClientTensorRequest) returns (ServerAggregatedTensorRequest) {}
 }

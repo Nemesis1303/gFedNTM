@@ -87,9 +87,10 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
     def can_send_update(self):
         if len(self.federation.federation_clients) < self.min_num_clients:
             return False
-        if len(self.federation.federation) != len(self.federation.federation_clients):
-            print("Not all the clients have sent their updates yet.")
-            return False
+        # TODO: Check with condition can be added here in case not all clients sent the updates
+        #if len(self.federation.federation) != len(self.federation.federation_clients):
+        #    print("Not all the clients have sent their updates yet.")
+        #    return False
         return True
     
     def sendAggregatedTensor(self, request, context):
@@ -112,18 +113,15 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
 
         client_to_repond = federation_client.FederationClient.get_pos_by_key(context.peer(), 
                                                                              self.federation.federation_clients)
-
-        update_name = "Update for client with ID " + str(self.federation.federation_clients[client_to_repond].id) + " for the iteration " + str(self.federation.federation_clients[client_to_repond].current_iter)
+        # Create request
+        update_name = "Update for client with ID " + str(self.federation.federation_clients[client_to_repond].id) + \
+                      " for the iteration " + str(self.federation.federation_clients[client_to_repond].current_iter)
         data = federated_pb2.Update(tensor_name=update_name, 
                                     tensor_shape=size, tensor_content=content_bytes)
         # Send update
-        # TODO: Check id server
-        id_server = "IDS" + "_" + str(round(time.time()))
-        print(id_server)
-        #id_to_request=request.header.id_request,
-        header = federated_pb2.MessageHeader(id_response=id_server,
-                                            message_type=federated_pb2.MessageType.SERVER_AGGREGATED_TENSOR_SEND)
-        print("Server sends update")
+        header = federated_pb2.MessageHeader(id_response=self.id_server,
+                                             message_type=federated_pb2.MessageType.SERVER_AGGREGATED_TENSOR_SEND)
+        print(update_name)
         return federated_pb2.ServerAggregatedTensorRequest(header=header, data=data)
 
 
