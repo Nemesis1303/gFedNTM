@@ -10,6 +10,8 @@ message ModelServer {
   repeated Update gradients = 1;
 } 
 
+message Empty {}
+
 /* Protocol buffer that defines the dimensions of a tensor such as {"input", 30}, {"output", 40} for a 30 x 40 2D tensor.
    The dimensions follow an "in-memory" layout, meaning that the first entry is the outermost dimensions used to 
    layout the values, while the last entry is the innermost dimension.
@@ -79,5 +81,6 @@ message ServerReceivedResponse {
 
 service Federation {
   rpc sendLocalTensor(ClientTensorRequest) returns (ServerReceivedResponse) {}
-  rpc sendAggregatedTensor(ServerAggregatedTensorRequest) returns (ClientReceivedResponse) {}
+  rpc sendAggregatedTensor(Empty) returns (ServerAggregatedTensorRequest) {}
+  // rpc exchangeUpdate(ClientTensorRequest) returns (ServerAggregatedTensorRequest) {}
 }

@@ -21,8 +21,8 @@ class FederationStub(object):
                 )
         self.sendAggregatedTensor = channel.unary_unary(
                 '/federated.Federation/sendAggregatedTensor',
-                request_serializer=federated__pb2.ServerAggregatedTensorRequest.SerializeToString,
-                response_deserializer=federated__pb2.ClientReceivedResponse.FromString,
+                request_serializer=federated__pb2.Empty.SerializeToString,
+                response_deserializer=federated__pb2.ServerAggregatedTensorRequest.FromString,
                 )
 
 
@@ -51,8 +51,8 @@ def add_FederationServicer_to_server(servicer, server):
             ),
             'sendAggregatedTensor': grpc.unary_unary_rpc_method_handler(
                     servicer.sendAggregatedTensor,
-                    request_deserializer=federated__pb2.ServerAggregatedTensorRequest.FromString,
-                    response_serializer=federated__pb2.ClientReceivedResponse.SerializeToString,
+                    request_deserializer=federated__pb2.Empty.FromString,
+                    response_serializer=federated__pb2.ServerAggregatedTensorRequest.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -93,7 +93,7 @@ class Federation(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/federated.Federation/sendAggregatedTensor',
-            federated__pb2.ServerAggregatedTensorRequest.SerializeToString,
-            federated__pb2.ClientReceivedResponse.FromString,
+            federated__pb2.Empty.SerializeToString,
+            federated__pb2.ServerAggregatedTensorRequest.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

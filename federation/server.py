@@ -9,17 +9,23 @@
 #                                IMPORTS                                     #
 ##############################################################################
 from concurrent import futures
+from waiting import wait
 import logging
 import grpc
 import time
 import torch
 import threading
 import numpy as np
+import pdb
 
 import federated_pb2
 import federated_pb2_grpc
 import federation
 
+FORMAT = '[%(asctime)-15s] [%(filename)s] [%(levelname)s] %(message)s'
+logging.basicConfig(format=FORMAT, level='INFO')
+logger = logging.getLogger('server')
+GRPC_TRACE=all 
 
 class FederatedServer(federated_pb2_grpc.FederationServicer):
     """Class that describes the behaviour of the GRPC server to which several clients are connected to create a federation for the joint training of a CTM or ProdLDA model.
@@ -29,6 +35,8 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
     def __init__(self):
         self.federation = federation.Federation()
         self.last_update = None
+        self.min_num_clients = 2 # TODO: Increase
+        self.current_iteration = -1
 
     def record_client(self, context, id_client, gradient, current_iter, current_id_msg):
         """Method to record the communication between a server and one of the clients in the federation.
@@ -47,41 +55,83 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
         """[summary]
 
         Args:
-            * request (ClientTensorRequest): [description]
-            * context (AuthMetadataContext): [description]
+            * request (ClientTensorRequest): Request of the client for sending an iteration's gradient
+            * context (AuthMetadataContext): Context of the RPC communication between the client and the server
 
         Returns:
-            * ServerReceivedResponse: [description]
+            * ServerReceivedResponse: Server's response to confirm a client that its sent gradient was received
         """
 
         id_server = "IDS" + "_" + str(round(time.time()))
         header = federated_pb2.MessageHeader(id_response=id_server,
                                              id_to_request=request.header.id_request,
                                              message_type=federated_pb2.MessageType.SERVER_CONFIRM_RECEIVED)
+        # TODO: Revise iteration_completed and federation_completed
         metadata = federated_pb2.MessageAdditionalData(federation_completed=request.metadata.federation_completed,
                                                        iteration_completed=request.metadata.iteration_completed,
                                                        current_iteration=request.metadata.current_iteration,
                                                        num_max_iterations=request.metadata.num_max_iterations)
-        # TODO: Shape needs to be considered after deserialization. Make this convesrsion
-        deserialized_bytes = np.frombuffer(request.data.tensor_content, dtype=np.int64)
+        deserialized_bytes = np.frombuffer(request.data.tensor_content, dtype=np.float64)
         deserialized_numpy = np.reshape(deserialized_bytes, newshape=(2, 3))
         deserialized_tensor = torch.tensor(deserialized_numpy)
         print("The tensor sent is: ", deserialized_tensor)
-        # deserialized_tensor = None
         self.record_client(context, request.metadata.id_machine, deserialized_tensor,
                            request.metadata.current_iteration, request.header.id_request)
+        
        
         return federated_pb2.ServerReceivedResponse(header=header, metadata=metadata)
+    
+    def can_send_update(self):
+        #for client in self.federation.federation_clients:
+        #    if self.current_iteration != client.current_iter:
+        print(len(self.federation.federation_clients) >= self.min_num_clients)
+        if len(self.federation.federation_clients) < self.min_num_clients:
+            return False
+        return True
+    
+    def sendAggregatedTensor(self, request, context):
+        print("llega al servidor")
+        print(self.federation.federation_clients[0])
+
+        #if len(self.federation.federation_clients) >= self.min_num_clients:
+        #    print("entra en while")
+        
+        # Wait until all the clients in the federation have sent its current iteration gradient
+        wait(lambda: self.can_send_update(), timeout_seconds=120, waiting_for="Update can be sent")
+        # Calculate average
+        clients_tensors = [client.tensor for client in self.federation.federation_clients]
+        average_tensor = torch.mean(torch.stack(clients_tensors), dim=0)
+        print("The average tensor is: ", average_tensor)
+        # Serialize tensor
+        content_bytes = average_tensor.numpy().tobytes()
+        size = federated_pb2.TensorShape()
+        size.dim.extend([federated_pb2.TensorShape.Dim(size=average_tensor.shape[0], name="dim1"),
+                        federated_pb2.TensorShape.Dim(size=average_tensor.shape[1], name="dim2")])
+        update_name = "Update from iteration " 
+        print(update_name)
+        data = federated_pb2.Update(tensor_name=update_name, 
+                                    tensor_shape=size, tensor_content=content_bytes)
+        # Send update
+        # TODO: Check id server
+        id_server = "IDS" + "_" + str(round(time.time()))
+        print(id_server)
+        #id_to_request=request.header.id_request,
+        header = federated_pb2.MessageHeader(id_response=id_server,
+                                            message_type=federated_pb2.MessageType.SERVER_AGGREGATED_TENSOR_SEND)
+        print("Server sends update")
+        return federated_pb2.ServerAggregatedTensorRequest(header=header, data=data)
+
 
 
 def serve():
     """[summary]
     """
-    server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
+    server = grpc.server(futures.ThreadPoolExecutor())
     federated_pb2_grpc.add_FederationServicer_to_server(
         FederatedServer(), server)
     server.add_insecure_port('[::]:50051')
     server.start()
+    
     server.wait_for_termination()
 
 

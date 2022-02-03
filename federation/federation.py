@@ -61,8 +61,8 @@ class Federation:
             self.federation[client] -= 1
             if self.federation[client] == 0:
                 del self.federation[client]
-                client_to_remove = federation_client.FederationClient.get_pos_by_id(id_client, self.federation_clients)
-                del self.federation_clients[client_to_remove]
+                #client_to_remove = federation_client.FederationClient.get_pos_by_id(id_client, self.federation_clients)
+                #del self.federation_clients[client_to_remove]
 
     def getClients(self):
         """Get keys of the clients that are connected to the federation.
