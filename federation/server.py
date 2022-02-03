@@ -68,13 +68,10 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
                                              message_type=federated_pb2.MessageType.SERVER_CONFIRM_RECEIVED)
         dims = tuple([dim.size for dim in request.data.tensor_shape.dim])
         deserialized_bytes = np.frombuffer(request.data.tensor_content, dtype=np.float64)
-        deserialized_numpy = np.reshape(deserialized_bytes, newshape=dims)
-        deserialized_tensor = torch.tensor(deserialized_numpy)     
+        deserialized_numpy = np.reshape(deserialized_bytes, newshape=dims)    
 
-
-        self.record_client(context, request.metadata.id_machine, deserialized_tensor,
+        self.record_client(context, request.metadata.id_machine, deserialized_numpy,
                            request.metadata.current_iteration, request.header.id_request)
-        
        
         return federated_pb2.ServerReceivedResponse(header=header)
     
@@ -89,18 +86,15 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
     def sendAggregatedTensor(self, request, context):
         print("llega al servidor")
         print(self.federation.federation_clients[0])
-
-        #if len(self.federation.federation_clients) >= self.min_num_clients:
-        #    print("entra en while")
         
         # Wait until all the clients in the federation have sent its current iteration gradient
         wait(lambda: self.can_send_update(), timeout_seconds=120, waiting_for="Update can be sent")
         # Calculate average
         clients_tensors = [client.tensor for client in self.federation.federation_clients]
-        average_tensor = torch.mean(torch.stack(clients_tensors), dim=0)
+        average_tensor = np.mean(np.stack(clients_tensors), axis=0)
         print("The average tensor is: ", average_tensor)
         # Serialize tensor
-        content_bytes = average_tensor.numpy().tobytes()
+        content_bytes = average_tensor.tobytes()
         size = federated_pb2.TensorShape()
         size.dim.extend([federated_pb2.TensorShape.Dim(size=average_tensor.shape[0], name="dim1"),
                         federated_pb2.TensorShape.Dim(size=average_tensor.shape[1], name="dim2")])
