@@ -1,13 +1,22 @@
-"""Class to train AVITM models."""
+# -*- coding: utf-8 -*-
+"""
+@author: estebandito22
+https://github.com/estebandito22/PyTorchAVITM/blob/master/pytorchavitm/avitm/avitm.py
 
+@modifiedBy: lcalvo
+******************************************************************************
+***                               AVITM                                    ***
+******************************************************************************
+"""
+##############################################################################
+#                                IMPORTS                                     #
+##############################################################################
 import os
 from collections import defaultdict
 import multiprocessing as mp
 import requests
-
 import numpy as np
 import datetime
-
 import torch
 from torch import nn
 from torch import optim
@@ -196,7 +205,7 @@ class AVITM(object):
         # Parameter0 = prior_mean
         # Parameter1 = prior_variance
         # Parameter2 = beta
-        self.model.beta = nn.Parameter(update)
+        self.model.beta.grad = update
         
         # Perform one step of the optimizer (SGD/Adam)
         self.optimizer.step()

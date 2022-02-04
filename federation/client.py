@@ -122,7 +122,7 @@ class Client:
                             X, train_loss, samples_processed)
 
                     # Send minibatch' gradient (beta) to the server
-                    self.__send_per_minibatch_gradient(self.local_model.beta.detach(),
+                    self.__send_per_minibatch_gradient(self.local_model.beta.grad.detach(),
                                                        self.local_model.index_mb,
                                                        self.local_model.current_epoch,
                                                        self.local_model.self.local_model.num_epochs)

@@ -1,5 +1,16 @@
-"""PyTorch class for feed foward AVITM network."""
+# -*- coding: utf-8 -*-
+"""
+@author: estebandito22
+https://github.com/estebandito22/PyTorchAVITM/blob/master/pytorchavitm/avitm/decoder_network.py
 
+@modifiedBy: lcalvo
+******************************************************************************
+***                           DECODER NETWORK                              ***
+******************************************************************************
+"""
+##############################################################################
+#                                IMPORTS                                     #
+##############################################################################
 import torch
 from torch import nn
 from torch.nn import functional as F
@@ -7,11 +18,11 @@ from avitm.inference_network import InferenceNetwork
 
 
 class DecoderNetwork(nn.Module):
-
-    """AVITM Network."""
+    """PyTorch class for feed foward AVITM network.
+    """
 
     def __init__(self, input_size, n_components=10, model_type='prodLDA',
-                 hidden_sizes=(100,100), activation='softplus', dropout=0.2,
+                 hidden_sizes=(100, 100), activation='softplus', dropout=0.2,
                  learn_priors=True):
         """
         Initialize InferenceNetwork.

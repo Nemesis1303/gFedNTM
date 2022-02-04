@@ -1,13 +1,24 @@
-"""PyTorch class for feed foward inference network."""
+# -*- coding: utf-8 -*-
+"""
+@author: estebandito22
+https://github.com/estebandito22/PyTorchAVITM/blob/master/pytorchavitm/avitm/inference_network.py
 
+@modifiedBy: lcalvo
+******************************************************************************
+***                         INFERENCE NETWORK                              ***
+******************************************************************************
+"""
+##############################################################################
+#                                IMPORTS                                     #
+##############################################################################
 from collections import OrderedDict
 from torch import nn
 import torch
 
 
 class InferenceNetwork(nn.Module):
-
-    """Inference Network."""
+    """PyTorch class for feed foward inference network.
+    """
 
     def __init__(self, input_size, output_size, hidden_sizes,
                  activation='softplus', dropout=0.2):
