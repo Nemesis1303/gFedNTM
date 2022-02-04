@@ -11,10 +11,12 @@
 from concurrent import futures
 import grpc
 import argparse
+import numpy as np
 
 from federation import federated_pb2_grpc
 from federation.client import Client
 from federation.server import FederatedServer
+from utils.utils import prepare_data_avitm_federated
 
 
 def start_server(min_num_clients):
@@ -28,11 +30,21 @@ def start_server(min_num_clients):
 
 
 def start_client(id_client):
-    # TRAINING PARAMETERS
+    # TODO: Pass the period as an argument if in the end, I find useful its usage
     period = 3
-    training_datasets = ["aa", "bb", "cc", "dd", "ee"]
+
+    # Training data
+    file = "data/training_data/synthetic.npz"
+    data = np.load(file)
+    corpus = data['documents'][id_client-1]
+    print(corpus[0])
+
+    # Generate training dataset in the format for AVITM
+    train_dataset, input_size, id2token = prepare_data_avitm_federated(corpus, 0.99, 0.01)
+
+    # TRAINING PARAMETERS
     model_parameters = {
-        "input_size": 100,
+        "input_size": input_size,
         "n_components": 10,
         "model_type": "prodLDA",
         "hidden_sizes": (100, 100),
@@ -48,9 +60,9 @@ def start_client(id_client):
     }
 
     # START CLIENT
-    save_dir = None
+    save_dir = "data/output_models"
     client = Client(id_client, period, model_parameters)
-    client.train_local_model(training_datasets[id_client-1], save_dir)
+    client.train_local_model(train_dataset, save_dir)
 
 
 def main():
