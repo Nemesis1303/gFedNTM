@@ -35,7 +35,7 @@ def start_client(id_client):
 
     # Training data
     file = "data/training_data/synthetic.npz"
-    data = np.load(file)
+    data = np.load(file, allow_pickle=True)
     corpus = data['documents'][id_client-1]
     print(corpus[0])
 

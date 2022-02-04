@@ -89,9 +89,10 @@ class Client:
         self.local_model.current_minibatch = 0
         self.local_model.current_epoch = 0
 
+        # num_workers=mp.cpu_count()
         train_loader = DataLoader(
             self.local_model.train_data, batch_size=self.local_model.batch_size,
-            shuffle=True, num_workers=mp.cpu_count())
+            shuffle=True, num_workers=0)
 
         # Initialize training variables
         train_loss = 0
@@ -122,10 +123,11 @@ class Client:
                             X, train_loss, samples_processed)
 
                     # Send minibatch' gradient (beta) to the server
-                    self.__send_per_minibatch_gradient(self.local_model.beta.grad.detach(),
-                                                       self.local_model.index_mb,
-                                                       self.local_model.current_epoch,
-                                                       self.local_model.self.local_model.num_epochs)
+                    self.__send_per_minibatch_gradient\
+                     (self.local_model.model.beta.grad.detach(),
+                      self.local_model.index_mb,
+                      self.local_model.current_epoch,
+                      self.local_model.num_epochs)
 
                     print("Client ", self.id, "sent gradient ", self.local_model.index_mb,
                           "/", self.local_model.current_epoch, "and is waiting for updates")
@@ -157,21 +159,21 @@ class Client:
                         self.local_model.save(save_dir)
 
     def __send_per_minibatch_gradient(self, gradient, current_mb, current_epoch, num_epochs):
-        id_message = "ID" + self.id + "_" + str(round(time.time()))
+        id_message = "ID" + str(self.id) + "_" + str(round(time.time()))
         header = federated_pb2.MessageHeader(id_request=id_message,
                                              message_type=federated_pb2.MessageType.CLIENT_TENSOR_SEND)
         metadata = federated_pb2.MessageAdditionalData(current_mb=current_mb,
                                                        current_epoch=current_epoch,
                                                        num_max_epochs=num_epochs,
                                                        id_machine=int(self.id))
-        update_name = "Update of " + self.id
+        update_name = "Update of " + str(self.id)
         content_bytes = gradient.numpy().tobytes()
         content_type = gradient.numpy().dtype
         size = federated_pb2.TensorShape()
         size.dim.extend([federated_pb2.TensorShape.Dim(size=gradient.size(dim=0), name="dim1"),
                          federated_pb2.TensorShape.Dim(size=gradient.size(dim=1), name="dim2")])
+        # TODO: Figure out how to write dtype=content_type
         data = federated_pb2.Update(tensor_name=update_name,
-                                    dtype=content_type,
                                     tensor_shape=size,
                                     tensor_content=content_bytes)
         request = federated_pb2.ClientTensorRequest(

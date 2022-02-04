@@ -187,20 +187,21 @@ class AVITM(object):
     def _train_minibatch(self, X, train_loss, samples_processed):
         if self.USE_CUDA:
             X = X.cuda()
+            print(X)
 
-            # Forward pass
-            self.model.zero_grad() # Update gradients to zero
-            prior_mean, prior_variance, \
-                posterior_mean, posterior_variance, posterior_log_variance, \
-                word_dists = self.model(X)
+        # Forward pass
+        self.model.zero_grad() # Update gradients to zero
+        prior_mean, prior_variance, \
+            posterior_mean, posterior_variance, posterior_log_variance, \
+            word_dists = self.model(X)
 
-            # Backward pass: Compute gradients
-            loss = self._loss(
-                X, word_dists, prior_mean, prior_variance,
-                posterior_mean, posterior_variance, posterior_log_variance)
-            loss.backward()
+        # Backward pass: Compute gradients
+        loss = self._loss(
+            X, word_dists, prior_mean, prior_variance,
+            posterior_mean, posterior_variance, posterior_log_variance)
+        loss.backward()
 
-            return loss, train_loss, samples_processed
+        return loss, train_loss, samples_processed
     
     def _optimize_on_minibatch(self, X, loss, update, train_loss, samples_processed):
         # Update gradients

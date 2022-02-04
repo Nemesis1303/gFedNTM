@@ -22,7 +22,7 @@ class Federation:
         self.federation = {}
         self.federation_clients = []
 
-    def connect(self, client, id_client, gradient, current_iter, current_id_msg):
+    def connect(self, client, id_client, gradient, current_iter, current_id_msg, max_iter):
         """Class to register the connection  a client in the federation. As the client gets registered into the federation when it sends a GRPC message to the server, a counter is kept in order to account for the number  times a client has tried to communicate with the server. To do so, we save each client identification obtained from the context as the key  a dictionary, incrementing by one its corresponding value at each time the client connects with the server. Additionally, an object the class FederationClient is added to the list clients in the federation at each time a new client connects to it.
 
         Args:
@@ -31,6 +31,7 @@ class Federation:
             * gradient (Pytorch.Tensor): Gradient that the client is sending to the server at "current_iter" on "current_id_msg"
             * current_iter (int): Iteration that corresponds with the gradient that is being sent by the client.
             * current_id_msg (int): Id  the message at which the gradient is being sent.
+            * max_iter (int): Number of epochs with which the model is being trained.
         """
         print("Client {} connecting".format(client))
         with self.federation_lock:
@@ -39,7 +40,8 @@ class Federation:
                 new_federation_client = FederationClient(id=id_client,
                                                          federation_key=client,
                                                          tensor=gradient, current_iter=current_iter,
-                                                         current_id_msg=current_id_msg)
+                                                         current_id_msg=current_id_msg,
+                                                         num_max_iter=max_iter)
                 self.federation_clients.append(new_federation_client)
             else:
                 self.federation[client] += 1
@@ -69,7 +71,7 @@ class Federation:
             self.federation[client] -= 1
             if self.federation[client] == 0:
                 del self.federation[client]
-                client_to_remove = federation_client.FederationClient.get_pos_by_key(
+                client_to_remove = FederationClient.get_pos_by_key(
                     client, self.federation_clients)
                 if self.federation_clients[client_to_remove].current_iter == self.federation_clients[client_to_remove].current_id_msg:
                     del self.federation_clients[client_to_remove]

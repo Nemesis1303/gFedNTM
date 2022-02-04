@@ -23,7 +23,7 @@ logging.basicConfig(format=FORMAT, level='INFO')
 logger = logging.getLogger('server')
 GRPC_TRACE = all
 
-
+# TODO: Include update client state
 class FederatedServer(federated_pb2_grpc.FederationServicer):
     """Class that describes the behaviour of the GRPC server to which several clients are connected to create a federation for the joint training of a CTM or ProdLDA model.
 
@@ -35,7 +35,8 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
         self.current_iteration = -1
         self.id_server = "IDS" + "_" + str(round(time.time()))
 
-    def record_client(self, context, id_client, gradient, current_iter, current_id_msg):
+    def record_client(self, context, id_client, gradient, 
+                      current_iter, current_id_msg, num_max_iter):
         """Method to record the communication between a server and one of the clients in the federation.
 
         Args:
@@ -47,7 +48,7 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
             self.federation.disconnect(context.peer())
         context.add_callback(unregister_client)
         self.federation.connect(context.peer(), id_client,
-                                gradient, current_iter, current_id_msg)
+                                gradient, current_iter, current_id_msg, num_max_iter)
 
     def record_client_waiting(self, context):
         def unregister_client():
@@ -73,11 +74,12 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
                                              message_type=federated_pb2.MessageType.SERVER_CONFIRM_RECEIVED)
         dims = tuple([dim.size for dim in request.data.tensor_shape.dim])
         deserialized_bytes = np.frombuffer(
-            request.data.tensor_content, dtype=request.data.dtype)
+            request.data.tensor_content, dtype=np.float32)
         deserialized_numpy = np.reshape(deserialized_bytes, newshape=dims)
 
         self.record_client(context, request.metadata.id_machine, deserialized_numpy,
-                           request.metadata.current_iteration, request.header.id_request)
+                           request.metadata.current_epoch, request.header.id_request, 
+                           request.metadata.num_max_epochs)
 
         return federated_pb2.ServerReceivedResponse(header=header)
 
@@ -101,6 +103,10 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
         # Calculate average
         clients_tensors = [
             client.tensor for client in self.federation.federation_clients]
+        print(clients_tensors[0])
+        print(clients_tensors[1])
+        print(clients_tensors[0].shape)
+        print(clients_tensors[1].shape)
         average_tensor = np.mean(np.stack(clients_tensors), axis=0)
         print("The average tensor is: ", average_tensor)
 
