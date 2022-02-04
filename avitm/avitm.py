@@ -22,6 +22,8 @@ from torch import nn
 from torch import optim
 from torch.utils.data import DataLoader
 from torch.optim.lr_scheduler import ReduceLROnPlateau
+from tqdm import tqdm
+from torch.nn import functional as F
 
 from avitm.decoder_network import DecoderNetwork
 
@@ -401,3 +403,51 @@ class AVITM(object):
 
         self._init_nn()
         self.model.load_state_dict(checkpoint['state_dict'])
+    
+    def get_doc_topic_distribution(self, n_samples=20):
+        """Given a trained AVITM model, it gets its associated document-topic distribution.
+
+        Args:
+            n_samples (int, optional): [description]. Defaults to 20.
+
+        Returns:
+            [ndarray]: Document-topics distribution
+        """        
+        self.model.eval()
+
+        loader = DataLoader(
+                self.train_data, batch_size=self.batch_size, shuffle=True,
+                num_workers=mp.cpu_count())
+
+        pbar = tqdm(n_samples, position=0, leave=True)
+
+        final_thetas = []
+        for sample_index in range(n_samples):
+            with torch.no_grad():
+                collect_theta = []
+
+                for batch_samples in loader:
+                    X = batch_samples['X']
+
+                    if self.USE_CUDA:
+                        X = X.cuda()
+
+                    # forward pass
+                    self.model.zero_grad()
+                    
+                    with torch.no_grad():
+                        posterior_mu, posterior_log_sigma = self.model.inf_net(X)
+
+                        # Generate samples from theta
+                        theta = F.softmax(
+                                self.model.reparameterize(posterior_mu, posterior_log_sigma), dim=1)
+                        theta = self.model.drop_theta(theta)
+
+                    collect_theta.extend(theta.cpu().numpy().tolist())
+
+                pbar.update(1)
+                pbar.set_description("Sampling: [{}/{}]".format(sample_index + 1, n_samples))
+
+                final_thetas.append(np.array(collect_theta))
+        pbar.close()
+        return np.sum(final_thetas, axis=0) / n_samples
