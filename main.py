@@ -20,15 +20,17 @@ from federation.server import FederatedServer
 def start_server(min_num_clients):
     # START SERVER
     server = grpc.server(futures.ThreadPoolExecutor())
-    federated_pb2_grpc.add_FederationServicer_to_server(FederatedServer(min_num_clients), server)
+    federated_pb2_grpc.add_FederationServicer_to_server(
+        FederatedServer(min_num_clients), server)
     server.add_insecure_port('[::]:50051')
     server.start()
     server.wait_for_termination()
 
+
 def start_client(id_client):
     # TRAINING PARAMETERS
     period = 3
-    training_datasets = ["aa","bb","cc","dd","ee"]
+    training_datasets = ["aa", "bb", "cc", "dd", "ee"]
     model_parameters = {
         "input_size": 100,
         "n_components": 10,
@@ -62,21 +64,13 @@ def main():
     args = parser.parse_args()
 
     if args.id == 0:
-        print("Starting server with", args.min_clients_federation, "as minimum number of clients to start the federation.")
+        print("Starting server with", args.min_clients_federation,
+              "as minimum number of clients to start the federation.")
         start_server(args.min_clients_federation)
     else:
         print("Starting client with id ", args.id)
         start_client(args.id)
 
+
 if __name__ == "__main__":
     main()
-
-
-
-
-
-
-
-
-
-

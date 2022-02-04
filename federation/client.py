@@ -107,7 +107,7 @@ class Client:
 
                 # Train epoch
                 s = datetime.datetime.now()
-                self.model.train()
+                self.local_model.model.train()
                 train_loss = 0
                 samples_processed = 0
 
