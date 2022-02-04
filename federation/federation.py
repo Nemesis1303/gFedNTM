@@ -9,7 +9,8 @@
 #                                IMPORTS                                     #
 ##############################################################################
 import threading
-import federation_client
+
+from federation.federation_client import FederationClient
 
 
 class Federation:
@@ -35,9 +36,10 @@ class Federation:
         with self.federation_lock:
             if client not in self.federation:
                 self.federation[client] = 1
-                new_federation_client = federation_client.FederationClient(id=id_client, federation_key=client,
-                                                                           tensor=gradient, current_iter=current_iter,
-                                                                           current_id_msg=current_id_msg)
+                new_federation_client = FederationClient(id=id_client,
+                                                         federation_key=client,
+                                                         tensor=gradient, current_iter=current_iter,
+                                                         current_id_msg=current_id_msg)
                 self.federation_clients.append(new_federation_client)
             else:
                 self.federation[client] += 1
@@ -67,7 +69,8 @@ class Federation:
             self.federation[client] -= 1
             if self.federation[client] == 0:
                 del self.federation[client]
-                client_to_remove = federation_client.FederationClient.get_pos_by_key(client, self.federation_clients)
+                client_to_remove = federation_client.FederationClient.get_pos_by_key(
+                    client, self.federation_clients)
                 if self.federation_clients[client_to_remove].current_iter == self.federation_clients[client_to_remove].current_id_msg:
                     del self.federation_clients[client_to_remove]
 

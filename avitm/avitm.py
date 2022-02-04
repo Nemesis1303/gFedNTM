@@ -9,11 +9,12 @@ import numpy as np
 import datetime
 
 import torch
+from torch import nn
 from torch import optim
 from torch.utils.data import DataLoader
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 
-from pytorchavitm.avitm.decoder_network import DecoderNetwork
+from avitm.decoder_network import DecoderNetwork
 
 
 class AVITM(object):
@@ -171,6 +172,40 @@ class AVITM(object):
         train_loss /= samples_processed
 
         return samples_processed, train_loss
+    
+    def _train_minibatch(self, X, train_loss, samples_processed):
+        if self.USE_CUDA:
+            X = X.cuda()
+
+            # Forward pass
+            self.model.zero_grad() # Update gradients to zero
+            prior_mean, prior_variance, \
+                posterior_mean, posterior_variance, posterior_log_variance, \
+                word_dists = self.model(X)
+
+            # Backward pass: Compute gradients
+            loss = self._loss(
+                X, word_dists, prior_mean, prior_variance,
+                posterior_mean, posterior_variance, posterior_log_variance)
+            loss.backward()
+
+            return loss, train_loss, samples_processed
+    
+    def _optimize_on_minibatch(self, X, loss, update, train_loss, samples_processed):
+        # Update gradients
+        # Parameter0 = prior_mean
+        # Parameter1 = prior_variance
+        # Parameter2 = beta
+        self.model.beta = nn.Parameter(update)
+        
+        # Perform one step of the optimizer (SGD/Adam)
+        self.optimizer.step()
+
+        # Compute train loss
+        train_loss += loss.item()
+        samples_processed += X.size()[0]
+        
+        return train_loss, samples_processed
 
     def fit(self, train_dataset, save_dir=None):
         """

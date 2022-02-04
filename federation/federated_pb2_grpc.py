@@ -2,7 +2,7 @@
 """Client and server classes corresponding to protobuf-defined services."""
 import grpc
 
-import federated_pb2 as federated__pb2
+from federation import federated_pb2 as federated__pb2
 
 
 class FederationStub(object):
@@ -15,15 +15,15 @@ class FederationStub(object):
             channel: A grpc.Channel.
         """
         self.sendLocalTensor = channel.unary_unary(
-                '/federated.Federation/sendLocalTensor',
-                request_serializer=federated__pb2.ClientTensorRequest.SerializeToString,
-                response_deserializer=federated__pb2.ServerReceivedResponse.FromString,
-                )
+            '/federated.Federation/sendLocalTensor',
+            request_serializer=federated__pb2.ClientTensorRequest.SerializeToString,
+            response_deserializer=federated__pb2.ServerReceivedResponse.FromString,
+        )
         self.sendAggregatedTensor = channel.unary_unary(
-                '/federated.Federation/sendAggregatedTensor',
-                request_serializer=federated__pb2.Empty.SerializeToString,
-                response_deserializer=federated__pb2.ServerAggregatedTensorRequest.FromString,
-                )
+            '/federated.Federation/sendAggregatedTensor',
+            request_serializer=federated__pb2.Empty.SerializeToString,
+            response_deserializer=federated__pb2.ServerAggregatedTensorRequest.FromString,
+        )
 
 
 class FederationServicer(object):
@@ -44,56 +44,57 @@ class FederationServicer(object):
 
 def add_FederationServicer_to_server(servicer, server):
     rpc_method_handlers = {
-            'sendLocalTensor': grpc.unary_unary_rpc_method_handler(
-                    servicer.sendLocalTensor,
-                    request_deserializer=federated__pb2.ClientTensorRequest.FromString,
-                    response_serializer=federated__pb2.ServerReceivedResponse.SerializeToString,
-            ),
-            'sendAggregatedTensor': grpc.unary_unary_rpc_method_handler(
-                    servicer.sendAggregatedTensor,
-                    request_deserializer=federated__pb2.Empty.FromString,
-                    response_serializer=federated__pb2.ServerAggregatedTensorRequest.SerializeToString,
-            ),
+        'sendLocalTensor': grpc.unary_unary_rpc_method_handler(
+            servicer.sendLocalTensor,
+            request_deserializer=federated__pb2.ClientTensorRequest.FromString,
+            response_serializer=federated__pb2.ServerReceivedResponse.SerializeToString,
+        ),
+        'sendAggregatedTensor': grpc.unary_unary_rpc_method_handler(
+            servicer.sendAggregatedTensor,
+            request_deserializer=federated__pb2.Empty.FromString,
+            response_serializer=federated__pb2.ServerAggregatedTensorRequest.SerializeToString,
+        ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
-            'federated.Federation', rpc_method_handlers)
+        'federated.Federation', rpc_method_handlers)
     server.add_generic_rpc_handlers((generic_handler,))
 
-
  # This class is part of an EXPERIMENTAL API.
+
+
 class Federation(object):
     """Missing associated documentation comment in .proto file."""
 
     @staticmethod
     def sendLocalTensor(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
+                        target,
+                        options=(),
+                        channel_credentials=None,
+                        call_credentials=None,
+                        insecure=False,
+                        compression=None,
+                        wait_for_ready=None,
+                        timeout=None,
+                        metadata=None):
         return grpc.experimental.unary_unary(request, target, '/federated.Federation/sendLocalTensor',
-            federated__pb2.ClientTensorRequest.SerializeToString,
-            federated__pb2.ServerReceivedResponse.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+                                             federated__pb2.ClientTensorRequest.SerializeToString,
+                                             federated__pb2.ServerReceivedResponse.FromString,
+                                             options, channel_credentials,
+                                             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
     def sendAggregatedTensor(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
+                             target,
+                             options=(),
+                             channel_credentials=None,
+                             call_credentials=None,
+                             insecure=False,
+                             compression=None,
+                             wait_for_ready=None,
+                             timeout=None,
+                             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/federated.Federation/sendAggregatedTensor',
-            federated__pb2.Empty.SerializeToString,
-            federated__pb2.ServerAggregatedTensorRequest.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+                                             federated__pb2.Empty.SerializeToString,
+                                             federated__pb2.ServerAggregatedTensorRequest.FromString,
+                                             options, channel_credentials,
+                                             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

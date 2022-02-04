@@ -30,9 +30,10 @@ message TensorShape {
 };
 
 message MessageAdditionalData {
-  uint32 current_iteration = 1;   // Iteration to which the current message data corresponds
-  uint32 num_max_iterations = 2;  // Maximum number of iterations that the federation has
-  uint32 id_machine = 3;
+  uint32 current_mb = 1;      // Minibatch to which the current message data corresponds
+  uint32 current_epoch = 2;   // Epoch to which the current message data corresponds
+  uint32 num_max_epochs = 3;  // Maximum number of epoch that the federation has
+  uint32 id_machine = 4;
 }
 
 enum MessageType {

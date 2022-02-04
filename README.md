@@ -4,6 +4,9 @@ GRPC based federated learning framework for ProdLDA and Contextualized Topic Mod
 ## Generate GRPC Python files from proto file
 Get into venv:
 ```
+python3 -m venv venv
+```
+```
 source venv/bin/activate
 ```
 Generate files:
