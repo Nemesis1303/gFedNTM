@@ -20,11 +20,11 @@ The generated file "federated_pb2.py" contains the type definitions, while "fede
 ## Run server
 
 ```
-python3 server.py
+python3 main.py --min_clients_federation <min_clients_federation>
 ```
 
 ## Run client 
 
 ```
-python3 client.py --id <id> --period <period>
+python3 main.py --id <id> --source <path_to_training_data>
 ```
