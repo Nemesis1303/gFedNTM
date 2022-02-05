@@ -14,10 +14,12 @@ import sys
 import getopt
 import logging
 import time
+import numpy as np
 from timeloop import Timeloop
 import datetime
 import grpc
 import multiprocessing as mp
+import torch
 from torch.utils.data import DataLoader
 
 from avitm.avitm import AVITM
@@ -54,6 +56,59 @@ class Client:
                   solver=model_parameters["solver"],
                   num_epochs=model_parameters["num_epochs"],
                   reduce_on_plateau=model_parameters["reduce_on_plateau"])
+    
+    def __train_epoch_local_model(self,loader):
+        self.local_model.model.train()
+        train_loss = 0
+        samples_processed = 0
+
+        self.local_model.current_mb = 0 # Counter for the current epoch
+        for batch_samples in loader:
+            # Training epoch starts
+            X = batch_samples['X']
+            if self.local_model.USE_CUDA:
+                X = X.cuda()
+                    
+            # Get gradients minibatch
+            loss, train_loss, samples_processed = \
+                self.local_model._train_minibatch(
+                    X, train_loss, samples_processed)
+
+            # Send minibatch' gradient to the server (gradient already converted to np)
+            self.__send_per_minibatch_gradient(
+                self.local_model.model.prior_mean.grad.detach(),
+                self.local_model.current_mb,
+                self.local_model.current_epoch,
+                self.local_model.num_epochs)
+
+            print("Client ", self.id, "sent gradient ", self.local_model.current_mb,
+                    "/", self.local_model.current_epoch, "and is waiting for updates")
+
+            # Wait until the server send the update
+            request_update = self.__listen_for_updates()
+
+            # Update minibatch'gradient with the update from the server
+            dims = tuple(
+                [dim.size for dim in request_update.data.tensor_shape.dim])
+            deserialized_bytes = np.frombuffer(
+                request_update.data.tensor_content, dtype=np.float32)
+            deserialized_numpy = np.reshape(
+                deserialized_bytes, newshape=dims)
+            deserialized_tensor = torch.Tensor(deserialized_numpy)
+
+            # Calculate minibatch's train loss and samples processed
+            train_loss, samples_processed = \
+                self.local_model._optimize_on_minibatch(
+                    X, loss, deserialized_tensor, train_loss, samples_processed)
+
+            self.local_model.current_mb += 1 # One minibatch ends
+        # One epoch ends
+
+        # Calculate epoch's train loss and samples processed
+        train_loss /= samples_processed
+
+        return samples_processed, train_loss
+
 
     def train_local_model(self, train_dataset, save_dir=None):
         """
@@ -108,40 +163,7 @@ class Client:
 
                 # Train epoch
                 s = datetime.datetime.now()
-                self.local_model.model.train()
-                train_loss = 0
-                samples_processed = 0
-
-                self.local_model.index_mb = 0
-                for batch_samples in train_loader:
-                    # TRAIN EPOCH : batch_size x vocab_size
-                    X = batch_samples['X']
-
-                    # Train minibatch
-                    loss, train_loss, samples_processed = \
-                        self.local_model._train_minibatch(
-                            X, train_loss, samples_processed)
-
-                    # Send minibatch' gradient (beta) to the server
-                    self.__send_per_minibatch_gradient\
-                     (self.local_model.model.beta.grad.detach(),
-                      self.local_model.index_mb,
-                      self.local_model.current_epoch,
-                      self.local_model.num_epochs)
-
-                    print("Client ", self.id, "sent gradient ", self.local_model.index_mb,
-                          "/", self.local_model.current_epoch, "and is waiting for updates")
-
-                    # Wait until the server send the update
-                    update = self.__listen_for_updates()
-                    # Update minibatch'gradient (beta) with the update from the server
-                    train_loss, sp = \
-                        self.local_model._optimize_on_minibatch(
-                            X, loss, update, train_loss, samples_processed)
-                    self.local_model.index_mb += 1
-
-                train_loss /= samples_processed
-
+                sp, train_loss = self.__train_epoch_local_model(train_loader)
                 samples_processed += sp
                 e = datetime.datetime.now()
 
@@ -170,8 +192,10 @@ class Client:
         content_bytes = gradient.numpy().tobytes()
         content_type = gradient.numpy().dtype
         size = federated_pb2.TensorShape()
-        size.dim.extend([federated_pb2.TensorShape.Dim(size=gradient.size(dim=0), name="dim1"),
-                         federated_pb2.TensorShape.Dim(size=gradient.size(dim=1), name="dim2")])
+        # size.dim.extend([federated_pb2.TensorShape.Dim(size=gradient.size(dim=0), name="dim1"),
+        #                 federated_pb2.TensorShape.Dim(size=gradient.size(dim=1), name="dim2")])
+        size.dim.extend([federated_pb2.TensorShape.Dim(
+            size=gradient.size(dim=0), name="dim1")])
         # TODO: Figure out how to write dtype=content_type
         data = federated_pb2.Update(tensor_name=update_name,
                                     tensor_shape=size,

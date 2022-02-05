@@ -114,8 +114,10 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
         content_bytes = average_tensor.tobytes()
         size = federated_pb2.TensorShape()
         size.dim.extend(
-            [federated_pb2.TensorShape.Dim(size=average_tensor.shape[0], name="dim1"),
-             federated_pb2.TensorShape.Dim(size=average_tensor.shape[1], name="dim2")])
+            [federated_pb2.TensorShape.Dim(size=average_tensor.shape[0], name="dim1")])
+        #size.dim.extend(
+        #    [federated_pb2.TensorShape.Dim(size=average_tensor.shape[0], name="dim1"),
+        #     federated_pb2.TensorShape.Dim(size=average_tensor.shape[1], name="dim2")])
 
         client_to_repond = federation_client.FederationClient.get_pos_by_key(context.peer(),
                                                                              self.federation.federation_clients)

@@ -89,6 +89,9 @@ class AVITM(object):
         self.num_epochs = num_epochs
         self.reduce_on_plateau = reduce_on_plateau
 
+        # Current epoch for tracking
+        self.current_mb = -1
+
         # init inference avitm network
         self.model = DecoderNetwork(
             input_size, n_components, model_type, hidden_sizes, activation,
@@ -187,8 +190,7 @@ class AVITM(object):
     def _train_minibatch(self, X, train_loss, samples_processed):
         if self.USE_CUDA:
             X = X.cuda()
-            print(X)
-
+        
         # Forward pass
         self.model.zero_grad() # Update gradients to zero
         prior_mean, prior_variance, \
@@ -208,7 +210,8 @@ class AVITM(object):
         # Parameter0 = prior_mean
         # Parameter1 = prior_variance
         # Parameter2 = beta
-        self.model.beta.grad = update
+        self.model.prior_mean.grad = update
+        #self.model.beta.grad = update
         
         # Perform one step of the optimizer (SGD/Adam)
         self.optimizer.step()
