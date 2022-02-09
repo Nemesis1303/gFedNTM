@@ -5,7 +5,7 @@ import gensim.downloader as api
 from scipy.spatial.distance import cosine
 import abc
 
-from contextualized_topic_models.evaluation.rbo import rbo
+from ctm.evaluation.rbo.rbo import rbo
 import numpy as np
 import itertools
 
@@ -43,6 +43,7 @@ class Coherence(abc.ABC):
     :param topics: a list of lists of the top-k words
     :param texts: (list of lists of strings) represents the corpus on which the empirical frequencies of words are computed
     """
+
     def __init__(self, topics, texts):
         self.topics = topics
         self.texts = texts
@@ -73,6 +74,7 @@ class CoherenceNPMI(Coherence):
             else:
                 return npmi.get_coherence()
 
+
 class CoherenceUMASS(Coherence):
     def __init__(self, topics, texts):
         super().__init__(topics, texts)
@@ -93,6 +95,7 @@ class CoherenceUMASS(Coherence):
             else:
                 return umass.get_coherence()
 
+
 class CoherenceUCI(Coherence):
     def __init__(self, topics, texts):
         super().__init__(topics, texts)
@@ -112,6 +115,7 @@ class CoherenceUCI(Coherence):
                 return uci.get_coherence_per_topic()
             else:
                 return uci.get_coherence()
+
 
 class CoherenceCV(Coherence):
     def __init__(self, topics, texts):
@@ -148,9 +152,10 @@ class CoherenceWordEmbeddings(Measure):
         if word2vec_path is None:
             self.wv = api.load('word2vec-google-news-300')
         else:
-            self.wv = KeyedVectors.load_word2vec_format(word2vec_path, binary=binary)
+            self.wv = KeyedVectors.load_word2vec_format(
+                word2vec_path, binary=binary)
 
-    def score(self, topk=10, binary= False):
+    def score(self, topk=10, binary=False):
         """
         :param topk: how many most likely words to consider in the evaluation
         :return: topic coherence computed on the word embeddings similarities
@@ -177,7 +182,7 @@ class InvertedRBO(Measure):
         super().__init__()
         self.topics = topics
 
-    def score(self, topk = 10, weight=0.9):
+    def score(self, topk=10, weight=0.9):
         """
         :param weight: p (float), default 1.0: Weight of each agreement at depth d:
         p**(d-1). When set to 1.0, there is no weight, the rbo returns to average overlap.
@@ -205,7 +210,8 @@ class Matches(Measure):
         self.orig_lang_docs = doc_distribution_original_language
         self.unseen_lang_docs = doc_distribution_unseen_language
         if len(self.orig_lang_docs) != len(self.unseen_lang_docs):
-            raise Exception('Distributions of the comparable documents must have the same length')
+            raise Exception(
+                'Distributions of the comparable documents must have the same length')
 
     def score(self):
         """
@@ -231,7 +237,8 @@ class KLDivergence(Measure):
         self.orig_lang_docs = doc_distribution_original_language
         self.unseen_lang_docs = doc_distribution_unseen_language
         if len(self.orig_lang_docs) != len(self.unseen_lang_docs):
-            raise Exception('Distributions of the comparable documents must have the same length')
+            raise Exception(
+                'Distributions of the comparable documents must have the same length')
 
     def score(self):
         """
@@ -269,12 +276,14 @@ class CentroidDistance(Measure):
         self.orig_lang_docs = doc_distribution_original_language
         self.unseen_lang_docs = doc_distribution_unseen_language
         if len(self.orig_lang_docs) != len(self.unseen_lang_docs):
-            raise Exception('Distributions of the comparable documents must have the same length')
+            raise Exception(
+                'Distributions of the comparable documents must have the same length')
 
         if word2vec_path is None:
             self.wv = api.load('word2vec-google-news-300')
         else:
-            self.wv = KeyedVectors.load_word2vec_format(word2vec_path, binary=binary)
+            self.wv = KeyedVectors.load_word2vec_format(
+                word2vec_path, binary=binary)
 
     def score(self):
         """
@@ -299,4 +308,3 @@ class CentroidDistance(Measure):
                 vector_list.append(self.wv.get_vector(word))
         vec = sum(vector_list)
         return vec / np.linalg.norm(vec)
-

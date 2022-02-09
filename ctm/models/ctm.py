@@ -12,8 +12,8 @@ from torch import optim
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch.utils.data import DataLoader
 from tqdm import tqdm
-from contextualized_topic_models.utils.early_stopping.early_stopping import EarlyStopping
-from contextualized_topic_models.networks.decoding_network import DecoderNetwork
+from ctm.utils.early_stopping.early_stopping import EarlyStopping
+from ctm.networks.decoding_network import DecoderNetwork
 
 
 class CTM:
@@ -48,13 +48,14 @@ class CTM:
                  num_data_loader_workers=mp.cpu_count(), label_size=0, loss_weights=None):
 
         self.device = (
-                torch.device("cuda")
-                if torch.cuda.is_available()
-                else torch.device("cpu")
-            )
+            torch.device("cuda")
+            if torch.cuda.is_available()
+            else torch.device("cpu")
+        )
 
         if self.__class__.__name__ == "CTM":
-            raise Exception("You cannot call this class. Use ZeroShotTM or CombinedTM")
+            raise Exception(
+                "You cannot call this class. Use ZeroShotTM or CombinedTM")
 
         assert isinstance(bow_size, int) and bow_size > 0, \
             "input_size must by type int > 0."
@@ -191,7 +192,8 @@ class CTM:
             # forward pass
             self.model.zero_grad()
             prior_mean, prior_variance, posterior_mean, posterior_variance,\
-            posterior_log_variance, word_dists, estimated_labels = self.model(X_bow, X_contextual, labels)
+                posterior_log_variance, word_dists, estimated_labels = self.model(
+                    X_bow, X_contextual, labels)
 
             # backward pass
             kl_loss, rl_loss = self._loss(
@@ -256,7 +258,8 @@ class CTM:
         self.train_data = train_dataset
         self.validation_data = validation_dataset
         if self.validation_data is not None:
-            self.early_stopping = EarlyStopping(patience=patience, verbose=verbose, path=save_dir, delta=delta)
+            self.early_stopping = EarlyStopping(
+                patience=patience, verbose=verbose, path=save_dir, delta=delta)
         train_loader = DataLoader(
             self.train_data, batch_size=self.batch_size, shuffle=True,
             num_workers=self.num_data_loader_workers)
@@ -281,7 +284,8 @@ class CTM:
                                                num_workers=self.num_data_loader_workers)
                 # train epoch
                 s = datetime.datetime.now()
-                val_samples_processed, val_loss = self._validation(validation_loader)
+                val_samples_processed, val_loss = self._validation(
+                    validation_loader)
                 e = datetime.datetime.now()
 
                 # report
@@ -309,7 +313,8 @@ class CTM:
                 len(self.train_data) * self.num_epochs, train_loss, e - s))
 
         pbar.close()
-        self.training_doc_topic_distributions = self.get_doc_topic_distribution(train_dataset, n_samples)
+        self.training_doc_topic_distributions = self.get_doc_topic_distribution(
+            train_dataset, n_samples)
 
     def _validation(self, loader):
         """Validation epoch."""
@@ -336,11 +341,11 @@ class CTM:
             # forward pass
             self.model.zero_grad()
             prior_mean, prior_variance, posterior_mean, posterior_variance, posterior_log_variance, word_dists, \
-            estimated_labels =\
+                estimated_labels =\
                 self.model(X_bow, X_contextual, labels)
 
             kl_loss, rl_loss = self._loss(X_bow, word_dists, prior_mean, prior_variance,
-                              posterior_mean, posterior_variance, posterior_log_variance)
+                                          posterior_mean, posterior_variance, posterior_log_variance)
 
             loss = self.weights["beta"]*kl_loss + rl_loss
             loss = loss.sum()
@@ -406,10 +411,12 @@ class CTM:
 
                     # forward pass
                     self.model.zero_grad()
-                    collect_theta.extend(self.model.get_theta(X_bow, X_contextual, labels).cpu().numpy().tolist())
+                    collect_theta.extend(self.model.get_theta(
+                        X_bow, X_contextual, labels).cpu().numpy().tolist())
 
                 pbar.update(1)
-                pbar.set_description("Sampling: [{}/{}]".format(sample_index + 1, n_samples))
+                pbar.set_description(
+                    "Sampling: [{}/{}]".format(sample_index + 1, n_samples))
 
                 final_thetas.append(np.array(collect_theta))
         pbar.close()
@@ -502,7 +509,8 @@ class CTM:
         epoch_file = "epoch_" + str(epoch) + ".pth"
         model_file = os.path.join(model_dir, epoch_file)
         with open(model_file, 'rb') as model_dict:
-            checkpoint = torch.load(model_dict, map_location=torch.device(self.device))
+            checkpoint = torch.load(
+                model_dict, map_location=torch.device(self.device))
 
         for (k, v) in checkpoint['dcue_dict'].items():
             setattr(self, k, v)
@@ -535,7 +543,8 @@ class CTM:
             raise Exception('Topic id must be lower than the number of topics')
         else:
             wd = self.get_topic_word_distribution()
-            t = [(word, wd[topic][idx]) for idx, word in self.train_data.idx2token.items()]
+            t = [(word, wd[topic][idx])
+                 for idx, word in self.train_data.idx2token.items()]
             t = sorted(t, key=lambda x: -x[1])
         return t
 
@@ -551,13 +560,15 @@ class CTM:
         :param width: width of the produced image
         :param height: height of the produced image
         """
-        word_score_list = self.get_word_distribution_by_topic_id(topic_id)[:n_words]
+        word_score_list = self.get_word_distribution_by_topic_id(topic_id)[
+            :n_words]
         word_score_dict = {tup[0]: tup[1] for tup in word_score_list}
         plt.figure(figsize=(10, 4), dpi=200)
         plt.axis("off")
         plt.imshow(wordcloud.WordCloud(width=width, height=height, background_color=background_color
                                        ).generate_from_frequencies(word_score_dict))
-        plt.title("Displaying Topic " + str(topic_id), loc='center', fontsize=24)
+        plt.title("Displaying Topic " + str(topic_id),
+                  loc='center', fontsize=24)
         plt.show()
 
     def get_predicted_topics(self, dataset, n_samples):
@@ -584,7 +595,8 @@ class CTM:
         term_frequency = np.ravel(dataset.X_bow.sum(axis=0))
         doc_lengths = np.ravel(dataset.X_bow.sum(axis=1))
         term_topic = self.get_topic_word_distribution()
-        doc_topic_distribution = self.get_doc_topic_distribution(dataset, n_samples=n_samples)
+        doc_topic_distribution = self.get_doc_topic_distribution(
+            dataset, n_samples=n_samples)
 
         data = {'topic_term_dists': term_topic,
                 'doc_topic_dists': doc_topic_distribution,
@@ -599,8 +611,10 @@ class CTM:
         ind = probability_list.argsort()[-k:][::-1]
         res = []
         for i in ind:
-            res.append((unpreprocessed_corpus[i], document_topic_distributions[i][topic_id]))
+            res.append(
+                (unpreprocessed_corpus[i], document_topic_distributions[i][topic_id]))
         return res
+
 
 class ZeroShotTM(CTM):
     """ZeroShotTM, as described in https://arxiv.org/pdf/2004.07737v1.pdf

@@ -2,14 +2,13 @@ import torch
 from torch import nn
 from torch.nn import functional as F
 
-from contextualized_topic_models.networks.inference_network import CombinedInferenceNetwork, ContextualInferenceNetwork
+from ctm.networks.inference_network import CombinedInferenceNetwork, ContextualInferenceNetwork
 
 
 class DecoderNetwork(nn.Module):
 
-
     def __init__(self, input_size, bert_size, infnet, n_components=10, model_type='prodLDA',
-                 hidden_sizes=(100,100), activation='softplus', dropout=0.2,
+                 hidden_sizes=(100, 100), activation='softplus', dropout=0.2,
                  learn_priors=True, label_size=0):
         """
         Initialize InferenceNetwork.
@@ -43,7 +42,6 @@ class DecoderNetwork(nn.Module):
         self.learn_priors = learn_priors
         self.topic_word_matrix = None
 
-
         if infnet == "zeroshot":
             self.inf_net = ContextualInferenceNetwork(
                 input_size, bert_size, n_components, hidden_sizes, activation, label_size=label_size)
@@ -51,7 +49,8 @@ class DecoderNetwork(nn.Module):
             self.inf_net = CombinedInferenceNetwork(
                 input_size, bert_size, n_components, hidden_sizes, activation, label_size=label_size)
         else:
-            raise Exception('Missing infnet parameter, options are zeroshot and combined')
+            raise Exception(
+                'Missing infnet parameter, options are zeroshot and combined')
 
         if label_size != 0:
             self.label_classification = nn.Linear(n_components, label_size)

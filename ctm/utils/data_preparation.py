@@ -2,7 +2,7 @@ import numpy as np
 from sentence_transformers import SentenceTransformer
 import scipy.sparse
 import warnings
-from contextualized_topic_models.datasets.dataset import CTMDataset
+from ctm.datasets.dataset import CTMDataset
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.preprocessing import OneHotEncoder
 

@@ -1,6 +1,6 @@
-from contextualized_topic_models.models.ctm import ZeroShotTM
-from contextualized_topic_models.utils.preprocessing import WhiteSpacePreprocessingStopwords
-from contextualized_topic_models.utils.data_preparation import TopicModelDataPreparation
+from ctm.models.ctm import ZeroShotTM
+from ctm.utils.preprocessing import WhiteSpacePreprocessingStopwords
+from ctm.utils.data_preparation import TopicModelDataPreparation
 import numpy as np
 import pickle
 import warnings
