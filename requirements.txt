@@ -12,3 +12,5 @@ pdbpp ~= 0.10.3
 requests ~= 2.27.1
 scikit-learn ~= 1.0.2
 tqdm ~= 4.62.3
+pandas ~= 1.4.0
+seaborn ~= 0.11.2

@@ -16,7 +16,7 @@ import numpy as np
 from federation import federated_pb2_grpc
 from federation.client import Client
 from federation.server import FederatedServer
-from utils.utils import prepare_data_avitm_federated
+from utils.utils_preprocessing import prepare_data_avitm_federated
 
 
 def start_server(min_num_clients):
