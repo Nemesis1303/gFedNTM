@@ -83,9 +83,9 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
 
         # Deserialize gradient update from the client and save in the corresponding Client object as numpy array
         dims = tuple([dim.size for dim in request.data.tensor_shape.dim])
-        dtype = get_type_from_string(request.data.dtype)
+        dtype_send = get_type_from_string(request.data.dtype)
         deserialized_bytes = np.frombuffer(
-            request.data.tensor_content, dtype=dtype)
+            request.data.tensor_content, dtype=dtype_send)
         deserialized_numpy = np.reshape(deserialized_bytes, newshape=dims)
 
         # Record client in the federation

@@ -72,7 +72,7 @@ class Client:
                                     tensor_content=content_bytes)
         return data
 
-    def __send_per_minibatch_gradient(self, gradient, current_mb, current_epoch, num_epochs):
+    def send_per_minibatch_gradient(self, gradient, current_mb, current_epoch, num_epochs):
         """Sends a minibatch's gradient update to the server.
 
         Args:
@@ -108,7 +108,7 @@ class Client:
             logger.info('Client %s received a response to request %s',
                         str(self.id), response.header.id_to_request)
 
-    def __listen_for_updates(self):
+    def listen_for_updates(self):
         """Waits for an update from the server.
 
         Returns:
@@ -186,7 +186,7 @@ class AVITMClient(Client):
                     X, train_loss, samples_processed)
 
             # Send minibatch' gradient to the server (gradient already converted to np)
-            self.__send_per_minibatch_gradient(
+            self.send_per_minibatch_gradient(
                 self.local_model.model.prior_mean.grad.detach(),
                 self.local_model.current_mb,
                 self.local_model.current_epoch,
@@ -197,7 +197,7 @@ class AVITMClient(Client):
                         str(self.local_model.current_epoch))
 
             # Wait until the server send the update
-            request_update = self.__listen_for_updates()
+            request_update = self.listen_for_updates()
 
             # Update minibatch'gradient with the update from the server
             dims = tuple(
