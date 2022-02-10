@@ -14,7 +14,7 @@ from federation.federation_client import FederationClient
 
 
 class Federation:
-    """Class to describe the set  clients that compose a federation.
+    """Class to describe the set of clients that compose a federation.
     """
 
     def __init__(self):

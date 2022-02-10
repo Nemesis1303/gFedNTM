@@ -15,7 +15,6 @@ import getopt
 import logging
 import time
 import numpy as np
-from timeloop import Timeloop
 import datetime
 import grpc
 import multiprocessing as mp
@@ -38,9 +37,107 @@ class Client:
     """ Class containing the stubs to interact with the server-side part via a gRPC channel.
     """
 
-    def __init__(self, id, period, model_parameters):
+    def __init__(self, id, period):
         self.id = id
         self.period = period
+        self.local_model = None
+
+    def __generate_protos_update(self, gradient):
+        """Generates a prototocol buffer Update message from a Tensor gradient.
+
+        Args:
+        -----
+           * gradient (torch.Tensor): Gradient to be sent in the protocol buffer message.
+
+        Returns:
+        --------
+           * federated_pb2.Update: Prototocol buffer that is going to be send through the gRPC 
+                                   channel.
+        """
+        # Name of the update based on client's id
+        update_name = "Update from " + str(self.id)
+
+        # Convert Tensor gradient to bytes object for sending
+        content_bytes = gradient.numpy().tobytes()
+        content_type = str(gradient.numpy().dtype)
+        size = federated_pb2.TensorShape()
+        num_dims = len(gradient.shape)
+        for i in np.arange(num_dims):
+            name = "dim" + str(i)
+            size.dim.extend(
+                [federated_pb2.TensorShape.Dim(size=gradient.shape[i], name=name)])
+        data = federated_pb2.Update(tensor_name=update_name,
+                                    dtype=content_type,
+                                    tensor_shape=size,
+                                    tensor_content=content_bytes)
+        return data
+
+    def __send_per_minibatch_gradient(self, gradient, current_mb, current_epoch, num_epochs):
+        """Sends a minibatch's gradient update to the server.
+
+        Args:
+        -----
+            * gradient (torch.Tensor): Gradient to be sent to the server in the current 
+                                       minibatch.
+            * current_mb (int):        Current minibatch, i.e. minibatch to which the gradient 
+                                       is going to be sent corresponds.
+            * current_epoch (int):     Current epoch, i.e. epoch to which the minibatch 
+                                       corresponds.
+            * num_epochs (int):        Number of epochs that is going to be used for training 
+                                       the model.
+        """
+        # Generate request's header
+        id_message = "ID" + str(self.id) + "_" + str(round(time.time()))
+        header = federated_pb2.MessageHeader(id_request=id_message,
+                                             message_type=federated_pb2.MessageType.CLIENT_TENSOR_SEND)
+        # Generate request's metadata
+        metadata = federated_pb2.MessageAdditionalData(current_mb=current_mb,
+                                                       current_epoch=current_epoch,
+                                                       num_max_epochs=num_epochs,
+                                                       id_machine=int(self.id))
+        # Generate Protos Update
+        data = self.__generate_protos_update(gradient)
+
+        # Generate Protos ClientTensorRequest with the update
+        request = federated_pb2.ClientTensorRequest(
+            header=header, metadata=metadata, data=data)
+
+        # Send request to the server and wait for his response
+        if self.stub:
+            response = self.stub.sendLocalTensor(request)
+            logger.info('Client %s received a response to request %s',
+                        str(self.id), response.header.id_to_request)
+
+    def __listen_for_updates(self):
+        """Waits for an update from the server.
+
+        Returns:
+        --------
+            * federated_pb2.ServerAggregatedTensorRequest: Update from the server with the  
+                                                           average tensor generated from all federation clients' updates.
+        """
+        update = self.stub.sendAggregatedTensor(federated_pb2.Empty())
+        logger.info('Client %s received updated for minibatch %s of epoch %s ',
+                    str(self.id),
+                    str(self.local_model.current_mb),
+                    str(self.local_model.current_epoch))
+
+        return update
+
+
+"""
+******************************************************************************
+***                        CLASS AVITM CLIENT                              ***
+******************************************************************************
+"""
+
+
+class AVITMClient(Client):
+
+    def __init__(self, id, period, model_parameters):
+
+        Client.__init__(self, id, period)
+
         self.model_parameters = model_parameters
         self.local_model = \
             AVITM(input_size=model_parameters["input_size"],
@@ -56,19 +153,33 @@ class Client:
                   solver=model_parameters["solver"],
                   num_epochs=model_parameters["num_epochs"],
                   reduce_on_plateau=model_parameters["reduce_on_plateau"])
-    
-    def __train_epoch_local_model(self,loader):
+
+    def __train_epoch_local_model(self, loader):
+        """Trains one epoch of the local AVITM model.
+
+        Args:
+        -----
+            * loader (DataLoader): Python iterable over the training dataset with which the 
+                                 minibatch is going to be trained.
+
+        Returns:
+        --------
+            * int:   Number of samples processed
+            * float: Minibatch's train loss
+
+        """
         self.local_model.model.train()
         train_loss = 0
         samples_processed = 0
 
-        self.local_model.current_mb = 0 # Counter for the current epoch
+        self.local_model.current_mb = 0  # Counter for the current epoch
         for batch_samples in loader:
+
             # Training epoch starts
             X = batch_samples['X']
             if self.local_model.USE_CUDA:
                 X = X.cuda()
-                    
+
             # Get gradients minibatch
             loss, train_loss, samples_processed = \
                 self.local_model._train_minibatch(
@@ -81,8 +192,9 @@ class Client:
                 self.local_model.current_epoch,
                 self.local_model.num_epochs)
 
-            print("Client ", self.id, "sent gradient ", self.local_model.current_mb,
-                    "/", self.local_model.current_epoch, "and is waiting for updates")
+            logger.info('Client %s sent gradient %s/%s and is waiting for updates.',
+                        str(self.id), str(self.local_model.current_mb),
+                        str(self.local_model.current_epoch))
 
             # Wait until the server send the update
             request_update = self.__listen_for_updates()
@@ -101,7 +213,7 @@ class Client:
                 self.local_model._optimize_on_minibatch(
                     X, loss, deserialized_tensor, train_loss, samples_processed)
 
-            self.local_model.current_mb += 1 # One minibatch ends
+            self.local_model.current_mb += 1  # One minibatch ends
         # One epoch ends
 
         # Calculate epoch's train loss and samples processed
@@ -109,14 +221,14 @@ class Client:
 
         return samples_processed, train_loss
 
-
     def train_local_model(self, train_dataset, save_dir=None):
-        """
-        Train a local AVITM model. To do so, we send the server the gradients corresponding with the parameter beta of the model, and the server returns an update of such a parameter, which is calculated by averaging the per minibatch beta parameters that he gets from the set of clients that are connected to the federation. After obtaining the beta updates from the server, the client keeps with the training of its own local model. This process is repeated for each minibatch of each epoch.
+        """Trains a local AVITM model. To do so, we send the server the gradients corresponding with the parameter beta of the model, and the server returns an update of such a parameter, which is calculated by averaging the per minibatch beta parameters that he gets from the set of clients that are connected to the federation. After obtaining the beta updates from the server, the client keeps with the training of its own local model. This process is repeated for each minibatch of each epoch.
 
-        Args
-            * train_dataset : PyTorch Dataset classs for training data.
-            * save_dir : directory to save checkpoint models to.
+        Args:
+        -----
+            * train_dataset (BOWDataset):        PyTorch Dataset classs for training data.
+            * save_dir (pathlib.Path, optional): Directory to save checkpoint models to. 
+                                                 Defaults to None.
         """
         # Print settings to output file
         print("Settings: \n\
@@ -180,35 +292,18 @@ class Client:
                     if save_dir is not None:
                         self.local_model.save(save_dir)
 
-    def __send_per_minibatch_gradient(self, gradient, current_mb, current_epoch, num_epochs):
-        id_message = "ID" + str(self.id) + "_" + str(round(time.time()))
-        header = federated_pb2.MessageHeader(id_request=id_message,
-                                             message_type=federated_pb2.MessageType.CLIENT_TENSOR_SEND)
-        metadata = federated_pb2.MessageAdditionalData(current_mb=current_mb,
-                                                       current_epoch=current_epoch,
-                                                       num_max_epochs=num_epochs,
-                                                       id_machine=int(self.id))
-        update_name = "Update of " + str(self.id)
-        content_bytes = gradient.numpy().tobytes()
-        content_type = gradient.numpy().dtype
-        size = federated_pb2.TensorShape()
-        # size.dim.extend([federated_pb2.TensorShape.Dim(size=gradient.size(dim=0), name="dim1"),
-        #                 federated_pb2.TensorShape.Dim(size=gradient.size(dim=1), name="dim2")])
-        size.dim.extend([federated_pb2.TensorShape.Dim(
-            size=gradient.size(dim=0), name="dim1")])
-        # TODO: Figure out how to write dtype=content_type
-        data = federated_pb2.Update(tensor_name=update_name,
-                                    tensor_shape=size,
-                                    tensor_content=content_bytes)
-        request = federated_pb2.ClientTensorRequest(
-            header=header, metadata=metadata, data=data)
-        if self.stub:
-            response = self.stub.sendLocalTensor(request)
-            logger.info('Client %s received a response to request %s',
-                        str(self.id), response.header.id_to_request)
 
-    def __listen_for_updates(self):
-        update = self.stub.sendAggregatedTensor(federated_pb2.Empty())
-        print("Client with ID ", self.id,
-              "recevied update for minibatch ", self.local_model.current_mb, " of the epoch ", self.local_model.current_epoch)
-        return update
+"""
+******************************************************************************
+***                        CLASS CTM CLIENT                                ***
+******************************************************************************
+"""
+
+
+class CTMCLient(Client):
+    def __init__(self, id, period, model_parameters):
+
+        Client.__init__(self, id, period)
+
+        self.model_parameters = model_parameters
+        self.local_model = None
