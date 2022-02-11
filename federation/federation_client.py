@@ -15,13 +15,22 @@ class FederationClient:
        a CTM or ProdLDA model.
     """
 
-    def __init__(self, id, federation_key, tensor, current_iter, current_id_msg, num_max_iter):
-        self.id = id
+    def __init__(self, federation_key, path_tmp_local_corpus):
         self.federation_key = federation_key
-        self.tensor = tensor
-        self.current_iter = current_iter
-        self.current_id_msg = current_id_msg # TODO: revise this field; not really necessary
+        self.path_tmp_local_corpus = path_tmp_local_corpus
+        self.tensor = None
+        self.current_iter = None
+        self.current_id_msg = None
+        self.num_max_iter = None
+        self.vocab_sent = False
+        
+    def set_num_max_iter(self, num_max_iter):
         self.num_max_iter = num_max_iter
+
+    def update_client_state(self, tensor, current_iter, current_id_msg):
+        self.tensor = tensor
+        self.current_iter = current_iter,
+        self.current_id_msg = current_id_msg
 
     def get_pos_by_key(key, federation_clients):
         """It searchs a client with the specified key over the given list of FederationClient objects
@@ -40,8 +49,3 @@ class FederationClient:
             else:
                 print("No client with specified key was found")
                 return -1
-
-    def update_client_state(self, tensor, current_iter, current_id_msg):
-        self.tensor = tensor
-        self.current_iter = current_iter, 
-        self.current_id_msg = current_id_msg

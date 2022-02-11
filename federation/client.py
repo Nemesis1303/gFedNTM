@@ -10,9 +10,8 @@
 ##############################################################################
 from __future__ import print_function
 from importlib.metadata import metadata
-import sys
-import getopt
 import logging
+import os
 import time
 import numpy as np
 import datetime
@@ -20,9 +19,13 @@ import grpc
 import multiprocessing as mp
 import torch
 from torch.utils.data import DataLoader
+from gensim.corpora import Dictionary
+import pathlib
+from  gensim.test.utils import get_tmpfile
 
 from avitm.avitm import AVITM
 from federation import federated_pb2, federated_pb2_grpc
+from utils.auxiliary_functions import get_file_chunks, save_chunks_to_file
 
 
 ##############################################################################
@@ -37,10 +40,49 @@ class Client:
     """ Class containing the stubs to interact with the server-side part via a gRPC channel.
     """
 
-    def __init__(self, id, period):
+    def __init__(self, id, stub, period, local_corpus):
         self.id = id
+        self.stub = stub
         self.period = period
         self.local_model = None
+        self.local_corpus = local_corpus
+        self.tmp_local_corpus = get_tmpfile(str(self.id))
+        self.global_corpus = None
+        self.tmp_global_corpus = get_tmpfile(str(self.id))
+
+        # Save vocab in temporal local file
+        self.__prepare_vocab_to_send(self.local_corpus)
+
+        # Send file with vocabulary to server
+        self.__send_local_vocab()
+
+        # Wait for the consensed vocabulary
+        self.__wait_for_agreed_vocab()
+
+    def __prepare_vocab_to_send(self, corpus):
+        dct = Dictionary(corpus)
+        dct.save_as_text(self.tmp_local_corpus)
+
+    def __send_local_vocab(self):
+        print(self.tmp_local_corpus)
+        print(type(self.tmp_local_corpus))
+        request = get_file_chunks(self.tmp_local_corpus)
+        
+        # Send request to the server and wait for his response
+        if self.stub:
+            response = self.stub.upload(request)
+            logger.info(
+                'Client %s vocab is being sent to server.', str(self.id))
+            #assert response.length == os.path.getsize(self.tmp_local_corpus)
+
+            # Remove local file when finished the sending to the server
+            if response.length == os.path.getsize(self.tmp_local_corpus):
+                os.remove(self.tmp_local_corpus)
+
+    def __wait_for_agreed_vocab(self):
+        response = self.stub.download(federated_pb2.Empty())
+        save_chunks_to_file(response, self.tmp_global_corpus)
+        logger.info('Client %s receiving consensus vocab.', str(self.id))
 
     def __generate_protos_update(self, gradient):
         """Generates a prototocol buffer Update message from a Tensor gradient.
@@ -134,9 +176,9 @@ class Client:
 
 class AVITMClient(Client):
 
-    def __init__(self, id, period, model_parameters):
+    def __init__(self, id, stub, period, local_corpus, model_parameters):
 
-        Client.__init__(self, id, period)
+        Client.__init__(self, id, stub, period, local_corpus)
 
         self.model_parameters = model_parameters
         self.local_model = \
@@ -266,31 +308,31 @@ class AVITMClient(Client):
         samples_processed = 0
 
         # Open channel for communication with the server
-        with grpc.insecure_channel('localhost:50051') as channel:
-            self.stub = federated_pb2_grpc.FederationStub(channel)
+        #with grpc.insecure_channel('localhost:50051') as channel:
+        #    self.stub = federated_pb2_grpc.FederationStub(channel)
 
-            # Training of the local model
-            for epoch in range(self.local_model.num_epochs):
-                self.local_model.current_epoch = epoch
+        # Training of the local model
+        for epoch in range(self.local_model.num_epochs):
+            self.local_model.current_epoch = epoch
 
-                # Train epoch
-                s = datetime.datetime.now()
-                sp, train_loss = self.__train_epoch_local_model(train_loader)
-                samples_processed += sp
-                e = datetime.datetime.now()
+            # Train epoch
+            s = datetime.datetime.now()
+            sp, train_loss = self.__train_epoch_local_model(train_loader)
+            samples_processed += sp
+            e = datetime.datetime.now()
 
-                # report
-                print("Epoch: [{}/{}]\tSamples: [{}/{}]\tTrain Loss: {}\tTime: {}".format(
-                    epoch+1, self.local_model.num_epochs, samples_processed,
-                    len(self.local_model.train_data)*self.local_model.num_epochs, train_loss, e - s))
+            # report
+            print("Epoch: [{}/{}]\tSamples: [{}/{}]\tTrain Loss: {}\tTime: {}".format(
+                epoch+1, self.local_model.num_epochs, samples_processed,
+                len(self.local_model.train_data)*self.local_model.num_epochs, train_loss, e - s))
 
-                # save best
-                if train_loss < self.local_model.best_loss_train:
-                    self.local_model.best_loss_train = train_loss
-                    self.local_model.best_components = self.local_model.model.beta
+            # save best
+            if train_loss < self.local_model.best_loss_train:
+                self.local_model.best_loss_train = train_loss
+                self.local_model.best_components = self.local_model.model.beta
 
-                    if save_dir is not None:
-                        self.local_model.save(save_dir)
+                if save_dir is not None:
+                    self.local_model.save(save_dir)
 
 
 """
@@ -301,9 +343,9 @@ class AVITMClient(Client):
 
 
 class CTMCLient(Client):
-    def __init__(self, id, period, model_parameters):
+    def __init__(self, id, stub, period, local_corpus, model_parameters):
 
-        Client.__init__(self, id, period)
+        Client.__init__(self, id, stub, period, local_corpus)
 
         self.model_parameters = model_parameters
         self.local_model = None

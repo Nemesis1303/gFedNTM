@@ -24,6 +24,16 @@ class FederationStub(object):
                 request_serializer=federated__pb2.Empty.SerializeToString,
                 response_deserializer=federated__pb2.ServerAggregatedTensorRequest.FromString,
                 )
+        self.upload = channel.stream_unary(
+                '/federated.Federation/upload',
+                request_serializer=federated__pb2.Chunk.SerializeToString,
+                response_deserializer=federated__pb2.Reply.FromString,
+                )
+        self.download = channel.unary_stream(
+                '/federated.Federation/download',
+                request_serializer=federated__pb2.Empty.SerializeToString,
+                response_deserializer=federated__pb2.Chunk.FromString,
+                )
 
 
 class FederationServicer(object):
@@ -41,6 +51,18 @@ class FederationServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def upload(self, request_iterator, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def download(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_FederationServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -53,6 +75,16 @@ def add_FederationServicer_to_server(servicer, server):
                     servicer.sendAggregatedTensor,
                     request_deserializer=federated__pb2.Empty.FromString,
                     response_serializer=federated__pb2.ServerAggregatedTensorRequest.SerializeToString,
+            ),
+            'upload': grpc.stream_unary_rpc_method_handler(
+                    servicer.upload,
+                    request_deserializer=federated__pb2.Chunk.FromString,
+                    response_serializer=federated__pb2.Reply.SerializeToString,
+            ),
+            'download': grpc.unary_stream_rpc_method_handler(
+                    servicer.download,
+                    request_deserializer=federated__pb2.Empty.FromString,
+                    response_serializer=federated__pb2.Chunk.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -95,5 +127,39 @@ class Federation(object):
         return grpc.experimental.unary_unary(request, target, '/federated.Federation/sendAggregatedTensor',
             federated__pb2.Empty.SerializeToString,
             federated__pb2.ServerAggregatedTensorRequest.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def upload(request_iterator,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.stream_unary(request_iterator, target, '/federated.Federation/upload',
+            federated__pb2.Chunk.SerializeToString,
+            federated__pb2.Reply.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def download(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_stream(request, target, '/federated.Federation/download',
+            federated__pb2.Empty.SerializeToString,
+            federated__pb2.Chunk.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

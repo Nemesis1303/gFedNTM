@@ -72,7 +72,21 @@ message ServerReceivedResponse {
   MessageAdditionalData metadata = 2;
 }
 
+message Chunk {
+  bytes buffer = 1;
+}
+
+message Request {
+  string name = 1;
+}
+
+message Reply {
+  int32 length = 1;
+}
+
 service Federation {
   rpc sendLocalTensor(ClientTensorRequest) returns (ServerReceivedResponse) {}
   rpc sendAggregatedTensor(Empty) returns (ServerAggregatedTensorRequest) {}
+  rpc upload(stream Chunk) returns (Reply) {}
+  rpc download(Empty) returns (stream Chunk) {}
 }

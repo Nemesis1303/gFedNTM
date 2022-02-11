@@ -61,8 +61,11 @@ def start_client(id_client):
 
     # START CLIENT
     save_dir = "data/output_models"
-    client = AVITMClient(id_client, period, model_parameters)
-    client.train_local_model(train_dataset, save_dir)
+    # Open channel for communication with the server
+    with grpc.insecure_channel('localhost:50051') as channel:
+        stub = federated_pb2_grpc.FederationStub(channel)
+        client = AVITMClient(id_client, stub, period, corpus, model_parameters)
+        client.train_local_model(train_dataset, save_dir)
 
 
 def main():
