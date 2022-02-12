@@ -9,6 +9,7 @@
 #                                IMPORTS                                     #
 ##############################################################################
 import numpy as np
+import pickle
 
 from federation import federated_pb2
 
@@ -41,3 +42,23 @@ def save_chunks_to_file(chunks, filename):
     with open(filename, 'wb') as f:
         for chunk in chunks:
             f.write(chunk.buffer)
+
+
+def save_in_pickle(structure, pickle_to_save_in):
+    with open(pickle_to_save_in, 'wb') as f:
+        pickle.dump(structure, f)
+
+
+def save_corpus_in_file(corpus, file):
+    documents = [' '.join(el) for el in corpus]
+    with open(file, 'w') as fout:
+        for idx, doc in enumerate(documents):
+            fout.write(doc + '\n')
+
+
+def get_corpus_from_file(file):
+    corpus = []
+    with open(file, 'r') as f:
+        for l in f.readlines():
+            corpus.append(l.split())
+    return corpus

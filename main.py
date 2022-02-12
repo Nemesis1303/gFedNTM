@@ -37,7 +37,6 @@ def start_client(id_client):
     file = "data/training_data/synthetic.npz"
     data = np.load(file, allow_pickle=True)
     corpus = data['documents'][id_client-1]
-    print(corpus[0])
 
     # Generate training dataset in the format for AVITM
     train_dataset, input_size, id2token = prepare_data_avitm_federated(corpus, 0.99, 0.01)
@@ -65,8 +64,6 @@ def start_client(id_client):
     with grpc.insecure_channel('localhost:50051') as channel:
         stub = federated_pb2_grpc.FederationStub(channel)
         client = AVITMClient(id_client, stub, period, corpus, model_parameters)
-        client.train_local_model(train_dataset, save_dir)
-
 
 def main():
     parser = argparse.ArgumentParser()

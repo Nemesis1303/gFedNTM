@@ -19,17 +19,20 @@ class FederationClient:
         self.federation_key = federation_key
         self.path_tmp_local_corpus = path_tmp_local_corpus
         self.tensor = None
-        self.current_iter = None
-        self.current_id_msg = None
-        self.num_max_iter = None
+        self.current_epoch = -1
+        self.current_id_msg = -2
+        self.num_max_iter = -3
+        self.curren_mb = -4
         self.vocab_sent = False
-        
+        self.can_get_update = False
+
     def set_num_max_iter(self, num_max_iter):
         self.num_max_iter = num_max_iter
 
-    def update_client_state(self, tensor, current_iter, current_id_msg):
+    def update_client_state(self, tensor, curren_mb, current_epoch, current_id_msg):
         self.tensor = tensor
-        self.current_iter = current_iter,
+        self.curren_mb = curren_mb
+        self.current_epoch = current_epoch,
         self.current_id_msg = current_id_msg
 
     def get_pos_by_key(key, federation_clients):
@@ -43,9 +46,14 @@ class FederationClient:
         Returns:
             * int: Position on the list of the searched client
         """
-        for client_pos in range(len(federation_clients)):
+        for client_pos in range(len(federation_clients)):         
             if key == federation_clients[client_pos].federation_key:
                 return client_pos
             else:
                 print("No client with specified key was found")
-                return -1
+        return -1
+    
+    def set_can_get_update_by_key(key, federation_clients, update):
+        for client_pos in range(len(federation_clients)):         
+            if key == federation_clients[client_pos].federation_key:
+                federation_clients[client_pos].can_get_update = update

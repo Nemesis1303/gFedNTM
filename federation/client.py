@@ -21,11 +21,12 @@ import torch
 from torch.utils.data import DataLoader
 from gensim.corpora import Dictionary
 import pathlib
-from  gensim.test.utils import get_tmpfile
+from gensim.test.utils import get_tmpfile
 
 from avitm.avitm import AVITM
 from federation import federated_pb2, federated_pb2_grpc
-from utils.auxiliary_functions import get_file_chunks, save_chunks_to_file
+from utils.auxiliary_functions import get_file_chunks, save_chunks_to_file, save_corpus_in_file, get_corpus_from_file
+from utils.utils_preprocessing import prepare_data_avitm_federated
 
 
 ##############################################################################
@@ -60,21 +61,20 @@ class Client:
         self.__wait_for_agreed_vocab()
 
     def __prepare_vocab_to_send(self, corpus):
-        dct = Dictionary(corpus)
-        dct.save_as_text(self.tmp_local_corpus)
+        # dct = Dictionary(corpus)
+        # dct.save_as_text(self.tmp_local_corpus)
+        save_corpus_in_file(corpus, self.tmp_local_corpus)
 
     def __send_local_vocab(self):
         print(self.tmp_local_corpus)
         print(type(self.tmp_local_corpus))
         request = get_file_chunks(self.tmp_local_corpus)
-        
+
         # Send request to the server and wait for his response
         if self.stub:
             response = self.stub.upload(request)
             logger.info(
                 'Client %s vocab is being sent to server.', str(self.id))
-            #assert response.length == os.path.getsize(self.tmp_local_corpus)
-
             # Remove local file when finished the sending to the server
             if response.length == os.path.getsize(self.tmp_local_corpus):
                 os.remove(self.tmp_local_corpus)
@@ -83,6 +83,7 @@ class Client:
         response = self.stub.download(federated_pb2.Empty())
         save_chunks_to_file(response, self.tmp_global_corpus)
         logger.info('Client %s receiving consensus vocab.', str(self.id))
+        self.global_corpus = get_corpus_from_file(self.tmp_global_corpus)
 
     def __generate_protos_update(self, gradient):
         """Generates a prototocol buffer Update message from a Tensor gradient.
@@ -181,8 +182,17 @@ class AVITMClient(Client):
         Client.__init__(self, id, stub, period, local_corpus)
 
         self.model_parameters = model_parameters
+
+        # Generate training set
+        self.train_dataset = None
+        self.input_size = None
+        self.id2token = None
+        self.__get_training_dataset()
+        print(self.input_size)
+
+        # Configure local model
         self.local_model = \
-            AVITM(input_size=model_parameters["input_size"],
+            AVITM(input_size=self.input_size,
                   n_components=model_parameters["n_components"],
                   model_type=model_parameters["model_type"],
                   hidden_sizes=model_parameters["hidden_sizes"],
@@ -195,6 +205,14 @@ class AVITMClient(Client):
                   solver=model_parameters["solver"],
                   num_epochs=model_parameters["num_epochs"],
                   reduce_on_plateau=model_parameters["reduce_on_plateau"])
+
+        # Start training
+        self.train_local_model(self.train_dataset)
+
+    def __get_training_dataset(self):
+        # Generate training dataset in the format for AVITM
+        self.train_dataset, self.input_size, self.id2token = \
+            prepare_data_avitm_federated(self.global_corpus, 0.99, 0.01)
 
     def __train_epoch_local_model(self, loader):
         """Trains one epoch of the local AVITM model.
@@ -308,7 +326,7 @@ class AVITMClient(Client):
         samples_processed = 0
 
         # Open channel for communication with the server
-        #with grpc.insecure_channel('localhost:50051') as channel:
+        # with grpc.insecure_channel('localhost:50051') as channel:
         #    self.stub = federated_pb2_grpc.FederationStub(channel)
 
         # Training of the local model
