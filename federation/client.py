@@ -22,12 +22,14 @@ from torch.utils.data import DataLoader
 from gensim.corpora import Dictionary
 import pathlib
 from gensim.test.utils import get_tmpfile
+import pandas as pd
 
 from avitm.avitm import AVITM
 from federation import federated_pb2, federated_pb2_grpc
 from utils.auxiliary_functions import get_file_chunks, save_chunks_to_file, save_corpus_in_file, get_corpus_from_file
 from utils.utils_preprocessing import prepare_data_avitm_federated
-
+from utils.utils_postprocessing import convert_topic_word_to_init_size
+from utils.utils_evaluation import get_simmat_thetas, get_simmat_betas, get_sim_docs_frobenius, get_sim_tops_frobenius
 
 ##############################################################################
 # DEBUG SETTINGS
@@ -188,7 +190,6 @@ class AVITMClient(Client):
         self.input_size = None
         self.id2token = None
         self.__get_training_dataset()
-        print(self.input_size)
 
         # Configure local model
         self.local_model = \
@@ -207,7 +208,10 @@ class AVITMClient(Client):
                   reduce_on_plateau=model_parameters["reduce_on_plateau"])
 
         # Start training
-        self.train_local_model(self.train_dataset)
+        self.__train_local_model(self.train_dataset)
+
+        # Get topics, doc-topic and word-topic distributions
+        self.__get_results_model()
 
     def __get_training_dataset(self):
         # Generate training dataset in the format for AVITM
@@ -247,7 +251,7 @@ class AVITMClient(Client):
 
             # Send minibatch' gradient to the server (gradient already converted to np)
             self.send_per_minibatch_gradient(
-                self.local_model.model.prior_mean.grad.detach(),
+                self.local_model.model.beta.grad.detach(),
                 self.local_model.current_mb,
                 self.local_model.current_epoch,
                 self.local_model.num_epochs)
@@ -281,7 +285,7 @@ class AVITMClient(Client):
 
         return samples_processed, train_loss
 
-    def train_local_model(self, train_dataset, save_dir=None):
+    def __train_local_model(self, train_dataset, save_dir=None):
         """Trains a local AVITM model. To do so, we send the server the gradients corresponding with the parameter beta of the model, and the server returns an update of such a parameter, which is calculated by averaging the per minibatch beta parameters that he gets from the set of clients that are connected to the federation. After obtaining the beta updates from the server, the client keeps with the training of its own local model. This process is repeated for each minibatch of each epoch.
 
         Args:
@@ -351,6 +355,74 @@ class AVITMClient(Client):
 
                 if save_dir is not None:
                     self.local_model.save(save_dir)
+
+    def __get_results_model(self):
+        # Get topics
+        self.local_model.topics = pd.DataFrame(self.local_model.get_topics()).T
+        # Get doc-topic distribution
+        self.local_model.doc_topic_distrib = self.local_model.get_doc_topic_distribution()
+        # Get word-topic distribution
+        self.local_model.word_topic_distrib = self.local_model.get_topic_word_distribution()
+
+
+"""
+******************************************************************************
+***                     CLASS SYNTHETIC AVITM CLIENT                       ***
+******************************************************************************
+"""
+
+
+class SyntheticAVITMClient(AVITMClient):
+    def __init__(self, id, stub, period, local_corpus, model_parameters, vocab_size,
+                 gt_doc_topic_distrib, gt_word_topic_distrib):
+
+        AVITMClient.__init__(self, id, stub, period,
+                             local_corpus, model_parameters)
+
+        self.vocab_size = vocab_size
+        self.gt_doc_topic_distrib = gt_doc_topic_distrib
+        self.gt_word_topic_distrib = gt_word_topic_distrib
+
+        self.sim_mat_thetas_gt = None
+        self.sim_mat_theta_inferred = None
+        self.sim_mat_betas = None
+        self.sim_docs_frob = 0.0
+        self.sim_tops_frob = 0.0
+
+        # Evaluate model
+        self.__evaluate_synthetic_model()
+        print(self.sim_docs_frob)
+        print(self.sim_tops_frob)
+
+    def __evaluate_synthetic_model(self):
+        all_words = []
+        for word in np.arange(self.vocab_size+1):
+            if word > 0:
+                all_words.append('wd'+str(word))
+        self.local_model.word_topic_distrib = \
+            convert_topic_word_to_init_size(self.vocab_size,
+                                            self.local_model,
+                                            "avitm",
+                                            self.local_model.n_components,
+                                            self.id2token, all_words)
+        # Get similarity matrixes
+        self.sim_mat_thetas_gt = \
+            get_simmat_thetas(False, len(self.global_corpus),
+                              self.gt_doc_topic_distrib)
+
+        self.sim_mat_theta_inferred = \
+            get_simmat_thetas(False, len(self.global_corpus),
+                              self.local_model.doc_topic_distrib)
+
+        self.sim_mat_betas = \
+            get_simmat_betas(
+                False, self.local_model.word_topic_distrib, self.gt_word_topic_distrib)
+
+        # Get metrics
+        self.sim_docs_frob = \
+            get_sim_docs_frobenius(
+                self.sim_mat_thetas_gt, self.sim_mat_theta_inferred)
+        self.sim_tops_frob = get_sim_tops_frobenius(self.sim_mat_betas)
 
 
 """

@@ -46,14 +46,14 @@ class FederationClient:
         Returns:
             * int: Position on the list of the searched client
         """
-        for client_pos in range(len(federation_clients)):         
+        for client_pos in range(len(federation_clients)):
             if key == federation_clients[client_pos].federation_key:
                 return client_pos
             else:
                 print("No client with specified key was found")
         return -1
-    
+
     def set_can_get_update_by_key(key, federation_clients, update):
-        for client_pos in range(len(federation_clients)):         
+        for client_pos in range(len(federation_clients)):
             if key == federation_clients[client_pos].federation_key:
                 federation_clients[client_pos].can_get_update = update

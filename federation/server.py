@@ -28,8 +28,6 @@ logger = logging.getLogger('server')
 GRPC_TRACE = all
 
 
-# @TODO: Include update client state
-
 class FederatedServer(federated_pb2_grpc.FederationServicer):
     """Class that describes the behaviour of the GRPC server to which several clients are connected to create a federation for the joint training of a CTM or ProdLDA model.
 
@@ -155,18 +153,19 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
         deserialized_numpy = np.reshape(deserialized_bytes, newshape=dims)
 
         # Record client in the federation
-        self.record_client(context, deserialized_numpy, request.metadata.current_mb, request.metadata.current_epoch, request.header.id_request, request.metadata.num_max_epochs)
+        self.record_client(context, deserialized_numpy, request.metadata.current_mb,
+                           request.metadata.current_epoch, request.header.id_request, request.metadata.num_max_epochs)
 
         id_client = federation_client.FederationClient.get_pos_by_key(context.peer(),
-                                                              self.federation.federation_clients)
+                                                                      self.federation.federation_clients)
         # Update minibatch and epoch in the server
         self.current_minibatch = request.metadata.current_mb
         self.current_epoch = request.metadata.current_epoch
 
         # @ TODO
         federation_client.FederationClient.set_can_get_update_by_key(context.peer(),
-                                                              self.federation.federation_clients,
-                                                              False)
+                                                                     self.federation.federation_clients,
+                                                                     False)
 
         return federated_pb2.ServerReceivedResponse(header=header)
 
@@ -181,7 +180,7 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
         if len(self.federation.federation_clients) < self.min_num_clients:
             return False
         for client in self.federation.federation_clients:
-             if not client.can_get_update:
+            if not client.can_get_update:
                 return False
         return True
 
@@ -201,18 +200,15 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
 
         # Record clients waiting
         self.record_client_waiting_or_consensus(context, True)
-    
+
         federation_client.FederationClient.set_can_get_update_by_key(context.peer(),
-                                                              self.federation.federation_clients,
-                                                              True)
+                                                                     self.federation.federation_clients,
+                                                                     True)
 
         # Wait until all the clients in the federation have sent its current iteration gradient
         wait(lambda: self.can_send_update(), timeout_seconds=120,
              waiting_for="Update can be sent")
-
-        print("CLIENTS",len(self.federation.federation_clients))
-        print(self.federation.federation_clients[0].tensor.shape)
-        print(self.federation.federation_clients[1].tensor.shape)
+      
         # Calculate average
         clients_tensors = [
             client.tensor for client in self.federation.federation_clients]
@@ -247,6 +243,6 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
         print(update_name)
 
         id_client = federation_client.FederationClient.get_pos_by_key(context.peer(),
-                                                              self.federation.federation_clients)
+                                                                      self.federation.federation_clients)
 
         return federated_pb2.ServerAggregatedTensorRequest(header=header, data=data)

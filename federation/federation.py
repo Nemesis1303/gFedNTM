@@ -75,7 +75,7 @@ class Federation:
                 print(type(current_epoch))
                 self.federation_clients[id_client].set_num_max_iter(max_iter)
                 self.federation_clients[id_client].update_client_state(
-                    gradient,current_mb, current_epoch, current_id_msg)
+                    gradient, current_mb, current_epoch, current_id_msg)
 
     def connect_waiting_or_consensus(self, client, waiting):
         with self.federation_lock:

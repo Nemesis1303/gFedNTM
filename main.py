@@ -14,7 +14,7 @@ import argparse
 import numpy as np
 
 from federation import federated_pb2_grpc
-from federation.client import AVITMClient, Client
+from federation.client import AVITMClient, Client, SyntheticAVITMClient
 from federation.server import FederatedServer
 from utils.utils_preprocessing import prepare_data_avitm_federated
 
@@ -37,6 +37,12 @@ def start_client(id_client):
     file = "data/training_data/synthetic.npz"
     data = np.load(file, allow_pickle=True)
     corpus = data['documents'][id_client-1]
+    vocab_size = data['vocab_size']
+    word_topic_distrib_gt = data['topic_vectors']
+    doc_topic_distrib_gt_all = data['doc_topics']
+    doc_topic_distrib_gt_together = []
+    for i in np.arange(len(doc_topic_distrib_gt_all)):
+        doc_topic_distrib_gt_together.extend(doc_topic_distrib_gt_all[i]) 
 
     # Generate training dataset in the format for AVITM
     train_dataset, input_size, id2token = prepare_data_avitm_federated(corpus, 0.99, 0.01)
@@ -63,7 +69,8 @@ def start_client(id_client):
     # Open channel for communication with the server
     with grpc.insecure_channel('localhost:50051') as channel:
         stub = federated_pb2_grpc.FederationStub(channel)
-        client = AVITMClient(id_client, stub, period, corpus, model_parameters)
+        # client = AVITMClient(id_client, stub, period, corpus, model_parameters) 
+        client = SyntheticAVITMClient(id_client, stub, period, corpus, model_parameters, vocab_size, doc_topic_distrib_gt_together, word_topic_distrib_gt) 
 
 def main():
     parser = argparse.ArgumentParser()
@@ -71,7 +78,7 @@ def main():
                         help="Id of the client. If this argument is not provided, the server is started.")
     parser.add_argument('--source', type=str, default=None,
                         help="Path to the training data.")
-    parser.add_argument('--min_clients_federation', type=int, default=2,
+    parser.add_argument('--min_clients_federation', type=int, default=5,
                         help="Minimum number of client that are necessary for starting a federation. This parameter only affects the server.")
     args = parser.parse_args()
 

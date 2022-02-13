@@ -17,12 +17,12 @@ def convert_topic_word_to_init_size(vocab_size, model, model_type,
     It is only of use in case we are training a model over a synthetic dataset, so as to later compare the performance of the attained model in what regards to the similarity between the original and the trained model.
 
     Args:
-        * vocab_size (int): Size of the synethic'data vocabulary.
-        * model (AVITM): Model whose topic-word matrix is being transformed.
-        * model_type (str): Type of the trained model (e.g. AVITM)
-        * ntopics (int): Number of topics of the trained model.
+        * vocab_size (int):       Size of the synethic'data vocabulary.
+        * model (AVITM/CTM):      Model whose topic-word matrix is being transformed.
+        * model_type (str):       Type of the trained model (e.g. AVITM)
+        * ntopics (int):          Number of topics of the trained model.
         * id2token (List[tuple]): Mappings with the content of the document-term matrix.
-        * all_words (List[str]): List of all the words of the vocabulary of size vocab_size.
+        * all_words (List[str]):  List of all the words of the vocabulary of size vocab_size.
 
     Returns:
         * ndarray: Normalized transormed topic-word distribution.
