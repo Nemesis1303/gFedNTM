@@ -9,7 +9,8 @@
 #                                IMPORTS                                     #
 ##############################################################################
 import numpy as np
-
+from scipy import sparse
+from sklearn.preprocessing import normalize
 
 def convert_topic_word_to_init_size(vocab_size, model, model_type,
                                     ntopics, id2token, all_words):
@@ -42,3 +43,18 @@ def convert_topic_word_to_init_size(vocab_size, model, model_type,
     else:
         print("Method not impleemnted for the selected model type")
         return None
+
+def thetas2sparse(thr, thetas):
+    """Converts a topic model's thetas matrix 
+
+    Args:
+        thr (_type_): _description_
+        thetas (_type_): _description_
+    """   
+    thetas[thetas<thr] = 0
+    thetas = sparse.csr_matrix(thetas, copy=True)
+    thetas = normalize(thetas,axis=1,norm='l1')
+    return thetas
+
+ 
+

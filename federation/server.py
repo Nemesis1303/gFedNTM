@@ -208,7 +208,12 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
         # Wait until all the clients in the federation have sent its current iteration gradient
         wait(lambda: self.can_send_update(), timeout_seconds=120,
              waiting_for="Update can be sent")
-      
+        
+        #print(self.federation.federation_clients[0].tensor.shape)
+        #print(self.federation.federation_clients[1].tensor.shape)
+        #print(self.federation.federation_clients[2].tensor.shape)
+        #print(self.federation.federation_clients[3].tensor.shape)
+        #print(self.federation.federation_clients[4].tensor.shape)
         # Calculate average
         clients_tensors = [
             client.tensor for client in self.federation.federation_clients]

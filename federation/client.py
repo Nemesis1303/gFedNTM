@@ -28,8 +28,9 @@ from avitm.avitm import AVITM
 from federation import federated_pb2, federated_pb2_grpc
 from utils.auxiliary_functions import get_file_chunks, save_chunks_to_file, save_corpus_in_file, get_corpus_from_file
 from utils.utils_preprocessing import prepare_data_avitm_federated
-from utils.utils_postprocessing import convert_topic_word_to_init_size
+from utils.utils_postprocessing import convert_topic_word_to_init_size, thetas2sparse
 from utils.utils_evaluation import get_simmat_thetas, get_simmat_betas, get_sim_docs_frobenius, get_sim_tops_frobenius
+from utils.auxiliary_functions import save_model_as_npz
 
 ##############################################################################
 # DEBUG SETTINGS
@@ -374,7 +375,7 @@ class AVITMClient(Client):
 
 class SyntheticAVITMClient(AVITMClient):
     def __init__(self, id, stub, period, local_corpus, model_parameters, vocab_size,
-                 gt_doc_topic_distrib, gt_word_topic_distrib):
+                 gt_doc_topic_distrib, gt_word_topic_distrib, file_save):
 
         AVITMClient.__init__(self, id, stub, period,
                              local_corpus, model_parameters)
@@ -389,10 +390,22 @@ class SyntheticAVITMClient(AVITMClient):
         self.sim_docs_frob = 0.0
         self.sim_tops_frob = 0.0
 
+        self.file_save = file_save
+
         # Evaluate model
         self.__evaluate_synthetic_model()
         print(self.sim_docs_frob)
         print(self.sim_tops_frob)
+
+        # Converse thetas to sparse
+        thr = 0.00001
+        self.local_model.doc_topic_distrib = \
+            thetas2sparse(thr, self.local_model.doc_topic_distrib)
+        self.gt_doc_topic_distrib = \
+            thetas2sparse(thr, self.gt_doc_topic_distrib)
+
+        # Save model
+        save_model_as_npz(self.file_save, self)
 
     def __evaluate_synthetic_model(self):
         all_words = []
@@ -406,13 +419,19 @@ class SyntheticAVITMClient(AVITMClient):
                                             self.local_model.n_components,
                                             self.id2token, all_words)
         # Get similarity matrixes
-        self.sim_mat_thetas_gt = \
-            get_simmat_thetas(False, len(self.global_corpus),
-                              self.gt_doc_topic_distrib)
-
+        inic = (self.id-1)*len(self.gt_doc_topic_distrib)
+        end = (self.id)*len(self.gt_doc_topic_distrib)
+        # Ge thetas of the documents corresponding only to the node's corpus
+        self.local_model.doc_topic_distrib = self.local_model.doc_topic_distrib[inic:end, :]
+        # thetas = self.local_model.doc_topic_distrib
+        print(self.local_model.doc_topic_distrib.size)
         self.sim_mat_theta_inferred = \
-            get_simmat_thetas(False, len(self.global_corpus),
+            get_simmat_thetas(False, len(self.gt_doc_topic_distrib),
                               self.local_model.doc_topic_distrib)
+
+        self.sim_mat_thetas_gt = \
+            get_simmat_thetas(False, len(self.gt_doc_topic_distrib),
+                              self.gt_doc_topic_distrib)
 
         self.sim_mat_betas = \
             get_simmat_betas(
@@ -438,4 +457,15 @@ class CTMCLient(Client):
         Client.__init__(self, id, stub, period, local_corpus)
 
         self.model_parameters = model_parameters
+
+        # Generate training set
+        self.train_dataset = None
+        self.input_size = None
+        self.id2token = None
+        self.__get_training_dataset()
+
+        # Configure local CTM model
         self.local_model = None
+
+    def __get_training_dataset(self):
+        print("TODO")

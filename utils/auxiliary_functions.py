@@ -10,6 +10,7 @@
 ##############################################################################
 import numpy as np
 import pickle
+from scipy import sparse
 
 from federation import federated_pb2
 
@@ -62,3 +63,39 @@ def get_corpus_from_file(file):
         for l in f.readlines():
             corpus.append(l.split())
     return corpus
+
+
+def save_model_as_npz(npzfile, client):
+    """Saves the matrixes that characterize a topic model in a numpy npz filel.
+
+    Args:
+        npzfile (str): Name of the file in which the model will be saved
+        client (): 
+    """
+
+    if isinstance(client.local_model.doc_topic_distrib, sparse.csr_matrix):
+        np.savez(
+            npzfile,
+            betas=client.local_model.word_topic_distrib,
+            betas_orig=client.gt_word_topic_distrib,
+            thetas_data=client.local_model.doc_topic_distrib.data,
+            thetas_indices=client.local_model.doc_topic_distrib.indices,
+            thetas_indptr=client.local_model.doc_topic_distrib.indptr,
+            thetas_shape=client.local_model.doc_topic_distrib.shape,
+            thetas_orig_data=client.gt_doc_topic_distrib.data,
+            thetas_orig_indices=client.gt_doc_topic_distrib.indices,
+            thetas_orig_indptr=client.gt_doc_topic_distrib.indptr,
+            thetas_orig_shape=client.gt_doc_topic_distrib.shape,
+            ntopics=client.local_model.n_components,
+            topics=client.local_model.topics
+        )
+    else:
+        np.savez(
+            npzfile,
+            betas=client.local_model.word_topic_distrib,
+            betas_orig=client.gt_word_topic_distrib,
+            thetas=client.local_model.doc_topic_distrib,
+            thetas_orig=client.gt_doc_topic_distrib,
+            ntopics=client.local_model.n_components,
+            topics=client.local_model.topics
+        )
