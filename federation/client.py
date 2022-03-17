@@ -385,7 +385,7 @@ class SyntheticAVITMClient(AVITMClient):
         self.gt_word_topic_distrib = gt_word_topic_distrib
 
         self.sim_mat_thetas_gt = None
-        self.sim_mat_theta_inferred = None
+        self.sim_mat_thetas_model = None
         self.sim_mat_betas = None
         self.sim_docs_frob = 0.0
         self.sim_tops_frob = 0.0
@@ -398,7 +398,7 @@ class SyntheticAVITMClient(AVITMClient):
         print(self.sim_tops_frob)
 
         # Converse thetas to sparse
-        thr = 0.00001
+        thr = 3e-3
         self.local_model.doc_topic_distrib = \
             thetas2sparse(thr, self.local_model.doc_topic_distrib)
         self.gt_doc_topic_distrib = \
@@ -408,10 +408,7 @@ class SyntheticAVITMClient(AVITMClient):
         save_model_as_npz(self.file_save, self)
 
     def __evaluate_synthetic_model(self):
-        all_words = []
-        for word in np.arange(self.vocab_size+1):
-            if word > 0:
-                all_words.append('wd'+str(word))
+        all_words = ['wd'+str(word) for word in np.arange(self.vocab_size+1) if word > 0]
         self.local_model.word_topic_distrib = \
             convert_topic_word_to_init_size(self.vocab_size,
                                             self.local_model,
@@ -421,26 +418,29 @@ class SyntheticAVITMClient(AVITMClient):
         # Get similarity matrixes
         inic = (self.id-1)*len(self.gt_doc_topic_distrib)
         end = (self.id)*len(self.gt_doc_topic_distrib)
-        # Ge thetas of the documents corresponding only to the node's corpus
+        # Get thetas of the documents corresponding only to the node's corpus
         self.local_model.doc_topic_distrib = self.local_model.doc_topic_distrib[inic:end, :]
         # thetas = self.local_model.doc_topic_distrib
         print(self.local_model.doc_topic_distrib.size)
+        
         self.sim_mat_theta_inferred = \
             get_simmat_thetas(False, len(self.gt_doc_topic_distrib),
                               self.local_model.doc_topic_distrib)
 
         self.sim_mat_thetas_gt = \
             get_simmat_thetas(False, len(self.gt_doc_topic_distrib),
-                              self.gt_doc_topic_distrib)
+                              self.gt_doc_topic_distrib[0])
 
         self.sim_mat_betas = \
             get_simmat_betas(
                 False, self.local_model.word_topic_distrib, self.gt_word_topic_distrib)
 
         # Get metrics
+        # Difference in evaluation of doc similarity
         self.sim_docs_frob = \
             get_sim_docs_frobenius(
-                self.sim_mat_thetas_gt, self.sim_mat_theta_inferred)
+                self.sim_mat_thetas_gt, self.sim_mat_thetas_model)
+        # Number of topics correctly evaluated
         self.sim_tops_frob = get_sim_tops_frobenius(self.sim_mat_betas)
 
 

@@ -193,9 +193,6 @@ def get_sim_docs_frobenius(sim_mat_thetas_gt, sim_mat_thetas_model):
     frobenius_diff_sims = np.linalg.norm(diff_sims, 'fro')
     return frobenius_diff_sims
 
-
 def get_sim_tops_frobenius(sim_mat_betas):
-    simmat_pd = pd.DataFrame(sim_mat_betas)
-    maxValues_rows = simmat_pd.max(axis=1)
-    max_values_rows_sum = maxValues_rows.sum()
-    return max_values_rows_sum
+    return  np.sum(np.max(sim_mat_betas, axis=0))
+
