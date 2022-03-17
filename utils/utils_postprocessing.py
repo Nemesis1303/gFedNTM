@@ -29,7 +29,7 @@ def convert_topic_word_to_init_size(vocab_size, model, model_type,
         * ndarray: Normalized transormed topic-word distribution.
     """
     if model_type == "avitm":
-        w_t_distrib = np.zeros((10, vocab_size), dtype=np.float64)
+        w_t_distrib = np.zeros((ntopics, vocab_size), dtype=np.float64)
         wd = model.get_topic_word_distribution()
         for i in np.arange(ntopics):
             for idx, word in id2token.items():
@@ -37,8 +37,7 @@ def convert_topic_word_to_init_size(vocab_size, model, model_type,
                     if all_words[j] == word:
                         w_t_distrib[i, j] = wd[i][idx]
                         break
-        sum_of_rows = w_t_distrib.sum(axis=1)
-        normalized_array = w_t_distrib / sum_of_rows[:, np.newaxis]
+        normalized_array = normalize(w_t_distrib,axis=1,norm='l1')
         return normalized_array
     else:
         print("Method not impleemnted for the selected model type")
