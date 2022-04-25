@@ -41,7 +41,7 @@ def get_simmat_thetas(from_file, n_docs, thetas=None, path_to_model=None):
             print("No path to model file was provided")
             return None
     else:
-        if thetas:
+        if thetas is not None:
             thetas_sqrt = np.sqrt(thetas)
         else:
             print("No thetas matrix was provided")
@@ -73,7 +73,7 @@ def get_simmat_betas(from_file, betas=None, betas_orig=None, path_to_model=None)
         betas = data['betas']
         betas_orig = data['betas_orig']
     else:
-        if not betas or not betas_orig:
+        if betas is None or betas_orig is None:
             print("One of the betas matrixes was not provided.")
             return None
     betas_sqrt = np.sqrt(betas)
@@ -120,7 +120,7 @@ def get_average_std_nruns(from_file, n_docs, n_runs, method, base_path=None, the
                 print("No base path for the nruns models was provided.")
                 return None
         else:
-            if thetas:
+            if thetas is not None:
                 sim_mat = get_simmat_thetas(from_file, n_docs, thetas)
             else:
                 print("No thetas matrix was provided.")
@@ -176,7 +176,7 @@ def get_repeated_elements_simmat_nruns(from_file, n_docs, n_runs, base_path=None
                 print("No base path for the nruns models was provided.")
                 return None
         else:
-            if thetas:
+            if thetas is not None:
                 sim_mat = get_simmat_thetas(from_file, n_docs, thetas)
             else:
                 print("No thetas matrix was provided.")
@@ -193,9 +193,6 @@ def get_sim_docs_frobenius(sim_mat_thetas_gt, sim_mat_thetas_model):
     frobenius_diff_sims = np.linalg.norm(diff_sims, 'fro')
     return frobenius_diff_sims
 
-
 def get_sim_tops_frobenius(sim_mat_betas):
-    simmat_pd = pd.DataFrame(sim_mat_betas)
-    maxValues_rows = simmat_pd.max(axis=1)
-    max_values_rows_sum = maxValues_rows.sum()
-    return max_values_rows_sum
+    return  np.sum(np.max(sim_mat_betas, axis=0))
+

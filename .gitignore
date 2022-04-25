@@ -132,3 +132,6 @@ dmypy.json
 training_data/
 .txt
 .pickle
+
+data/output_models/variability/
+.npz

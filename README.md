@@ -5,6 +5,7 @@ GRPC based federated learning framework for ProdLDA and Contextualized Topic Mod
 Get into venv:
 ```
 python3 -m venv venv
+virtualenv --python=/opt/homebrew/bin/python3 venv        
 ```
 ```
 source venv/bin/activate

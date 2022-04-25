@@ -24,6 +24,7 @@ from torch.utils.data import DataLoader
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from tqdm import tqdm
 from torch.nn import functional as F
+from scipy.special import softmax
 
 from avitm.decoder_network import DecoderNetwork
 
@@ -128,6 +129,16 @@ class AVITM(object):
 
         if self.USE_CUDA:
             self.model = self.model.cuda()
+        
+        # Post-training parameters
+        self.topics = None
+        self.doc_topic_distrib = None
+        self.word_topic_distrib = None
+
+        # Parameters for evaluation
+        self.frob_gt_inferred_doc_dif = 0.0
+        self.max_gt_inferred_top = 0.0
+
 
     def _loss(self, inputs, word_dists, prior_mean, prior_variance,
               posterior_mean, posterior_variance, posterior_log_variance):
@@ -210,8 +221,8 @@ class AVITM(object):
         # Parameter0 = prior_mean
         # Parameter1 = prior_variance
         # Parameter2 = beta
-        self.model.prior_mean.grad = update
-        #self.model.beta.grad = update
+        #self.model.prior_mean.grad = update
+        self.model.beta.grad = update
         
         # Perform one step of the optimizer (SGD/Adam)
         self.optimizer.step()
@@ -455,3 +466,7 @@ class AVITM(object):
                 final_thetas.append(np.array(collect_theta))
         pbar.close()
         return np.sum(final_thetas, axis=0) / n_samples
+
+    def get_topic_word_distribution(self):
+        topic_word_matrix = self.model.beta.cpu().detach().numpy()
+        return softmax(topic_word_matrix, axis=1)
