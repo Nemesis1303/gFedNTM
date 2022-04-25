@@ -225,7 +225,7 @@ class AVITMClient(Client):
         Args:
         -----
             * loader (DataLoader): Python iterable over the training dataset with which the 
-                                 minibatch is going to be trained.
+                                   minibatch is going to be trained.
 
         Returns:
         --------
@@ -295,27 +295,7 @@ class AVITMClient(Client):
             * save_dir (pathlib.Path, optional): Directory to save checkpoint models to. 
                                                  Defaults to None.
         """
-        # Print settings to output file
-        print("Settings: \n\
-               N Components: {}\n\
-               Topic Prior Mean: {}\n\
-               Topic Prior Variance: {}\n\
-               Model Type: {}\n\
-               Hidden Sizes: {}\n\
-               Activation: {}\n\
-               Dropout: {}\n\
-               Learn Priors: {}\n\
-               Learning Rate: {}\n\
-               Momentum: {}\n\
-               Reduce On Plateau: {}\n\
-               Save Dir: {}".format(
-            self.local_model.n_components, 0.0,
-            1. - (1./self.local_model.n_components), self.local_model.model_type,
-            self.local_model.hidden_sizes, self.local_model.activation,
-            self.local_model.dropout, self.local_model.learn_priors,
-            self.local_model.lr, self.local_model.momentum,
-            self.local_model.reduce_on_plateau, save_dir))
-
+        
         self.local_model.model_dir = save_dir
         self.local_model.train_data = train_dataset
         self.local_model.current_minibatch = 0
@@ -329,10 +309,6 @@ class AVITMClient(Client):
         # Initialize training variables
         train_loss = 0
         samples_processed = 0
-
-        # Open channel for communication with the server
-        # with grpc.insecure_channel('localhost:50051') as channel:
-        #    self.stub = federated_pb2_grpc.FederationStub(channel)
 
         # Training of the local model
         for epoch in range(self.local_model.num_epochs):
