@@ -155,7 +155,8 @@ def get_repeated_elements_simmat_nruns(from_file, n_docs, n_runs, base_path=None
                                               the model was trained.
         * n_runs (int):                       Nr of times the traininig of the model has been 
                                               carried out. 
-        * base_path (pathlib.Path, optional): Path where the "model.npz" files are located. Defaults to None.
+        * base_path (pathlib.Path, optional): Path where the "model.npz" files are located. 
+                                              Defaults to None.
         * thetas (darray, optional):          Document-topic distribution of the model 
                                               whose performance is being evaluated. Defaults to None.
 

@@ -27,7 +27,6 @@ def prepare_data_avitm_federated(corpus, max_df, min_df):
 
     Returns:
     --------
-        # TODO: Revise types 
         * List[BowDataset]: List containing the training corpus for each node.
         * List[tuple]:      List of mappings with the content of each training dataset's 
                             document-term matrix.

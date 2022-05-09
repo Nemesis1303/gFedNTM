@@ -110,7 +110,7 @@ def main():
                         help="Path to the training data.")
     parser.add_argument('--model_type', type=str, default="prod",
                         help="ProdLDA (prod) or CTM (ctm).")
-    parser.add_argument('--min_clients_federation', type=int, default=5,
+    parser.add_argument('--min_clients_federation', type=int, default=1,
                         help="Minimum number of client that are necessary for starting a federation. This parameter only affects the server.")
     args = parser.parse_args()
 

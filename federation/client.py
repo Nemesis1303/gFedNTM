@@ -9,23 +9,18 @@
 #                                IMPORTS                                     #
 ##############################################################################
 from __future__ import print_function
-from importlib.metadata import metadata
 import logging
 import os
 import time
 import numpy as np
 import datetime
-import grpc
-import multiprocessing as mp
 import torch
 from torch.utils.data import DataLoader
-from gensim.corpora import Dictionary
-import pathlib
 from gensim.test.utils import get_tmpfile
 import pandas as pd
 
 from avitm.avitm import AVITM
-from federation import federated_pb2, federated_pb2_grpc
+from federation import federated_pb2
 from utils.auxiliary_functions import get_file_chunks, save_chunks_to_file, save_corpus_in_file, get_corpus_from_file
 from utils.utils_preprocessing import prepare_data_avitm_federated
 from utils.utils_postprocessing import convert_topic_word_to_init_size, thetas2sparse
@@ -64,13 +59,21 @@ class Client:
         self.__wait_for_agreed_vocab()
 
     def __prepare_vocab_to_send(self, corpus):
-        # dct = Dictionary(corpus)
-        # dct.save_as_text(self.tmp_local_corpus)
+        """Prepares the vocabulary that a node is going to send to the server by saving it into a text file.
+
+        Args:
+        -----
+           * corpus (numpy.ndarray): Node's corpus.
+        """
         save_corpus_in_file(corpus, self.tmp_local_corpus)
 
     def __send_local_vocab(self):
-        print(self.tmp_local_corpus)
-        print(type(self.tmp_local_corpus))
+        """Prepares the vocabulary that a node is going to send to the server by saving it into a text file.
+
+        Args:
+        -----
+           * corpus (numpy.ndarray): Node's corpus.
+        """
         request = get_file_chunks(self.tmp_local_corpus)
 
         # Send request to the server and wait for his response
