@@ -25,6 +25,7 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau
 from tqdm import tqdm
 from torch.nn import functional as F
 from scipy.special import softmax
+from sklearn.preprocessing import normalize
 
 from avitm.decoder_network import DecoderNetwork
 
@@ -469,4 +470,5 @@ class AVITM(object):
 
     def get_topic_word_distribution(self):
         topic_word_matrix = self.model.beta.cpu().detach().numpy()
-        return softmax(topic_word_matrix, axis=1)
+        wd = softmax(topic_word_matrix, axis=1)
+        return normalize(wd,axis=1,norm='l1')

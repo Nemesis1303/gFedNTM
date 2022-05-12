@@ -221,6 +221,7 @@ class AVITMClient(Client):
         # Generate training dataset in the format for AVITM
         self.train_dataset, self.input_size, self.id2token = \
             prepare_data_avitm_federated(self.global_corpus, 0.99, 0.01)
+        
 
     def __train_epoch_local_model(self, loader):
         """Trains one epoch of the local AVITM model.
