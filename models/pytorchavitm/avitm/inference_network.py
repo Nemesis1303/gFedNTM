@@ -1,44 +1,51 @@
 # -*- coding: utf-8 -*-
 """
-@author: estebandito22
-https://github.com/estebandito22/PyTorchAVITM/blob/master/pytorchavitm/avitm/inference_network.py
-
-@modifiedBy: lcalvo
 ******************************************************************************
 ***                         INFERENCE NETWORK                              ***
 ******************************************************************************
 """
-##############################################################################
-#                                IMPORTS                                     #
-##############################################################################
 from collections import OrderedDict
 from torch import nn
 import torch
 
 
 class InferenceNetwork(nn.Module):
-    """PyTorch class for feed foward inference network.
-    """
+    """PyTorch class for feed foward inference network."""
 
     def __init__(self, input_size, output_size, hidden_sizes,
                  activation='softplus', dropout=0.2):
-        """
-        Initialize InferenceNetwork.
 
-        Args
-            input_size : int, dimension of input
-            output_size : int, dimension of output
-            hidden_sizes : tuple, length = n_layers
-            activation : string, 'softplus' or 'relu', default 'softplus'
-            dropout : float, default 0.2, default 0.2
         """
+        Initializes InferenceNetwork.
+
+        Parameters
+        ----------
+        input_size : int
+            Dimension of the input
+        output_size : int
+            Dimension of the output
+        n_components : int (default=10)
+            Number of topic components
+        model_type : string (default='prodLDA')
+            Type of the model that is going to be trained, 'prodLDA' or 'LDA'
+        hidden_sizes : tuple, length = n_layers (default=(100,100))
+            Size of the hidden layer
+        activation : string (default='softplus')
+            Activation function to be used, chosen from 'softplus', 'relu', 'sigmoid', 'leakyrelu', 'rrelu', 'elu', 'selu' or 'tanh'
+        dropout : float (default=0.2)
+            Percent of neurons to drop out.
+        """
+
         super(InferenceNetwork, self).__init__()
+        
         assert isinstance(input_size, int), "input_size must by type int."
         assert isinstance(output_size, int), "output_size must be type int."
         assert isinstance(hidden_sizes, tuple), \
             "hidden_sizes must be type tuple."
-        assert activation in ['softplus', 'relu'], \
-            "activation must be 'softplus' or 'relu'."
+        assert activation in ['softplus', 'relu', 'sigmoid', 'tanh', 'leakyrelu',
+                              'rrelu', 'elu', 'selu'], \
+            "activation must be 'softplus', 'relu', 'sigmoid', 'leakyrelu'," \
+            " 'rrelu', 'elu', 'selu' or 'tanh'."
         assert dropout >= 0, "dropout must be >= 0."
 
         self.input_size = input_size
@@ -50,6 +57,18 @@ class InferenceNetwork(nn.Module):
             self.activation = nn.Softplus()
         elif activation == 'relu':
             self.activation = nn.ReLU()
+        elif activation == 'sigmoid':
+            self.activation = nn.Sigmoid()
+        elif activation == 'tanh':
+            self.activation = nn.Tanh()
+        elif activation == 'leakyrelu':
+            self.activation = nn.LeakyReLU()
+        elif activation == 'rrelu':
+            self.activation = nn.RReLU()
+        elif activation == 'elu':
+            self.activation = nn.ELU()
+        elif activation == 'selu':
+            self.activation = nn.SELU()
 
         self.input_layer = nn.Linear(input_size, hidden_sizes[0])
 
@@ -66,7 +85,7 @@ class InferenceNetwork(nn.Module):
         self.dropout_enc = nn.Dropout(p=self.dropout)
 
     def forward(self, x):
-        """Forward pass."""
+        """Forward pass"""
         x = self.input_layer(x)
         x = self.activation(x)
         x = self.hiddens(x)

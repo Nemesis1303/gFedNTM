@@ -9,37 +9,34 @@
 #                                IMPORTS                                     #
 ##############################################################################
 from __future__ import print_function
-import logging
+
+import datetime
 import os
 import time
+
 import numpy as np
-import datetime
 import torch
-from torch.utils.data import DataLoader
 from gensim.test.utils import get_tmpfile
-import pandas as pd
-
-from avitm.avitm import AVITM
-from federation import federated_pb2
-from utils.auxiliary_functions import get_file_chunks, save_chunks_to_file, save_corpus_in_file, get_corpus_from_file
+from models.pytorchavitm.avitm.federated_avitm.federated_avitm_model import \
+    FederatedAVITM
+from torch.utils.data import DataLoader
+from utils.auxiliary_functions import (get_corpus_from_file, get_file_chunks,
+                                       save_chunks_to_file,
+                                       save_corpus_in_file, save_model_as_npz)
+from utils.utils_evaluation import (get_sim_docs_frobenius,
+                                    get_sim_tops_frobenius, get_simmat_betas,
+                                    get_simmat_thetas)
+from utils.utils_postprocessing import (convert_topic_word_to_init_size,
+                                        thetas2sparse)
 from utils.utils_preprocessing import prepare_data_avitm_federated
-from utils.utils_postprocessing import convert_topic_word_to_init_size, thetas2sparse
-from utils.utils_evaluation import get_simmat_thetas, get_simmat_betas, get_sim_docs_frobenius, get_sim_tops_frobenius
-from utils.auxiliary_functions import save_model_as_npz
 
-##############################################################################
-# DEBUG SETTINGS
-##############################################################################
-FORMAT = '[%(asctime)-15s] [%(filename)s] [%(levelname)s] %(message)s'
-logging.basicConfig(format=FORMAT, level='INFO')
-logger = logging.getLogger('client')
-
+from federation import federated_pb2
 
 class Client:
     """ Class containing the stubs to interact with the server-side part via a gRPC channel.
     """
 
-    def __init__(self, id, stub, period, local_corpus):
+    def __init__(self, id, stub, period, local_corpus, logger=None):
         self.id = id
         self.stub = stub
         self.period = period
@@ -48,6 +45,15 @@ class Client:
         self.tmp_local_corpus = get_tmpfile(str(self.id))
         self.global_corpus = None
         self.tmp_global_corpus = get_tmpfile(str(self.id))
+
+        # Create logger object
+        if logger:
+            self.logger = logger
+        else:
+            import logging
+            FMT = '[%(asctime)-15s] [%(filename)s] [%(levelname)s] %(message)s'
+            logging.basicConfig(format=FMT, level='INFO')
+            self.logger = logging.getLogger('Client')
 
         # Save vocab in temporal local file
         self.__prepare_vocab_to_send(self.local_corpus)
@@ -59,50 +65,55 @@ class Client:
         self.__wait_for_agreed_vocab()
 
     def __prepare_vocab_to_send(self, corpus):
-        """Prepares the vocabulary that a node is going to send to the server by saving it into a text file.
+        """
+        Prepares the vocabulary that a node is going to send to the server by saving it into a text file.
 
-        Args:
-        -----
-           * corpus (numpy.ndarray): Node's corpus.
+        Parameters
+        ----------
+        corpus : numpy.ndarray
+            Node's corpus
         """
         save_corpus_in_file(corpus, self.tmp_local_corpus)
 
     def __send_local_vocab(self):
-        """Prepares the vocabulary that a node is going to send to the server by saving it into a text file.
-
-        Args:
-        -----
-           * corpus (numpy.ndarray): Node's corpus.
+        """
+        Sends the local vocabulary to the server and waits for its ACK.
         """
         request = get_file_chunks(self.tmp_local_corpus)
 
         # Send request to the server and wait for his response
         if self.stub:
             response = self.stub.upload(request)
-            logger.info(
+            self.logger.info(
                 'Client %s vocab is being sent to server.', str(self.id))
             # Remove local file when finished the sending to the server
             if response.length == os.path.getsize(self.tmp_local_corpus):
                 os.remove(self.tmp_local_corpus)
 
     def __wait_for_agreed_vocab(self):
+        """
+        Waits by saving the agreed vocabulary sent by the server.
+        """
         response = self.stub.download(federated_pb2.Empty())
         save_chunks_to_file(response, self.tmp_global_corpus)
-        logger.info('Client %s receiving consensus vocab.', str(self.id))
+        self.logger.info('Client %s receiving consensus vocab.', str(self.id))
         self.global_corpus = get_corpus_from_file(self.tmp_global_corpus)
 
     def __generate_protos_update(self, gradient):
-        """Generates a prototocol buffer Update message from a Tensor gradient.
-
-        Args:
-        -----
-           * gradient (torch.Tensor): Gradient to be sent in the protocol buffer message.
-
-        Returns:
-        --------
-           * federated_pb2.Update: Prototocol buffer that is going to be send through the gRPC 
-                                   channel.
         """
+        Generates a prototocol buffer Update message from a Tensor gradient.
+
+        Parameters
+        ----------
+        gradient : torch.Tensor
+            Gradient to be sent in the protocol buffer message
+        
+        Returns
+        -------
+        data : federated_pb2.Update
+            Prototocol buffer that is going to be send through the gRPC channel
+        """
+
         # Name of the update based on client's id
         update_name = "Update from " + str(self.id)
 
@@ -122,28 +133,36 @@ class Client:
         return data
 
     def send_per_minibatch_gradient(self, gradient, current_mb, current_epoch, num_epochs):
-        """Sends a minibatch's gradient update to the server.
-
-        Args:
-        -----
-            * gradient (torch.Tensor): Gradient to be sent to the server in the current 
-                                       minibatch.
-            * current_mb (int):        Current minibatch, i.e. minibatch to which the gradient 
-                                       is going to be sent corresponds.
-            * current_epoch (int):     Current epoch, i.e. epoch to which the minibatch 
-                                       corresponds.
-            * num_epochs (int):        Number of epochs that is going to be used for training 
-                                       the model.
         """
+        Sends a minibatch's gradient update to the server.
+
+        Parameters
+        ----------
+        gradient : torch.Tensor
+            Gradient to be sent to the server in the current minibatch
+        current_mb: int
+            Current minibatch, i.e. minibatch to which the gradient that is going to be sent corresponds
+        current_epoch: int
+            Current epoch, i.e. epoch to which the minibatch corresponds
+        num_epochs: int
+            Number of epochs that is going to be used for training the model.
+        
+        Returns
+        -------
+        data : federated_pb2.Update
+            Prototocol buffer that is going to be send through the gRPC channel
+        """
+
         # Generate request's header
         id_message = "ID" + str(self.id) + "_" + str(round(time.time()))
         header = federated_pb2.MessageHeader(id_request=id_message,
                                              message_type=federated_pb2.MessageType.CLIENT_TENSOR_SEND)
         # Generate request's metadata
-        metadata = federated_pb2.MessageAdditionalData(current_mb=current_mb,
-                                                       current_epoch=current_epoch,
-                                                       num_max_epochs=num_epochs,
-                                                       id_machine=int(self.id))
+        metadata = \
+            federated_pb2.MessageAdditionalData(current_mb=current_mb,
+                                                current_epoch=current_epoch,
+                                                num_max_epochs=num_epochs,
+                                                id_machine=int(self.id))
         # Generate Protos Update
         data = self.__generate_protos_update(gradient)
 
@@ -154,19 +173,21 @@ class Client:
         # Send request to the server and wait for his response
         if self.stub:
             response = self.stub.sendLocalTensor(request)
-            logger.info('Client %s received a response to request %s',
+            self.logger.info('Client %s received a response to request %s',
                         str(self.id), response.header.id_to_request)
 
     def listen_for_updates(self):
-        """Waits for an update from the server.
-
-        Returns:
-        --------
-            * federated_pb2.ServerAggregatedTensorRequest: Update from the server with the  
-                                                           average tensor generated from all federation clients' updates.
         """
+        Waits for an update from the server.
+        
+        Returns
+        -------
+        update : federated_pb2.ServerAggregatedTensorRequest
+            Update from the server with the average tensor generated from all federation clients' updates.
+        """
+        
         update = self.stub.sendAggregatedTensor(federated_pb2.Empty())
-        logger.info('Client %s received updated for minibatch %s of epoch %s ',
+        self.logger.info('Client %s received updated for minibatch %s of epoch %s ',
                     str(self.id),
                     str(self.local_model.current_mb),
                     str(self.local_model.current_epoch))
@@ -197,19 +218,20 @@ class AVITMClient(Client):
 
         # Configure local model
         self.local_model = \
-            AVITM(input_size=self.input_size,
-                  n_components=model_parameters["n_components"],
-                  model_type=model_parameters["model_type"],
-                  hidden_sizes=model_parameters["hidden_sizes"],
-                  activation=model_parameters["activation"],
-                  dropout=model_parameters["dropout"],
-                  learn_priors=model_parameters["learn_priors"],
-                  batch_size=model_parameters["batch_size"],
-                  lr=model_parameters["lr"],
-                  momentum=model_parameters["momentum"],
-                  solver=model_parameters["solver"],
-                  num_epochs=model_parameters["num_epochs"],
-                  reduce_on_plateau=model_parameters["reduce_on_plateau"])
+            FederatedAVITM(input_size=self.input_size,
+                           n_components=model_parameters["n_components"],
+                           model_type=model_parameters["model_type"],
+                           hidden_sizes=model_parameters["hidden_sizes"],
+                           activation=model_parameters["activation"],
+                           dropout=model_parameters["dropout"],
+                           learn_priors=model_parameters["learn_priors"],
+                           batch_size=model_parameters["batch_size"],
+                           lr=model_parameters["lr"],
+                           momentum=model_parameters["momentum"],
+                           solver=model_parameters["solver"],
+                           num_epochs=model_parameters["num_epochs"],
+                           reduce_on_plateau=model_parameters["reduce_on_plateau"],
+                           verbose=True)
 
         # Start training
         self.__train_local_model(self.train_dataset)
@@ -221,7 +243,7 @@ class AVITMClient(Client):
         # Generate training dataset in the format for AVITM
         self.train_dataset, self.input_size, self.id2token = \
             prepare_data_avitm_federated(self.global_corpus, 0.99, 0.01)
-        
+
 
     def __train_epoch_local_model(self, loader):
         """Trains one epoch of the local AVITM model.
@@ -240,19 +262,21 @@ class AVITMClient(Client):
         self.local_model.model.train()
         train_loss = 0
         samples_processed = 0
+        topic_doc_list = []
 
-        self.local_model.current_mb = 0  # Counter for the current epoch
+        self.local_model.current_mb = 0  # Counter for the current minibatch
+
+        # Training epoch starts
         for batch_samples in loader:
-
-            # Training epoch starts
+            
             X = batch_samples['X']
             if self.local_model.USE_CUDA:
                 X = X.cuda()
 
             # Get gradients minibatch
-            loss, train_loss, samples_processed = \
+            loss, train_loss, samples_processed, topic_words, topic_doc_list = \
                 self.local_model._train_minibatch(
-                    X, train_loss, samples_processed)
+                    X, train_loss, samples_processed, topic_doc_list)
 
             # Send minibatch' gradient to the server (gradient already converted to np)
             self.send_per_minibatch_gradient(
@@ -261,7 +285,7 @@ class AVITMClient(Client):
                 self.local_model.current_epoch,
                 self.local_model.num_epochs)
 
-            logger.info('Client %s sent gradient %s/%s and is waiting for updates.',
+            self.logger.info('Client %s sent gradient %s/%s and is waiting for updates.',
                         str(self.id), str(self.local_model.current_mb),
                         str(self.local_model.current_epoch))
 
@@ -283,12 +307,12 @@ class AVITMClient(Client):
                     X, loss, deserialized_tensor, train_loss, samples_processed)
 
             self.local_model.current_mb += 1  # One minibatch ends
-        # One epoch ends
+        # Training epoch ends
 
         # Calculate epoch's train loss and samples processed
         train_loss /= samples_processed
 
-        return samples_processed, train_loss
+        return samples_processed, train_loss, topic_words, topic_doc_list
 
     def __train_local_model(self, train_dataset, save_dir=None):
         """Trains a local AVITM model. To do so, we send the server the gradients corresponding with the parameter beta of the model, and the server returns an update of such a parameter, which is calculated by averaging the per minibatch beta parameters that he gets from the set of clients that are connected to the federation. After obtaining the beta updates from the server, the client keeps with the training of its own local model. This process is repeated for each minibatch of each epoch.
@@ -320,7 +344,8 @@ class AVITMClient(Client):
 
             # Train epoch
             s = datetime.datetime.now()
-            sp, train_loss = self.__train_epoch_local_model(train_loader)
+            sp, train_loss, topic_words, topic_document = \
+                self.__train_epoch_local_model(train_loader)
             samples_processed += sp
             e = datetime.datetime.now()
 
@@ -331,20 +356,30 @@ class AVITMClient(Client):
 
             # save best
             if train_loss < self.local_model.best_loss_train:
-                self.local_model.best_loss_train = train_loss
                 self.local_model.best_components = self.local_model.model.beta
+                self.local_model.final_topic_word = topic_words
+                self.local_model.final_topic_document = topic_document
+                self.local_model.best_loss_train = train_loss
 
                 if save_dir is not None:
                     self.local_model.save(save_dir)
 
     def __get_results_model(self):
+
         # Get topics
-        self.local_model.topics = pd.DataFrame(self.local_model.get_topics()).T
+        self.local_model.topics = self.local_model.get_topics() 
+        #pd.DataFrame(self.local_model.get_topics()).T
+        print(type(self.local_model.topics[0]))
+        print(self.local_model.topics)
+
         # Get doc-topic distribution
-        self.local_model.doc_topic_distrib = self.local_model.get_doc_topic_distribution()
+        self.local_model.doc_topic_distrib = \
+            np.asarray(self.local_model.get_thetas(self.local_model.train_data)).T 
+        #print(self.local_model.doc_topic_distrib == self.local_model.get)        
+
         # Get word-topic distribution
         self.local_model.word_topic_distrib = self.local_model.get_topic_word_distribution()
-
+        
 
 """
 ******************************************************************************
@@ -389,12 +424,12 @@ class SyntheticAVITMClient(AVITMClient):
 
     def __evaluate_synthetic_model(self):
         all_words = ['wd'+str(word) for word in np.arange(self.vocab_size+1) if word > 0]
-        self.local_model.word_topic_distrib = \
-            convert_topic_word_to_init_size(self.vocab_size,
-                                            self.local_model,
-                                            "avitm",
-                                            self.local_model.n_components,
-                                            self.id2token, all_words)
+        # self.local_model.word_topic_distrib = \
+        #     convert_topic_word_to_init_size(self.vocab_size,
+        #                                     self.local_model,
+        #                                     "avitm",
+        #                                     self.local_model.n_components,
+        #                                     self.id2token, all_words)
         # Get similarity matrixes
         inic = (self.id-1)*len(self.gt_doc_topic_distrib)
         end = (self.id)*len(self.gt_doc_topic_distrib)
@@ -403,25 +438,28 @@ class SyntheticAVITMClient(AVITMClient):
         # thetas = self.local_model.doc_topic_distrib
         print(self.local_model.doc_topic_distrib.size)
         
-        self.sim_mat_theta_inferred = \
-            get_simmat_thetas(False, len(self.gt_doc_topic_distrib),
-                              self.local_model.doc_topic_distrib)
+        self.sim_mat_theta_inferred = np.sqrt(self.local_model.doc_topic_distrib).dot(np.sqrt(self.local_model.doc_topic_distrib.T))
+            # get_simmat_thetas(False, len(self.gt_doc_topic_distrib),
+            #                   self.local_model.doc_topic_distrib)
 
-        self.sim_mat_thetas_gt = \
-            get_simmat_thetas(False, len(self.gt_doc_topic_distrib),
-                              self.gt_doc_topic_distrib[0])
+        self.sim_mat_thetas_gt = np.sqrt(self.gt_doc_topic_distrib[0]).dot(np.sqrt(self.gt_doc_topic_distrib[0].T))
+            # get_simmat_thetas(False, len(self.gt_doc_topic_distrib),
+            #                   self.gt_doc_topic_distrib)
+    
 
-        self.sim_mat_betas = \
-            get_simmat_betas(
-                False, self.local_model.word_topic_distrib, self.gt_word_topic_distrib)
+        # self.sim_mat_betas = \
+        #     get_simmat_betas(
+        #         False, self.local_model.word_topic_distrib, self.gt_word_topic_distrib)
 
         # Get metrics
         # Difference in evaluation of doc similarity
         self.sim_docs_frob = \
             get_sim_docs_frobenius(
-                self.sim_mat_thetas_gt, self.sim_mat_thetas_model)
+                self.sim_mat_thetas_gt, self.sim_mat_theta_inferred)
+        print(self.sim_docs_frob)
+        print('Difference in evaluation (train) of doc similarity (node 0):', np.sum(np.abs(self.sim_mat_thetas_gt - self.sim_mat_theta_inferred))/len(self.gt_doc_topic_distrib))
         # Number of topics correctly evaluated
-        self.sim_tops_frob = get_sim_tops_frobenius(self.sim_mat_betas)
+        #self.sim_tops_frob = get_sim_tops_frobenius(self.sim_mat_betas)
 
 
 """

@@ -11,7 +11,7 @@
 import numpy as np
 from sklearn.feature_extraction.text import CountVectorizer
 
-from utils.bow_dataset import BOWDataset
+from models.pytorchavitm.datasets.bow_dataset import BOWDataset
 
 
 def prepare_data_avitm_federated(corpus, max_df, min_df):
