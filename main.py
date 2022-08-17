@@ -5,17 +5,15 @@
 ***                                MAIN                                    ***
 ******************************************************************************
 """
-##############################################################################
-#                                IMPORTS                                     #
-##############################################################################
-from concurrent import futures
-import grpc
 import argparse
-import numpy as np
 import multiprocessing as mp
+from concurrent import futures
+
+import grpc
+import numpy as np
 
 from federation import federated_pb2_grpc
-from federation.client import AVITMClient, Client, SyntheticAVITMClient
+from federation.client import Client
 from federation.server import FederatedServer
 from utils.utils_preprocessing import prepare_data_avitm_federated
 
@@ -43,25 +41,26 @@ def start_client(id_client, model_type):
     doc_topic_distrib_gt_all = data['doc_topics']
     doc_topic_distrib_gt_together = []
     for i in np.arange(len(doc_topic_distrib_gt_all)):
-        doc_topic_distrib_gt_together.extend(doc_topic_distrib_gt_all[i]) 
+        doc_topic_distrib_gt_together.extend(doc_topic_distrib_gt_all[i])
 
     # Generate training dataset in the format for AVITM
-    train_dataset, input_size, id2token = prepare_data_avitm_federated(corpus, 0.99, 0.01)
+    train_dataset, input_size, id2token = prepare_data_avitm_federated(
+        corpus, 0.99, 0.01)
 
-    if model_type == "ctm": 
-         model_parameters = {
+    if model_type == "ctm":
+        model_parameters = {
             "bow_size": input_size,
             "contextual_size": 10,
             "inference_type": "combined",
             "n_components": 10,
             "model_type": "prodLDA",
             "hidden_sizes": (100, 100),
-            "activation": 'softplus', 
+            "activation": 'softplus',
             "dropout": 0.2,
             "learn_priors": True,
             "lr": 2e-3,
             "momentum": 0.99,
-            "solver": 'adam', 
+            "solver": 'adam',
             "num_epochs": 100,
             "reduce_on_plateau": False,
             "num_data_loader_workers": mp.cpu_count(),
@@ -86,23 +85,32 @@ def start_client(id_client, model_type):
             "solver": "adam",
             "num_epochs": 100,
             "num_samples": 10,
-            "num_data_loader_workers":0,
-            "reduce_on_plateau": False
+            "num_data_loader_workers": 0,
+            "reduce_on_plateau": False,
+            "topic_prior_mean": 0.0,
+            "topic_prior_variance": None,
+            "verbose": True
         }
 
         # START CLIENT
         rep = 3
         file_save = \
             "data/output_models/variability/model_client_" + \
-                    str(id_client) + "_rep_" + str(rep) + ".npz"
+            str(id_client) + "_rep_" + str(rep) + ".npz"
         print("Executing rep ", rep)
         # Open channel for communication with the server
         with grpc.insecure_channel('localhost:50051') as channel:
             stub = federated_pb2_grpc.FederationStub(channel)
-            # client = AVITMClient(id_client, stub, period, corpus, model_parameters) 
-            client = SyntheticAVITMClient(id_client, stub, period, corpus, model_parameters, vocab_size, doc_topic_distrib_gt_all[id_client-1], word_topic_distrib_gt, file_save) 
+
+            client = Client(id_client, stub, period, corpus, model_parameters)
+            eval_parameters = [
+                vocab_size, doc_topic_distrib_gt_all[id_client-1], word_topic_distrib_gt, file_save]
+            client.train_local_model()
+            client.eval_local_model(eval_params=eval_parameters)
+
     else:
         print("The selected model type is not provided.")
+
 
 def main():
     parser = argparse.ArgumentParser()

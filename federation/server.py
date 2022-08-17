@@ -284,7 +284,7 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
             federation_client.FederationClient.get_pos_by_key(
                 context.peer(),
                 self.federation.federation_clients)
-                
+
         # Create request
         update_name = "Update for client with key " + \
             str(self.federation.federation_clients[client_to_repond].federation_key) + \
@@ -302,6 +302,7 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
         id_client = federation_client.FederationClient.get_pos_by_key(
             context.peer(),
             self.federation.federation_clients)
-        
-        request = federated_pb2.ServerAggregatedTensorRequest(header=header, data=data)
+
+        request = federated_pb2.ServerAggregatedTensorRequest(
+            header=header, data=data)
         return request

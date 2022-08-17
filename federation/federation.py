@@ -5,9 +5,7 @@
 ***                         CLASS FEDERATION                               ***
 ******************************************************************************
 """
-##############################################################################
-#                                IMPORTS                                     #
-##############################################################################
+
 import threading
 
 from federation.federation_client import FederationClient
@@ -32,7 +30,7 @@ class Federation:
     def connect_consensus(self, client, path_tmp_local_corpus):
         """
         Class to register the connection of a client in the federation for the first time, i.e. for the agreement of a common vocabulary. 
-        
+
         As the client gets registered into the federation when it sends a GRPC message to the server, a counter is kept in order to account for the number times a client has tried to communicate with it. To do so, we save each client identification obtained from the context as the key of a dictionary, incrementing by one its corresponding value at each time the client connects with the server. Additionally, an object the class FederationClient is added to the list clients in the federation at each time a new client connects to it.
 
         Parameters
@@ -49,7 +47,7 @@ class Federation:
                 self.federation[client] = 1
                 new_federation_client = \
                     FederationClient(federation_key=client,
-                                    path_tmp_local_corpus=path_tmp_local_corpus)
+                                     path_tmp_local_corpus=path_tmp_local_corpus)
                 self.federation_clients.append(new_federation_client)
             else:
                 self.federation[client] += 1
@@ -106,12 +104,13 @@ class Federation:
         if waiting:
             self.logger.info("Client {} connecting waiting".format(client))
         else:
-            self.logger.info("Client {} connected for vocabulary consensus".format(client))
+            self.logger.info(
+                "Client {} connected for vocabulary consensus".format(client))
 
     def disconnect(self, client):
         """
         Method to unregister a client from the federation. 
-        
+
         As the registration of the user in the federation is described by a counter that relates to the number of times the user has sent a GRPC message to the server, the client is not completely unregister from the federation until this counter is set to 0. At this time, the client is also removed from the list FederationClient objects that describe the set clients that are connected in the federationl.
 
         Parameters
@@ -141,7 +140,7 @@ class Federation:
     def getClients(self):
         """
         Get keys of the clients that are connected to the federation.
-    
+
         Returns
         -------
         clients_info:

@@ -130,7 +130,7 @@ class DecoderNetwork(nn.Module):
             # word_dist: batch_size x input_size
             word_dist = torch.matmul(theta, beta)
             self.topic_word_matrix = beta
-            
+
         return self.prior_mean, self.prior_variance, posterior_mu, \
             posterior_sigma, posterior_log_sigma, word_dist
 

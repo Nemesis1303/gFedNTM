@@ -6,24 +6,24 @@ from collections import defaultdict
 
 import numpy as np
 import torch
+# Local imports
+from models.utils.early_stopping.pytorchtools import EarlyStopping
 from scipy.special import softmax
 from torch import optim
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-# Local imports
-from ...utils.early_stopping.pytorchtools import EarlyStopping
 from .decoder_network import DecoderNetwork
 
 
 class AVITM(object):
     """Class to train an AVITM model."""
 
-    def __init__(self, logger, input_size, n_components=10,      
-                 model_type='prodLDA', hidden_sizes=(100, 100), activation='softplus', dropout=0.2, 
+    def __init__(self, logger, input_size, n_components=10,
+                 model_type='prodLDA', hidden_sizes=(100, 100), activation='softplus', dropout=0.2,
                  learn_priors=True, batch_size=64, lr=2e-3,
-                 momentum=0.99, solver='adam', num_epochs=100, reduce_on_plateau=False, topic_prior_mean=0.0, topic_prior_variance=None,num_samples=10, num_data_loader_workers=0, verbose=True):
+                 momentum=0.99, solver='adam', num_epochs=100, reduce_on_plateau=False, topic_prior_mean=0.0, topic_prior_variance=None, num_samples=10, num_data_loader_workers=0, verbose=True):
         """
         Sets the main attributes to create a specific AVITM.
 
@@ -92,7 +92,6 @@ class AVITM(object):
             "reduce_on_plateau must be type bool."
         assert isinstance(topic_prior_mean, float), \
             "topic_prior_mean must be type float"
-
 
         # General attributes
         self.logger = logger
@@ -260,7 +259,8 @@ class AVITM(object):
 
             # forward pass
             self.model.zero_grad()
-            prior_mean, prior_var, posterior_mean, posterior_var, posterior_log_var, word_dists = self.model(X)
+            prior_mean, prior_var, posterior_mean, posterior_var, posterior_log_var, word_dists = self.model(
+                X)
 
             # backward pass
             loss = self._loss(X, word_dists, prior_mean, prior_var,
@@ -306,7 +306,8 @@ class AVITM(object):
 
             # forward pass
             self.model.zero_grad()
-            prior_mean, prior_var, posterior_mean, posterior_var, posterior_log_var, word_dists = self.model(x)
+            prior_mean, prior_var, posterior_mean, posterior_var, posterior_log_var, word_dists = self.model(
+                x)
 
             loss = self._loss(x, word_dists, prior_mean, prior_var,
                               posterior_mean, posterior_var, posterior_log_var)
@@ -368,8 +369,8 @@ class AVITM(object):
                 patience=patience, verbose=self.verbose, path=save_dir, delta=delta)
 
         train_loader = DataLoader(
-            self.train_data, 
-            batch_size=self.batch_size, 
+            self.train_data,
+            batch_size=self.batch_size,
             shuffle=True,
             num_workers=mp.cpu_count())
 
@@ -391,7 +392,7 @@ class AVITM(object):
             if self.validation_data is not None:
 
                 validation_loader = DataLoader(
-                    self.validation_data, 
+                    self.validation_data,
                     batch_size=self.batch_size, shuffle=True,
                     num_workers=mp.cpu_count())
 

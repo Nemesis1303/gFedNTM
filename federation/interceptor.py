@@ -5,9 +5,7 @@
 ***                             CLASS CLIENT                               ***
 ******************************************************************************
 """
-##############################################################################
-#                                IMPORTS                                     #
-##############################################################################
+
 from grpc_interceptor import ServerInterceptor
 
 
@@ -23,4 +21,4 @@ class ErrorLogger(ServerInterceptor):
             self.log_error(e)
             raise
 
-    #def log_error(self, e: Exception) -> None:
+    # def log_error(self, e: Exception) -> None:

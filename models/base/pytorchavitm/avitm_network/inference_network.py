@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from collections import OrderedDict
+
 from torch import nn
-import torch
 
 
 class InferenceNetwork(nn.Module):
@@ -9,7 +9,6 @@ class InferenceNetwork(nn.Module):
 
     def __init__(self, input_size, output_size, hidden_sizes,
                  activation='softplus', dropout=0.2):
-
         """
         Initializes InferenceNetwork.
 
@@ -28,7 +27,7 @@ class InferenceNetwork(nn.Module):
         """
 
         super(InferenceNetwork, self).__init__()
-        
+
         assert isinstance(input_size, int), "input_size must by type int."
         assert isinstance(output_size, int), "output_size must be type int."
         assert isinstance(hidden_sizes, tuple), \
