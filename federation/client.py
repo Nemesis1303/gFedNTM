@@ -17,15 +17,11 @@ import time
 import numpy as np
 import torch
 from gensim.test.utils import get_tmpfile
-from models.pytorchavitm.avitm.federated_avitm.federated_avitm_model import \
-    FederatedAVITM
+from models.pytorchavitm.federated.federated_avitm import FederatedAVITM
 from torch.utils.data import DataLoader
 from utils.auxiliary_functions import (get_corpus_from_file, get_file_chunks,
                                        save_chunks_to_file,
                                        save_corpus_in_file, save_model_as_npz)
-from utils.utils_evaluation import (get_sim_docs_frobenius,
-                                    get_sim_tops_frobenius, get_simmat_betas,
-                                    get_simmat_thetas)
 from utils.utils_postprocessing import (convert_topic_word_to_init_size,
                                         thetas2sparse)
 from utils.utils_preprocessing import prepare_data_avitm_federated
@@ -218,7 +214,8 @@ class AVITMClient(Client):
 
         # Configure local model
         self.local_model = \
-            FederatedAVITM(input_size=self.input_size,
+            FederatedAVITM(logger=self.logger,
+                           input_size=self.input_size,
                            n_components=model_parameters["n_components"],
                            model_type=model_parameters["model_type"],
                            hidden_sizes=model_parameters["hidden_sizes"],
@@ -231,6 +228,8 @@ class AVITMClient(Client):
                            solver=model_parameters["solver"],
                            num_epochs=model_parameters["num_epochs"],
                            reduce_on_plateau=model_parameters["reduce_on_plateau"],
+                           num_samples=model_parameters["num_samples"],
+                           num_data_loader_workers=model_parameters["num_data_loader_workers"],
                            verbose=True)
 
         # Start training
@@ -246,37 +245,40 @@ class AVITMClient(Client):
 
 
     def __train_epoch_local_model(self, loader):
-        """Trains one epoch of the local AVITM model.
-
-        Args:
-        -----
-            * loader (DataLoader): Python iterable over the training dataset with which the 
-                                   minibatch is going to be trained.
-
-        Returns:
-        --------
-            * int:   Number of samples processed
-            * float: Minibatch's train loss
-
         """
+        Trains one epoch of the local AVITM model.
+
+        Parameters
+        ----------
+        loader: DataLoader
+            Python iterable over the training dataset with which the epoch is going to be trained.
+
+        Returns
+        -------
+        samples_processed: int
+            Number of processed samples
+        train_loss: float
+            Training loss
+        """
+
         self.local_model.model.train()
+
         train_loss = 0
         samples_processed = 0
-        topic_doc_list = []
 
-        self.local_model.current_mb = 0  # Counter for the current minibatch
+        # Counter for the current minibatch
+        self.local_model.current_mb = 0  
 
         # Training epoch starts
         for batch_samples in loader:
             
+            # Get samples in minibatch
             X = batch_samples['X']
-            if self.local_model.USE_CUDA:
-                X = X.cuda()
 
             # Get gradients minibatch
-            loss, train_loss, samples_processed, topic_words, topic_doc_list = \
+            loss, train_loss, samples_processed = \
                 self.local_model._train_minibatch(
-                    X, train_loss, samples_processed, topic_doc_list)
+                    X, train_loss, samples_processed)
 
             # Send minibatch' gradient to the server (gradient already converted to np)
             self.send_per_minibatch_gradient(
@@ -312,20 +314,26 @@ class AVITMClient(Client):
         # Calculate epoch's train loss and samples processed
         train_loss /= samples_processed
 
-        return samples_processed, train_loss, topic_words, topic_doc_list
+        return samples_processed, train_loss
 
     def __train_local_model(self, train_dataset, save_dir=None):
-        """Trains a local AVITM model. To do so, we send the server the gradients corresponding with the parameter beta of the model, and the server returns an update of such a parameter, which is calculated by averaging the per minibatch beta parameters that he gets from the set of clients that are connected to the federation. After obtaining the beta updates from the server, the client keeps with the training of its own local model. This process is repeated for each minibatch of each epoch.
+        """
+        Trains a local AVITM model. 
+        
+        To do so, we send the server the gradients corresponding with the parameter beta of the model, and the server returns an update of such a parameter, which is calculated by averaging the per minibatch beta parameters that he gets from the set of clients that are connected to the federation. After obtaining the beta updates from the server, the client keeps with the training of its own local model. This process is repeated for each minibatch of each epoch.
 
-        Args:
-        -----
-            * train_dataset (BOWDataset):        PyTorch Dataset classs for training data.
-            * save_dir (pathlib.Path, optional): Directory to save checkpoint models to. 
-                                                 Defaults to None.
+        Parameters
+        ----------
+        train_dataset: BOWDataset
+            PyTorch Dataset classs for training data
+        save_dir: pathlib.Path, optional
+            Directory to save checkpoint models to, defaults to None.
         """
         
         self.local_model.model_dir = save_dir
         self.local_model.train_data = train_dataset
+        # TODO: Include validation data
+        # self.local_model.validation_data = validation_data
         self.local_model.current_minibatch = 0
         self.local_model.current_epoch = 0
 
@@ -344,7 +352,7 @@ class AVITMClient(Client):
 
             # Train epoch
             s = datetime.datetime.now()
-            sp, train_loss, topic_words, topic_document = \
+            sp, train_loss = \
                 self.__train_epoch_local_model(train_loader)
             samples_processed += sp
             e = datetime.datetime.now()
@@ -357,8 +365,6 @@ class AVITMClient(Client):
             # save best
             if train_loss < self.local_model.best_loss_train:
                 self.local_model.best_components = self.local_model.model.beta
-                self.local_model.final_topic_word = topic_words
-                self.local_model.final_topic_document = topic_document
                 self.local_model.best_loss_train = train_loss
 
                 if save_dir is not None:
@@ -369,12 +375,10 @@ class AVITMClient(Client):
         # Get topics
         self.local_model.topics = self.local_model.get_topics() 
         #pd.DataFrame(self.local_model.get_topics()).T
-        print(type(self.local_model.topics[0]))
-        print(self.local_model.topics)
 
         # Get doc-topic distribution
         self.local_model.doc_topic_distrib = \
-            np.asarray(self.local_model.get_thetas(self.local_model.train_data)).T 
+            np.asarray(self.local_model.get_doc_topic_distribution(self.local_model.train_data))#.T 
         #print(self.local_model.doc_topic_distrib == self.local_model.get)        
 
         # Get word-topic distribution
@@ -409,8 +413,6 @@ class SyntheticAVITMClient(AVITMClient):
 
         # Evaluate model
         self.__evaluate_synthetic_model()
-        print(self.sim_docs_frob)
-        print(self.sim_tops_frob)
 
         # Converse thetas to sparse
         thr = 3e-3
@@ -423,67 +425,31 @@ class SyntheticAVITMClient(AVITMClient):
         save_model_as_npz(self.file_save, self)
 
     def __evaluate_synthetic_model(self):
+
+        print(self.local_model.word_topic_distrib.shape)
+        print(self.gt_word_topic_distrib.shape)
         all_words = ['wd'+str(word) for word in np.arange(self.vocab_size+1) if word > 0]
-        # self.local_model.word_topic_distrib = \
-        #     convert_topic_word_to_init_size(self.vocab_size,
-        #                                     self.local_model,
-        #                                     "avitm",
-        #                                     self.local_model.n_components,
-        #                                     self.id2token, all_words)
-        # Get similarity matrixes
-        inic = (self.id-1)*len(self.gt_doc_topic_distrib)
-        end = (self.id)*len(self.gt_doc_topic_distrib)
+        self.local_model.word_topic_distrib = \
+            convert_topic_word_to_init_size(self.vocab_size,
+                                            self.local_model,
+                                            "avitm",
+                                            self.local_model.n_components,
+                                            self.id2token,
+                                            all_words)
+        print(self.local_model.word_topic_distrib.shape)
+        print(self.gt_word_topic_distrib.shape)
+                  
+        print('Tópicos (equivalentes) evaluados correctamente:', np.sum(np.max(np.sqrt(self.local_model.word_topic_distrib).dot(np.sqrt(self.gt_word_topic_distrib.T)), axis=0)))
+
         # Get thetas of the documents corresponding only to the node's corpus
-        self.local_model.doc_topic_distrib = self.local_model.doc_topic_distrib[inic:end, :]
-        # thetas = self.local_model.doc_topic_distrib
-        print(self.local_model.doc_topic_distrib.size)
-        
-        self.sim_mat_theta_inferred = np.sqrt(self.local_model.doc_topic_distrib).dot(np.sqrt(self.local_model.doc_topic_distrib.T))
-            # get_simmat_thetas(False, len(self.gt_doc_topic_distrib),
-            #                   self.local_model.doc_topic_distrib)
+        inic = (self.id-1)*len(self.gt_doc_topic_distrib)
+        print(inic)
+        end = (self.id)*len(self.gt_doc_topic_distrib)
+        print(end)
+        print(self.local_model.doc_topic_distrib.shape)
+        thetas = self.local_model.doc_topic_distrib[inic:end, :]
+        print(thetas)
 
-        self.sim_mat_thetas_gt = np.sqrt(self.gt_doc_topic_distrib[0]).dot(np.sqrt(self.gt_doc_topic_distrib[0].T))
-            # get_simmat_thetas(False, len(self.gt_doc_topic_distrib),
-            #                   self.gt_doc_topic_distrib)
-    
-
-        # self.sim_mat_betas = \
-        #     get_simmat_betas(
-        #         False, self.local_model.word_topic_distrib, self.gt_word_topic_distrib)
-
-        # Get metrics
-        # Difference in evaluation of doc similarity
-        self.sim_docs_frob = \
-            get_sim_docs_frobenius(
-                self.sim_mat_thetas_gt, self.sim_mat_theta_inferred)
-        print(self.sim_docs_frob)
-        print('Difference in evaluation (train) of doc similarity (node 0):', np.sum(np.abs(self.sim_mat_thetas_gt - self.sim_mat_theta_inferred))/len(self.gt_doc_topic_distrib))
-        # Number of topics correctly evaluated
-        #self.sim_tops_frob = get_sim_tops_frobenius(self.sim_mat_betas)
-
-
-"""
-******************************************************************************
-***                        CLASS CTM CLIENT                                ***
-******************************************************************************
-"""
-
-
-class CTMCLient(Client):
-    def __init__(self, id, stub, period, local_corpus, model_parameters):
-
-        Client.__init__(self, id, stub, period, local_corpus)
-
-        self.model_parameters = model_parameters
-
-        # Generate training set
-        self.train_dataset = None
-        self.input_size = None
-        self.id2token = None
-        self.__get_training_dataset()
-
-        # Configure local CTM model
-        self.local_model = None
-
-    def __get_training_dataset(self):
-        print("TODO")
+        sim_mat_theoretical = np.sqrt(self.gt_doc_topic_distrib[0]).dot(np.sqrt(self.gt_doc_topic_distrib[0].T))
+        sim_mat_actual = np.sqrt(thetas).dot(np.sqrt(thetas.T))
+        print('Difference in evaluation of doc similarity:', np.sum(np.abs(sim_mat_theoretical - sim_mat_actual))/len(self.gt_doc_topic_distrib))

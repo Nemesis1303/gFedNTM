@@ -35,7 +35,7 @@ def start_client(id_client, model_type):
     period = 3
 
     # Training data
-    file = "data/training_data/synthetic.npz"
+    file = "data/training_data/synthetic2.npz"
     data = np.load(file, allow_pickle=True)
     corpus = data['documents'][id_client-1]
     vocab_size = data['vocab_size']
@@ -84,7 +84,9 @@ def start_client(id_client, model_type):
             "lr": 2e-3,
             "momentum": 0.99,
             "solver": "adam",
-            "num_epochs": 100,
+            "num_epochs": 2,
+            "num_samples": 10,
+            "num_data_loader_workers":0,
             "reduce_on_plateau": False
         }
 
