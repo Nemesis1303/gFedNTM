@@ -1,5 +1,5 @@
 # gFedNTM
-A gRPC based federated learning framework for ProdLDA and Contextualized Topic Models
+A gRPC based federated learning framework for neural topic models.
 
 ## Generate gRPC Python files from proto file
 Get into venv:
