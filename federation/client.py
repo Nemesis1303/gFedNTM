@@ -6,18 +6,15 @@
 ******************************************************************************
 """
 
-from __future__ import print_function
 
-import os
 import time
 
 import numpy as np
 from gensim.test.utils import get_tmpfile
-from models.federated.federated_avitm import SyntheticFederatedAVITM
-from utils.auxiliary_functions import (get_corpus_from_file, get_file_chunks,
-                                       save_chunks_to_file,
-                                       save_corpus_in_file)
-from utils.utils_preprocessing import prepare_data_avitm_federated
+from models.base.pytorchavitm.datasets.bow_dataset import BOWDataset
+from models.federated.federated_avitm import FederatedAVITM
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.pipeline import FeatureUnion
 
 from federation import federated_pb2
 
@@ -26,16 +23,33 @@ class Client:
     """ Class containing the stubs to interact with the server-side part via a gRPC channel.
     """
 
-    def __init__(self, id, stub, period, local_corpus, model_parameters, logger=None):
+    def __init__(self, id, stub, local_model_type, local_corpus, model_parameters, logger=None):
+        """
+        Sets the main attributes defining a Client
+
+        Parameters
+        ----------
+        id : int
+            Client's ide
+        stub : federated_pb2_grpc.FederationStub
+            Module acting as the interface for gRPC client
+        local_model_type : str
+            Type of the underlying topic modeling algorithm used for the federated training
+        local_corpus : List[str]
+            List of documents that constitute the node's local corpus
+        """
+
         self.id = id
         self.stub = stub
-        self.period = period
-        self.local_model = None
+        self.local_model_type = local_model_type
+        self.local_corpus = \
+            [" ".join(local_corpus[i]) for i in np.arange(len(local_corpus))]
         self.model_parameters = model_parameters
-        self.local_corpus = local_corpus
-        self.tmp_local_corpus = get_tmpfile(str(self.id))
-        self.global_corpus = None
-        self.tmp_global_corpus = get_tmpfile(str(self.id))
+
+        # Other attributes
+        self.local_model = None
+        self.tmp_local_vocab = get_tmpfile(str(self.id))
+        self.tmp_global_vocab = get_tmpfile(str(self.id))
 
         # Create logger object
         if logger:
@@ -46,49 +60,81 @@ class Client:
             logging.basicConfig(format=FMT, level='INFO')
             self.logger = logging.getLogger('Client')
 
-        # Save vocab in temporal local file
-        self.__prepare_vocab_to_send(self.local_corpus)
-
         # Send file with vocabulary to server
         self.__send_local_vocab()
 
         # Wait for the consensed vocabulary
         self.__wait_for_agreed_vocab()
 
-    def __prepare_vocab_to_send(self, corpus):
-        """
-        Prepares the vocabulary that a node is going to send to the server by saving it into a text file.
 
-        Parameters
-        ----------
-        corpus : numpy.ndarray
-            Node's corpus
+    def __prepare_vocab_to_send(self):
         """
-        save_corpus_in_file(corpus, self.tmp_local_corpus)
+        Gets the vocabulary associated to the local corpus as a dictionary object.
+        """
+
+        if self.local_model_type == 'prod':
+            # Create a CountVectorizer object to convert a collection of text documents into a matrix of token counts
+            cv = CountVectorizer(
+                input='content', lowercase=True, stop_words='english', binary=False)
+            # Learn the vocabulary dictionary, bow = document-term matrix
+            cv.fit_transform(self.local_corpus)
+            vocab_dict = cv.vocabulary_
+        elif self.local_model_type == 'ctm':
+            print("To be implemented")
+        else:
+            self.logger.error(
+                "Model type for the vocabulary object generation not supported")
+
+        return vocab_dict
 
     def __send_local_vocab(self):
         """
         Sends the local vocabulary to the server and waits for its ACK.
         """
-        request = get_file_chunks(self.tmp_local_corpus)
 
-        # Send request to the server and wait for his response
+        # Get vocabulary to sent
+        vocab_dict = self.__prepare_vocab_to_send()
+        # Protofy vocabulary
+        dic = federated_pb2.Dictionary()
+        for key_, value_ in vocab_dict.items():
+            dic.pairs.extend(
+                [federated_pb2.Dictionary.Pair(key=key_, value=federated_pb2.Dictionary.Pair.Value(ivalue=value_))])
+
+        # Send dictionary to the server and wait for his response
         if self.stub:
-            response = self.stub.upload(request)
+            response = self.stub.sendLocalDic(dic)
             self.logger.info(
                 'Client %s vocab is being sent to server.', str(self.id))
             # Remove local file when finished the sending to the server
-            if response.length == os.path.getsize(self.tmp_local_corpus):
-                os.remove(self.tmp_local_corpus)
+            if response.length == len(vocab_dict):
+                self.logger.info(
+                    'Server received correctly vocab from client %s.', str(self.id))
+
+        return
 
     def __wait_for_agreed_vocab(self):
         """
         Waits by saving the agreed vocabulary sent by the server.
         """
-        response = self.stub.download(federated_pb2.Empty())
-        save_chunks_to_file(response, self.tmp_global_corpus)
-        self.logger.info('Client %s receiving consensus vocab.', str(self.id))
-        self.global_corpus = get_corpus_from_file(self.tmp_global_corpus)
+
+        self.logger.info(
+            'Client %s receiving consensus vocab.', str(self.id))
+
+        # Get global dictionary
+        response = self.stub.sendGlobalDic(federated_pb2.Empty())
+
+        # Unprotofy global dictionary
+        vocabs = []
+        for dic_i in range(len(response.dic)):
+            vocab_i = dict([(pair.key, pair.value.ivalue)
+                            for pair in response.dic[dic_i].pairs])
+            cv_i = CountVectorizer(vocabulary=vocab_i)
+            name_i = "CV" + str(dic_i)
+            vocabs.append((name_i, cv_i))
+
+        self.global_vocab = FeatureUnion(vocabs)
+
+        return
 
     def __generate_protos_update(self, gradient):
         """
@@ -192,24 +238,30 @@ class Client:
         To do so, we send the server the gradients corresponding with the parameter beta of the model, and the server returns an update of such a parameter, which is calculated by averaging the per minibatch beta parameters that he gets from the set of clients that are connected to the federation. After obtaining the beta updates from the server, the client keeps with the training of its own local model. This process is repeated for each minibatch of each epoch.
         """
 
-        # Create local model
-        # TODO: Create model according to type
+        if self.local_model_type == "prod":
+            # Local document-term matrix as function of the global vocabulary
+            train_bow = self.global_vocab.transform(
+                self.local_corpus).toarray()
 
-        # Generate training dataset in the format for AVITM
-        self.train_data, input_size, id2token = \
-            prepare_data_avitm_federated(
-                self.global_corpus, 0.99, 0.01)
+            # Array mapping from feature integer indices to feature name
+            idx2token = self.global_vocab.get_feature_names_out()
+            self.model_parameters["input_size"] = len(idx2token)
+            self.model_parameters["id2token"] = \
+                {k: v for k, v in zip(range(0, len(idx2token)), idx2token)}
 
-        self.model_parameters["input_size"] = input_size
-        self.model_parameters["id2token"] = id2token
+            # The train dataset is an object from the class BOWDataset
+            train_data = BOWDataset(train_bow, idx2token)
 
-        self.local_model = \
-            SyntheticFederatedAVITM(self.model_parameters, self, self.logger)
-        self.local_model.fit(self.train_data)
+            self.local_model = \
+                FederatedAVITM(self.model_parameters, self, self.logger)
+
+        elif self.local_model_type == "ctm":
+            print("To be implemented")
+        else:
+            self.logger.error("Provided underlying model not supported")
+
+        self.local_model.fit(train_data)
+
         print("TRAINED")
 
-    def eval_local_model(self, eval_params):
-        self.local_model.get_results_model()
-        self.local_model.evaluate_synthetic_model(
-            eval_params[0], eval_params[1], eval_params[2], eval_params[3])
-        print("EVALUATED")
+        return

@@ -29,9 +29,6 @@ def start_server(min_num_clients):
 
 
 def start_client(id_client, model_type):
-    # TODO: Pass the period as an argument if in the end, I find useful its usage
-    period = 3
-
     # Training data
     file = "data/training_data/synthetic.npz"
     data = np.load(file, allow_pickle=True)
@@ -93,20 +90,11 @@ def start_client(id_client, model_type):
         }
 
         # START CLIENT
-        rep = 3
-        file_save = \
-            "data/output_models/variability/model_client_" + \
-            str(id_client) + "_rep_" + str(rep) + ".npz"
-        print("Executing rep ", rep)
         # Open channel for communication with the server
         with grpc.insecure_channel('localhost:50051') as channel:
             stub = federated_pb2_grpc.FederationStub(channel)
-
-            client = Client(id_client, stub, period, corpus, model_parameters)
-            eval_parameters = [
-                vocab_size, doc_topic_distrib_gt_all[id_client-1], word_topic_distrib_gt, file_save]
+            client = Client(id_client, stub, model_type, corpus, model_parameters)
             client.train_local_model()
-            client.eval_local_model(eval_params=eval_parameters)
 
     else:
         print("The selected model type is not provided.")

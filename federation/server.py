@@ -10,9 +10,8 @@ import time
 
 import numpy as np
 from gensim.test.utils import get_tmpfile
-from utils.auxiliary_functions import (get_file_chunks, get_type_from_string,
-                                       save_chunks_to_file,
-                                       save_corpus_in_file)
+from utils.auxiliary_functions import (get_dict_from_file,
+                                       get_type_from_string, save_dict_as_json)
 from waiting import wait
 
 from federation import (federated_pb2, federated_pb2_grpc, federation,
@@ -32,6 +31,7 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
         self.current_epoch = -2
         self.id_server = "IDS" + "_" + str(round(time.time()))
         self.path_global_corpus = get_tmpfile(str(self.id_server))
+        self.dicts = []
 
         # Create logger object
         if logger:
@@ -117,36 +117,40 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
         context.add_callback(unregister_client)
         self.federation.connect_waiting_or_consensus(context.peer(), waiting)
 
-    def upload(self, request_iterator, context):
+    def sendLocalDic(self, request, context):
 
         path_tmp_local_corpus = get_tmpfile(context.peer())
         self.record_client_consensus(context, path_tmp_local_corpus)
 
-        # Save chunks to temporal file
-        save_chunks_to_file(request_iterator, path_tmp_local_corpus)
+        # Get client's vocab
+        vocab = dict([(pair.key, pair.value.ivalue)
+                     for pair in request.pairs])
+        # Save vocab to temporal file
+        #save_dict_as_json(vocab, path_tmp_local_corpus)
+        self.dicts.append(vocab)
+        return federated_pb2.Reply(length=len(vocab))
 
-        return federated_pb2.Reply(length=os.path.getsize(path_tmp_local_corpus))
+    def sendGlobalDic(self, request, context):
 
-    def download(self, request, context):
         # Record clients waiting for the consensed request
         self.record_client_waiting_or_consensus(context, False)
 
-        # Wait until all the clients in the federation have sent its local corpus
+        # Wait until all the clients in the federation have sent its local vocab
         wait(lambda: self.can_send_aggragated_vocab(), timeout_seconds=120,
              waiting_for="Aggregated vocab can be sent")
 
-        # Combine clients vocabulary
-        merged_corpus = []
-        for client in self.federation.federation_clients:
-            tmp_file_name = client.path_tmp_local_corpus
-            with open(tmp_file_name, 'r') as f:
-                for l in f.readlines():
-                    merged_corpus.append(l.split())
+        # Serialize clients vocab
+        feature_union = federated_pb2.FeatureUnion()
+        #for client in self.federation.federation_clients:
+        #   client_vocab = get_dict_from_file(client.path_tmp_local_corpus)
+        for vocab_dict in self.dicts:
+            dic = federated_pb2.Dictionary()
+            for key_, value_ in vocab_dict.items():
+                dic.pairs.extend(
+                    [federated_pb2.Dictionary.Pair(key=key_, value=federated_pb2.Dictionary.Pair.Value(ivalue=value_))])
+            feature_union.dic.extend([dic])
 
-        # Save in file and send it to clients
-        save_corpus_in_file(merged_corpus, self.path_global_corpus)
-
-        return get_file_chunks(self.path_global_corpus)
+        return feature_union
 
     def can_send_aggragated_vocab(self):
         """

@@ -34,6 +34,16 @@ class FederationStub(object):
                 request_serializer=federated__pb2.Empty.SerializeToString,
                 response_deserializer=federated__pb2.Chunk.FromString,
                 )
+        self.sendLocalDic = channel.unary_unary(
+                '/federated.Federation/sendLocalDic',
+                request_serializer=federated__pb2.Dictionary.SerializeToString,
+                response_deserializer=federated__pb2.Reply.FromString,
+                )
+        self.sendGlobalDic = channel.unary_unary(
+                '/federated.Federation/sendGlobalDic',
+                request_serializer=federated__pb2.Empty.SerializeToString,
+                response_deserializer=federated__pb2.FeatureUnion.FromString,
+                )
 
 
 class FederationServicer(object):
@@ -63,6 +73,18 @@ class FederationServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def sendLocalDic(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def sendGlobalDic(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_FederationServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -85,6 +107,16 @@ def add_FederationServicer_to_server(servicer, server):
                     servicer.download,
                     request_deserializer=federated__pb2.Empty.FromString,
                     response_serializer=federated__pb2.Chunk.SerializeToString,
+            ),
+            'sendLocalDic': grpc.unary_unary_rpc_method_handler(
+                    servicer.sendLocalDic,
+                    request_deserializer=federated__pb2.Dictionary.FromString,
+                    response_serializer=federated__pb2.Reply.SerializeToString,
+            ),
+            'sendGlobalDic': grpc.unary_unary_rpc_method_handler(
+                    servicer.sendGlobalDic,
+                    request_deserializer=federated__pb2.Empty.FromString,
+                    response_serializer=federated__pb2.FeatureUnion.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -161,5 +193,39 @@ class Federation(object):
         return grpc.experimental.unary_stream(request, target, '/federated.Federation/download',
             federated__pb2.Empty.SerializeToString,
             federated__pb2.Chunk.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def sendLocalDic(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/federated.Federation/sendLocalDic',
+            federated__pb2.Dictionary.SerializeToString,
+            federated__pb2.Reply.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def sendGlobalDic(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/federated.Federation/sendGlobalDic',
+            federated__pb2.Empty.SerializeToString,
+            federated__pb2.FeatureUnion.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

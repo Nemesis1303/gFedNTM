@@ -20,7 +20,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   syntax='proto3',
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_pb=b'\n\x0f\x66\x65\x64\x65rated.proto\x12\tfederated\"\x07\n\x05\x45mpty\"g\n\x0bTensorShape\x12\'\n\x03\x64im\x18\x02 \x03(\x0b\x32\x1a.federated.TensorShape.Dim\x1a/\n\x03\x44im\x12\x0c\n\x04size\x18\x01 \x01(\x03\x12\x11\n\x04name\x18\x02 \x01(\tH\x00\x88\x01\x01\x42\x07\n\x05_name\"r\n\x06Update\x12\x13\n\x0btensor_name\x18\x01 \x01(\t\x12\r\n\x05\x64type\x18\x02 \x01(\t\x12,\n\x0ctensor_shape\x18\x03 \x01(\x0b\x32\x16.federated.TensorShape\x12\x16\n\x0etensor_content\x18\x04 \x01(\x0c\"n\n\x15MessageAdditionalData\x12\x12\n\ncurrent_mb\x18\x01 \x01(\r\x12\x15\n\rcurrent_epoch\x18\x02 \x01(\r\x12\x16\n\x0enum_max_epochs\x18\x03 \x01(\r\x12\x12\n\nid_machine\x18\x04 \x01(\r\"\xbd\x01\n\rMessageHeader\x12\x17\n\nid_request\x18\x01 \x01(\tH\x00\x88\x01\x01\x12\x18\n\x0bid_response\x18\x02 \x01(\tH\x01\x88\x01\x01\x12\x1a\n\rid_to_request\x18\x03 \x01(\tH\x02\x88\x01\x01\x12,\n\x0cmessage_type\x18\x04 \x01(\x0e\x32\x16.federated.MessageTypeB\r\n\x0b_id_requestB\x0e\n\x0c_id_responseB\x10\n\x0e_id_to_request\"\x94\x01\n\x13\x43lientTensorRequest\x12(\n\x06header\x18\x01 \x01(\x0b\x32\x18.federated.MessageHeader\x12\x32\n\x08metadata\x18\x02 \x01(\x0b\x32 .federated.MessageAdditionalData\x12\x1f\n\x04\x64\x61ta\x18\x03 \x01(\x0b\x32\x11.federated.Update\"\x9e\x01\n\x1dServerAggregatedTensorRequest\x12(\n\x06header\x18\x01 \x01(\x0b\x32\x18.federated.MessageHeader\x12\x32\n\x08metadata\x18\x02 \x01(\x0b\x32 .federated.MessageAdditionalData\x12\x1f\n\x04\x64\x61ta\x18\x03 \x01(\x0b\x32\x11.federated.Update\"v\n\x16\x43lientReceivedResponse\x12(\n\x06header\x18\x01 \x01(\x0b\x32\x18.federated.MessageHeader\x12\x32\n\x08metadata\x18\x02 \x01(\x0b\x32 .federated.MessageAdditionalData\"v\n\x16ServerReceivedResponse\x12(\n\x06header\x18\x01 \x01(\x0b\x32\x18.federated.MessageHeader\x12\x32\n\x08metadata\x18\x02 \x01(\x0b\x32 .federated.MessageAdditionalData\"\x17\n\x05\x43hunk\x12\x0e\n\x06\x62uffer\x18\x01 \x01(\x0c\"\x17\n\x07Request\x12\x0c\n\x04name\x18\x01 \x01(\t\"\x17\n\x05Reply\x12\x0e\n\x06length\x18\x01 \x01(\x05*\x82\x01\n\x0bMessageType\x12\x16\n\x12\x43LIENT_TENSOR_SEND\x10\x00\x12\x1b\n\x17\x43LIENT_CONFIRM_RECEIVED\x10\x01\x12!\n\x1dSERVER_AGGREGATED_TENSOR_SEND\x10\x02\x12\x1b\n\x17SERVER_CONFIRM_RECEIVED\x10\x03\x32\xa0\x02\n\nFederation\x12V\n\x0fsendLocalTensor\x12\x1e.federated.ClientTensorRequest\x1a!.federated.ServerReceivedResponse\"\x00\x12T\n\x14sendAggregatedTensor\x12\x10.federated.Empty\x1a(.federated.ServerAggregatedTensorRequest\"\x00\x12\x30\n\x06upload\x12\x10.federated.Chunk\x1a\x10.federated.Reply\"\x00(\x01\x12\x32\n\x08\x64ownload\x12\x10.federated.Empty\x1a\x10.federated.Chunk\"\x00\x30\x01\x62\x06proto3'
+  serialized_pb=b'\n\x0f\x66\x65\x64\x65rated.proto\x12\tfederated\"\x07\n\x05\x45mpty\"g\n\x0bTensorShape\x12\'\n\x03\x64im\x18\x02 \x03(\x0b\x32\x1a.federated.TensorShape.Dim\x1a/\n\x03\x44im\x12\x0c\n\x04size\x18\x01 \x01(\x03\x12\x11\n\x04name\x18\x02 \x01(\tH\x00\x88\x01\x01\x42\x07\n\x05_name\"r\n\x06Update\x12\x13\n\x0btensor_name\x18\x01 \x01(\t\x12\r\n\x05\x64type\x18\x02 \x01(\t\x12,\n\x0ctensor_shape\x18\x03 \x01(\x0b\x32\x16.federated.TensorShape\x12\x16\n\x0etensor_content\x18\x04 \x01(\x0c\"n\n\x15MessageAdditionalData\x12\x12\n\ncurrent_mb\x18\x01 \x01(\r\x12\x15\n\rcurrent_epoch\x18\x02 \x01(\r\x12\x16\n\x0enum_max_epochs\x18\x03 \x01(\r\x12\x12\n\nid_machine\x18\x04 \x01(\r\"\xbd\x01\n\rMessageHeader\x12\x17\n\nid_request\x18\x01 \x01(\tH\x00\x88\x01\x01\x12\x18\n\x0bid_response\x18\x02 \x01(\tH\x01\x88\x01\x01\x12\x1a\n\rid_to_request\x18\x03 \x01(\tH\x02\x88\x01\x01\x12,\n\x0cmessage_type\x18\x04 \x01(\x0e\x32\x16.federated.MessageTypeB\r\n\x0b_id_requestB\x0e\n\x0c_id_responseB\x10\n\x0e_id_to_request\"\x94\x01\n\x13\x43lientTensorRequest\x12(\n\x06header\x18\x01 \x01(\x0b\x32\x18.federated.MessageHeader\x12\x32\n\x08metadata\x18\x02 \x01(\x0b\x32 .federated.MessageAdditionalData\x12\x1f\n\x04\x64\x61ta\x18\x03 \x01(\x0b\x32\x11.federated.Update\"\x9e\x01\n\x1dServerAggregatedTensorRequest\x12(\n\x06header\x18\x01 \x01(\x0b\x32\x18.federated.MessageHeader\x12\x32\n\x08metadata\x18\x02 \x01(\x0b\x32 .federated.MessageAdditionalData\x12\x1f\n\x04\x64\x61ta\x18\x03 \x01(\x0b\x32\x11.federated.Update\"v\n\x16\x43lientReceivedResponse\x12(\n\x06header\x18\x01 \x01(\x0b\x32\x18.federated.MessageHeader\x12\x32\n\x08metadata\x18\x02 \x01(\x0b\x32 .federated.MessageAdditionalData\"v\n\x16ServerReceivedResponse\x12(\n\x06header\x18\x01 \x01(\x0b\x32\x18.federated.MessageHeader\x12\x32\n\x08metadata\x18\x02 \x01(\x0b\x32 .federated.MessageAdditionalData\"\x17\n\x05\x43hunk\x12\x0e\n\x06\x62uffer\x18\x01 \x01(\x0c\"\x17\n\x07Request\x12\x0c\n\x04name\x18\x01 \x01(\t\"\x17\n\x05Reply\x12\x0e\n\x06length\x18\x01 \x01(\x05\"\xbb\x01\n\nDictionary\x12)\n\x05pairs\x18\x01 \x03(\x0b\x32\x1a.federated.Dictionary.Pair\x1a\x81\x01\n\x04Pair\x12\x0b\n\x03key\x18\x01 \x01(\t\x12/\n\x05value\x18\x02 \x01(\x0b\x32 .federated.Dictionary.Pair.Value\x1a;\n\x05Value\x12\x10\n\x06svalue\x18\x01 \x01(\tH\x00\x12\x10\n\x06ivalue\x18\x02 \x01(\x05H\x00\x42\x0e\n\x0coneof_values\"2\n\x0c\x46\x65\x61tureUnion\x12\"\n\x03\x64ic\x18\x01 \x03(\x0b\x32\x15.federated.Dictionary*\x82\x01\n\x0bMessageType\x12\x16\n\x12\x43LIENT_TENSOR_SEND\x10\x00\x12\x1b\n\x17\x43LIENT_CONFIRM_RECEIVED\x10\x01\x12!\n\x1dSERVER_AGGREGATED_TENSOR_SEND\x10\x02\x12\x1b\n\x17SERVER_CONFIRM_RECEIVED\x10\x03\x32\x99\x03\n\nFederation\x12V\n\x0fsendLocalTensor\x12\x1e.federated.ClientTensorRequest\x1a!.federated.ServerReceivedResponse\"\x00\x12T\n\x14sendAggregatedTensor\x12\x10.federated.Empty\x1a(.federated.ServerAggregatedTensorRequest\"\x00\x12\x30\n\x06upload\x12\x10.federated.Chunk\x1a\x10.federated.Reply\"\x00(\x01\x12\x32\n\x08\x64ownload\x12\x10.federated.Empty\x1a\x10.federated.Chunk\"\x00\x30\x01\x12\x39\n\x0csendLocalDic\x12\x15.federated.Dictionary\x1a\x10.federated.Reply\"\x00\x12<\n\rsendGlobalDic\x12\x10.federated.Empty\x1a\x17.federated.FeatureUnion\"\x00\x62\x06proto3'
 )
 
 _MESSAGETYPE = _descriptor.EnumDescriptor(
@@ -53,8 +53,8 @@ _MESSAGETYPE = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   serialized_options=None,
-  serialized_start=1192,
-  serialized_end=1322,
+  serialized_start=1434,
+  serialized_end=1564,
 )
 _sym_db.RegisterEnumDescriptor(_MESSAGETYPE)
 
@@ -605,6 +605,151 @@ _REPLY = _descriptor.Descriptor(
   serialized_end=1189,
 )
 
+
+_DICTIONARY_PAIR_VALUE = _descriptor.Descriptor(
+  name='Value',
+  full_name='federated.Dictionary.Pair.Value',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='svalue', full_name='federated.Dictionary.Pair.Value.svalue', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='ivalue', full_name='federated.Dictionary.Pair.Value.ivalue', index=1,
+      number=2, type=5, cpp_type=1, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+    _descriptor.OneofDescriptor(
+      name='oneof_values', full_name='federated.Dictionary.Pair.Value.oneof_values',
+      index=0, containing_type=None,
+      create_key=_descriptor._internal_create_key,
+    fields=[]),
+  ],
+  serialized_start=1320,
+  serialized_end=1379,
+)
+
+_DICTIONARY_PAIR = _descriptor.Descriptor(
+  name='Pair',
+  full_name='federated.Dictionary.Pair',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='key', full_name='federated.Dictionary.Pair.key', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='value', full_name='federated.Dictionary.Pair.value', index=1,
+      number=2, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[_DICTIONARY_PAIR_VALUE, ],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=1250,
+  serialized_end=1379,
+)
+
+_DICTIONARY = _descriptor.Descriptor(
+  name='Dictionary',
+  full_name='federated.Dictionary',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='pairs', full_name='federated.Dictionary.pairs', index=0,
+      number=1, type=11, cpp_type=10, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[_DICTIONARY_PAIR, ],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=1192,
+  serialized_end=1379,
+)
+
+
+_FEATUREUNION = _descriptor.Descriptor(
+  name='FeatureUnion',
+  full_name='federated.FeatureUnion',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='dic', full_name='federated.FeatureUnion.dic', index=0,
+      number=1, type=11, cpp_type=10, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=1381,
+  serialized_end=1431,
+)
+
 _TENSORSHAPE_DIM.containing_type = _TENSORSHAPE
 _TENSORSHAPE_DIM.oneofs_by_name['_name'].fields.append(
   _TENSORSHAPE_DIM.fields_by_name['name'])
@@ -631,6 +776,17 @@ _CLIENTRECEIVEDRESPONSE.fields_by_name['header'].message_type = _MESSAGEHEADER
 _CLIENTRECEIVEDRESPONSE.fields_by_name['metadata'].message_type = _MESSAGEADDITIONALDATA
 _SERVERRECEIVEDRESPONSE.fields_by_name['header'].message_type = _MESSAGEHEADER
 _SERVERRECEIVEDRESPONSE.fields_by_name['metadata'].message_type = _MESSAGEADDITIONALDATA
+_DICTIONARY_PAIR_VALUE.containing_type = _DICTIONARY_PAIR
+_DICTIONARY_PAIR_VALUE.oneofs_by_name['oneof_values'].fields.append(
+  _DICTIONARY_PAIR_VALUE.fields_by_name['svalue'])
+_DICTIONARY_PAIR_VALUE.fields_by_name['svalue'].containing_oneof = _DICTIONARY_PAIR_VALUE.oneofs_by_name['oneof_values']
+_DICTIONARY_PAIR_VALUE.oneofs_by_name['oneof_values'].fields.append(
+  _DICTIONARY_PAIR_VALUE.fields_by_name['ivalue'])
+_DICTIONARY_PAIR_VALUE.fields_by_name['ivalue'].containing_oneof = _DICTIONARY_PAIR_VALUE.oneofs_by_name['oneof_values']
+_DICTIONARY_PAIR.fields_by_name['value'].message_type = _DICTIONARY_PAIR_VALUE
+_DICTIONARY_PAIR.containing_type = _DICTIONARY
+_DICTIONARY.fields_by_name['pairs'].message_type = _DICTIONARY_PAIR
+_FEATUREUNION.fields_by_name['dic'].message_type = _DICTIONARY
 DESCRIPTOR.message_types_by_name['Empty'] = _EMPTY
 DESCRIPTOR.message_types_by_name['TensorShape'] = _TENSORSHAPE
 DESCRIPTOR.message_types_by_name['Update'] = _UPDATE
@@ -643,6 +799,8 @@ DESCRIPTOR.message_types_by_name['ServerReceivedResponse'] = _SERVERRECEIVEDRESP
 DESCRIPTOR.message_types_by_name['Chunk'] = _CHUNK
 DESCRIPTOR.message_types_by_name['Request'] = _REQUEST
 DESCRIPTOR.message_types_by_name['Reply'] = _REPLY
+DESCRIPTOR.message_types_by_name['Dictionary'] = _DICTIONARY
+DESCRIPTOR.message_types_by_name['FeatureUnion'] = _FEATUREUNION
 DESCRIPTOR.enum_types_by_name['MessageType'] = _MESSAGETYPE
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
@@ -738,6 +896,36 @@ Reply = _reflection.GeneratedProtocolMessageType('Reply', (_message.Message,), {
   })
 _sym_db.RegisterMessage(Reply)
 
+Dictionary = _reflection.GeneratedProtocolMessageType('Dictionary', (_message.Message,), {
+
+  'Pair' : _reflection.GeneratedProtocolMessageType('Pair', (_message.Message,), {
+
+    'Value' : _reflection.GeneratedProtocolMessageType('Value', (_message.Message,), {
+      'DESCRIPTOR' : _DICTIONARY_PAIR_VALUE,
+      '__module__' : 'federated_pb2'
+      # @@protoc_insertion_point(class_scope:federated.Dictionary.Pair.Value)
+      })
+    ,
+    'DESCRIPTOR' : _DICTIONARY_PAIR,
+    '__module__' : 'federated_pb2'
+    # @@protoc_insertion_point(class_scope:federated.Dictionary.Pair)
+    })
+  ,
+  'DESCRIPTOR' : _DICTIONARY,
+  '__module__' : 'federated_pb2'
+  # @@protoc_insertion_point(class_scope:federated.Dictionary)
+  })
+_sym_db.RegisterMessage(Dictionary)
+_sym_db.RegisterMessage(Dictionary.Pair)
+_sym_db.RegisterMessage(Dictionary.Pair.Value)
+
+FeatureUnion = _reflection.GeneratedProtocolMessageType('FeatureUnion', (_message.Message,), {
+  'DESCRIPTOR' : _FEATUREUNION,
+  '__module__' : 'federated_pb2'
+  # @@protoc_insertion_point(class_scope:federated.FeatureUnion)
+  })
+_sym_db.RegisterMessage(FeatureUnion)
+
 
 
 _FEDERATION = _descriptor.ServiceDescriptor(
@@ -747,8 +935,8 @@ _FEDERATION = _descriptor.ServiceDescriptor(
   index=0,
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_start=1325,
-  serialized_end=1613,
+  serialized_start=1567,
+  serialized_end=1976,
   methods=[
   _descriptor.MethodDescriptor(
     name='sendLocalTensor',
@@ -787,6 +975,26 @@ _FEDERATION = _descriptor.ServiceDescriptor(
     containing_service=None,
     input_type=_EMPTY,
     output_type=_CHUNK,
+    serialized_options=None,
+    create_key=_descriptor._internal_create_key,
+  ),
+  _descriptor.MethodDescriptor(
+    name='sendLocalDic',
+    full_name='federated.Federation.sendLocalDic',
+    index=4,
+    containing_service=None,
+    input_type=_DICTIONARY,
+    output_type=_REPLY,
+    serialized_options=None,
+    create_key=_descriptor._internal_create_key,
+  ),
+  _descriptor.MethodDescriptor(
+    name='sendGlobalDic',
+    full_name='federated.Federation.sendGlobalDic',
+    index=5,
+    containing_service=None,
+    input_type=_EMPTY,
+    output_type=_FEATUREUNION,
     serialized_options=None,
     create_key=_descriptor._internal_create_key,
   ),

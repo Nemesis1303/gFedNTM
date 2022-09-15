@@ -84,9 +84,30 @@ message Reply {
   int32 length = 1;
 }
 
+message Dictionary {
+  message Pair {
+    string key = 1;
+   
+     message Value {
+       oneof oneof_values {
+           string svalue = 1;
+           int32 ivalue = 2;
+       }
+     };
+    Value value = 2;
+  };
+  repeated Pair pairs = 1;
+}
+
+message FeatureUnion {
+  repeated Dictionary dic = 1;
+}
+
 service Federation {
   rpc sendLocalTensor(ClientTensorRequest) returns (ServerReceivedResponse) {}
   rpc sendAggregatedTensor(Empty) returns (ServerAggregatedTensorRequest) {}
   rpc upload(stream Chunk) returns (Reply) {}
   rpc download(Empty) returns (stream Chunk) {}
+  rpc sendLocalDic(Dictionary) returns (Reply) {}
+  rpc sendGlobalDic(Empty) returns (FeatureUnion) {}
 }

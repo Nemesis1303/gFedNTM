@@ -5,8 +5,8 @@ from models.base.pytorchavitm.avitm_network.avitm import AVITM
 from models.federated.federated_model import FederatedModel
 from sklearn.preprocessing import normalize
 from torch.utils.data import DataLoader
+
 from utils.auxiliary_functions import save_model_as_npz
-from utils.utils_postprocessing import convert_topic_word_to_init_size
 
 
 class FederatedAVITM(AVITM, FederatedModel):
@@ -204,47 +204,14 @@ class FederatedAVITM(AVITM, FederatedModel):
         # Get doc-topic distribution
         self.thetas = \
             np.asarray(self.get_doc_topic_distribution(self.train_data))
-        print(self.thetas)
         self.thetas[self.thetas < 3e-3] = 0
         self.thetas = normalize(self.thetas, axis=1, norm='l1')
-        #self.thetas = sparse.csr_matrix(self.thetas, copy=True)
 
         # Get word-topic distribution
         self.betas = self.get_topic_word_distribution()
 
+        file_save = \
+            "data/output_models/model_client_" + \
+            str(self.fedTrManager.client.id) + ".npz"
 
-class SyntheticFederatedAVITM(FederatedAVITM):
-    def __init__(self, tm_params, client, logger):
-
-        FederatedAVITM.__init__(self, tm_params, client, logger)
-
-    def evaluate_synthetic_model(self, vocab_size, gt_thetas, gt_betas, file_save):
-
-        all_words = \
-            ['wd'+str(word) for word in np.arange(vocab_size+1)
-             if word > 0]
-        self.betas = convert_topic_word_to_init_size(
-            vocab_size=vocab_size,
-            model=self,
-            model_type="avitm",
-            ntopics=self.n_components,
-            id2token=self.tm_params["id2token"],
-            all_words=all_words)
-
-        print('Tópicos (equivalentes) evaluados correctamente:', np.sum(
-            np.max(np.sqrt(self.betas).dot(np.sqrt(gt_betas.T)), axis=0)))
-
-        # Get thetas of the documents corresponding only to the node's corpus
-        inic = (self.fedTrManager.client.id-1)*len(gt_thetas)
-        end = (self.fedTrManager.client.id)*len(gt_thetas)
-        thetas = self.thetas[inic:end, :]
-
-        sim_mat_theoretical = \
-            np.sqrt(gt_thetas[0]).dot(np.sqrt(gt_thetas[0].T))
-        sim_mat_actual = np.sqrt(thetas).dot(np.sqrt(thetas.T))
-        print('Difference in evaluation of doc similarity:', np.sum(
-            np.abs(sim_mat_theoretical - sim_mat_actual))/len(gt_thetas))
-
-        # Save model
-        # TODO: Move, check if necessary
-        #save_model_as_npz(file_save, self)
+        save_model_as_npz(file_save, self.fedTrManager)

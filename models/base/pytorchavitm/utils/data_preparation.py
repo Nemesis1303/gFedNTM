@@ -35,7 +35,6 @@ def prepare_dataset(corpus, val_size=0.25):
     docs_train, docs_val = train_test_split(corpus, test_size=val_size, random_state=42)
 
     # Create a CountVectorizer object to convert a collection of text documents into a matrix of token counts
-    # Max and min_df not considered since cleaning is being previously performed
     cv = CountVectorizer(input='content', lowercase=True, stop_words='english', binary=False)
 
     #########################################
@@ -46,7 +45,7 @@ def prepare_dataset(corpus, val_size=0.25):
     # Learn the vocabulary dictionary, train_bow = document-term matrix.
     train_bow = cv.fit_transform(docs_train_conv).toarray()
 
-    # Array mapping from feature integer indices to feature name.
+    # Array mapping from feature integer indices to feature name
     idx2token = cv.get_feature_names_out()
     input_size = len(idx2token)
     id2token = {k: v for k, v in zip(range(0, len(idx2token)), idx2token)}
