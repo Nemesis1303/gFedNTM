@@ -10,8 +10,7 @@ import time
 
 import numpy as np
 from gensim.test.utils import get_tmpfile
-from utils.auxiliary_functions import (get_dict_from_file,
-                                       get_type_from_string, save_dict_as_json)
+from utils.auxiliary_functions import get_type_from_string
 from waiting import wait
 
 from federation import (federated_pb2, federated_pb2_grpc, federation,
