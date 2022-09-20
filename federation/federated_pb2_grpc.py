@@ -39,8 +39,8 @@ class FederationStub(object):
                 request_serializer=federated__pb2.Dictionary.SerializeToString,
                 response_deserializer=federated__pb2.Reply.FromString,
                 )
-        self.sendGlobalDic = channel.unary_unary(
-                '/federated.Federation/sendGlobalDic',
+        self.sendGlobalDicAndInitialNN = channel.unary_unary(
+                '/federated.Federation/sendGlobalDicAndInitialNN',
                 request_serializer=federated__pb2.Empty.SerializeToString,
                 response_deserializer=federated__pb2.FeatureUnion.FromString,
                 )
@@ -79,7 +79,7 @@ class FederationServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def sendGlobalDic(self, request, context):
+    def sendGlobalDicAndInitialNN(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -113,8 +113,8 @@ def add_FederationServicer_to_server(servicer, server):
                     request_deserializer=federated__pb2.Dictionary.FromString,
                     response_serializer=federated__pb2.Reply.SerializeToString,
             ),
-            'sendGlobalDic': grpc.unary_unary_rpc_method_handler(
-                    servicer.sendGlobalDic,
+            'sendGlobalDicAndInitialNN': grpc.unary_unary_rpc_method_handler(
+                    servicer.sendGlobalDicAndInitialNN,
                     request_deserializer=federated__pb2.Empty.FromString,
                     response_serializer=federated__pb2.FeatureUnion.SerializeToString,
             ),
@@ -214,7 +214,7 @@ class Federation(object):
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
-    def sendGlobalDic(request,
+    def sendGlobalDicAndInitialNN(request,
             target,
             options=(),
             channel_credentials=None,
@@ -224,7 +224,7 @@ class Federation(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/federated.Federation/sendGlobalDic',
+        return grpc.experimental.unary_unary(request, target, '/federated.Federation/sendGlobalDicAndInitialNN',
             federated__pb2.Empty.SerializeToString,
             federated__pb2.FeatureUnion.FromString,
             options, channel_credentials,

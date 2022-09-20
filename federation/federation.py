@@ -52,7 +52,7 @@ class Federation:
             else:
                 self.federation[client] += 1
 
-    def connect_update(self, client, gradient, current_mb, current_epoch, current_id_msg, max_iter):
+    def connect_update(self, client, gradients, current_mb, current_epoch, current_id_msg, max_iter):
         """
         Class to register the connection of a client in the federation for an update. 
 
@@ -60,7 +60,7 @@ class Federation:
         ----------
         client: str
             Client idenfication obtained from the context that provides information on the RPC
-        gradient: Pytorch.Tensor
+        gradients: List[List[str,Pytorch.Tensor]]
             Gradient that the client is sending to the server at "current_iter" on "current_id_msg"
         current_mb: int
             Epoch that corresponds with the gradient that is being sent by the client
@@ -82,7 +82,7 @@ class Federation:
                 print(type(current_epoch))
                 self.federation_clients[id_client].set_num_max_iter(max_iter)
                 self.federation_clients[id_client].update_client_state(
-                    gradient, current_mb, current_epoch, current_id_msg)
+                    gradients, current_mb, current_epoch, current_id_msg)
 
     def connect_waiting_or_consensus(self, client, waiting):
         """

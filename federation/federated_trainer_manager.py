@@ -1,11 +1,14 @@
 import numpy as np
 import torch
 
+from utils.auxiliary_functions import proto_to_modelStateDict, proto_to_optStateDict
+
+
 class FederatedTrainerManager(object):
     """
-    
+
     """
-    
+
     def __init__(self, client, logger=None):
         """
         Initilization Method
@@ -26,31 +29,26 @@ class FederatedTrainerManager(object):
             self._logger = logging.getLogger('FederatedModel')
 
         return
-    
+
     def send_gradient_minibatch(self, params):
+        gradients_ = []
+        for key in params.keys():
+            if key not in ["current_mb", "current_epoch", "num_epochs"]:
+                gradients_.append([key, params[key].grad.detach()])
         self.client.send_per_minibatch_gradient(
-                gradient = params["gradient"].grad.detach(),
-                current_mb = params["current_mb"],
-                current_epoch = params["current_epoch"],
-                num_epochs = params["num_epochs"])
-    
+            gradients=gradients_,
+            current_mb=params["current_mb"],
+            current_epoch=params["current_epoch"],
+            num_epochs=params["num_epochs"])
+
     def get_update_minibatch(self):
 
         # Wait until the server send the update
         request_update = self.client.listen_for_updates()
 
-        # Update minibatch'gradient with the update from the server
-        dims = tuple(
-            [dim.size for dim in request_update.data.tensor_shape.dim])
-        deserialized_bytes = np.frombuffer(
-            request_update.data.tensor_content, dtype=np.float32)
-        deserialized_numpy = np.reshape(
-            deserialized_bytes, newshape=dims)
-        deserialized_tensor = torch.Tensor(deserialized_numpy)
-        
-        return deserialized_tensor
-    
-    
-    
+        # Initialize local_model with initial NN
+        modelStateDict = proto_to_modelStateDict(
+            request_update.nndata.modelUpdate)
+        optStateDict = proto_to_optStateDict(request_update.nndata.optUpdate)
 
-    
+        return modelStateDict, optStateDict

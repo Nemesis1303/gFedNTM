@@ -20,9 +20,32 @@ from utils.utils_preprocessing import prepare_data_avitm_federated
 
 def start_server(min_num_clients):
     # START SERVER
+
+    model_parameters = {
+            "input_size": None,
+            "n_components": 50,
+            "model_type": "prodLDA",
+            "hidden_sizes": (100, 100),
+            "activation": "softplus",
+            "dropout": 0.2,
+            "learn_priors": True,
+            "batch_size": 64,
+            "lr": 2e-3,
+            "momentum": 0.99,
+            "solver": "adam",
+            "num_epochs": 100,
+            "num_samples": 10,
+            "num_data_loader_workers": 0,
+            "reduce_on_plateau": False,
+            "topic_prior_mean": 0.0,
+            "topic_prior_variance": None,
+            "verbose": True
+        }
+
+
     server = grpc.server(futures.ThreadPoolExecutor())
     federated_pb2_grpc.add_FederationServicer_to_server(
-        FederatedServer(min_num_clients), server)
+        FederatedServer(min_num_clients,model_parameters,"prod"), server)
     server.add_insecure_port('[::]:50051')
     server.start()
     server.wait_for_termination()
@@ -91,10 +114,21 @@ def start_client(id_client, model_type):
 
         # START CLIENT
         # Open channel for communication with the server
-        with grpc.insecure_channel('localhost:50051') as channel:
+        MAX_MESSAGE_LENGTH = 20 * 1024 * 1024
+        options = [
+                ('grpc.max_message_length', MAX_MESSAGE_LENGTH),
+                ('grpc.max_send_message_length', MAX_MESSAGE_LENGTH),
+                ('grpc.max_receive_message_length', MAX_MESSAGE_LENGTH),
+        ]
+        with grpc.insecure_channel('localhost:50051', options = options) as channel:
             stub = federated_pb2_grpc.FederationStub(channel)
             client = Client(id_client, stub, model_type, corpus, model_parameters)
             client.train_local_model()
+
+            # Only for federated
+            eval_parameters = [
+                vocab_size, doc_topic_distrib_gt_all[id_client-1], word_topic_distrib_gt]
+            client.eval_local_model(eval_params=eval_parameters)
 
     else:
         print("The selected model type is not provided.")

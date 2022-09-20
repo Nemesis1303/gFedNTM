@@ -10,7 +10,12 @@ import time
 
 import numpy as np
 from gensim.test.utils import get_tmpfile
-from utils.auxiliary_functions import get_type_from_string
+from models.federated.federated_avitm import FederatedAVITM
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.pipeline import FeatureUnion
+from utils.auxiliary_functions import (deserializeNumpy, get_type_from_string,
+                                       modelStateDict_to_proto,
+                                       optStateDict_to_proto)
 from waiting import wait
 
 from federation import (federated_pb2, federated_pb2_grpc, federation,
@@ -23,7 +28,7 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
     """Class that describes the behaviour of the GRPC server to which several clients are connected to create a federation for the joint training of a topic model.
     """
 
-    def __init__(self, min_num_clients, logger=None):
+    def __init__(self, min_num_clients, model_params, model_type, logger=None):
         self.federation = federation.Federation()
         self.min_num_clients = min_num_clients
         self.minibatch = -1
@@ -31,6 +36,11 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
         self.id_server = "IDS" + "_" + str(round(time.time()))
         self.path_global_corpus = get_tmpfile(str(self.id_server))
         self.dicts = []
+
+        self.global_model = None
+        self.model_type = model_type
+        self.model_parameters = model_params
+        self.global_vocab = None
 
         # Create logger object
         if logger:
@@ -129,7 +139,7 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
         self.dicts.append(vocab)
         return federated_pb2.Reply(length=len(vocab))
 
-    def sendGlobalDic(self, request, context):
+    def sendGlobalDicAndInitialNN(self, request, context):
 
         # Record clients waiting for the consensed request
         self.record_client_waiting_or_consensus(context, False)
@@ -138,10 +148,40 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
         wait(lambda: self.can_send_aggragated_vocab(), timeout_seconds=120,
              waiting_for="Aggregated vocab can be sent")
 
+        # Get init_size
+        vocabs = []
+        for dic_i in self.dicts:
+            cv_i = CountVectorizer(vocabulary=dic_i)
+            name_i = "CV" + str(dic_i)
+            vocabs.append((name_i, cv_i))
+        self.global_vocab = FeatureUnion(vocabs)
+        idx2token = self.global_vocab.get_feature_names_out()
+        self.model_parameters["input_size"] = len(idx2token)
+        self.model_parameters["id2token"] = \
+            {k: v for k, v in zip(range(0, len(idx2token)), idx2token)}
+
+        # Create initial NN
+        self.logger.info("Server initializing global model")
+        if self.model_type == "prod":
+            self.global_model = \
+                FederatedAVITM(self.model_parameters, self, self.logger)
+        elif self.model_type == "ctm":
+            print("To be implemented")
+        else:
+            self.logger.error("Provided underlying model not supported")
+
+        modelUpdate_ = \
+            modelStateDict_to_proto(self.global_model.model.state_dict(), -1)
+        optUpdate_ = \
+            optStateDict_to_proto(self.global_model.optimizer.state_dict())
+        nNUpdate = federated_pb2.NNUpdate(
+            modelUpdate=modelUpdate_,
+            optUpdate=optUpdate_
+        )
+
+        feature_union = federated_pb2.FeatureUnion(
+            initialNN=nNUpdate)
         # Serialize clients vocab
-        feature_union = federated_pb2.FeatureUnion()
-        #for client in self.federation.federation_clients:
-        #   client_vocab = get_dict_from_file(client.path_tmp_local_corpus)
         for vocab_dict in self.dicts:
             dic = federated_pb2.Dictionary()
             for key_, value_ in vocab_dict.items():
@@ -184,16 +224,15 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
                                         id_to_request=request.header.id_request,
                                         message_type=federated_pb2.MessageType.SERVER_CONFIRM_RECEIVED)
 
-        # Deserialize gradient update from the client and save in the corresponding Client object as numpy array
-        dims = tuple([dim.size for dim in request.data.tensor_shape.dim])
-        dtype_send = get_type_from_string(request.data.dtype)
-        deserialized_bytes = np.frombuffer(
-            request.data.tensor_content, dtype=dtype_send)
-        deserialized_numpy = np.reshape(deserialized_bytes, newshape=dims)
+        # Deserialize gradient updates from the client and save then in the corresponding Client object as numpy array
+        gradients = {}
+        for update in request.updates:
+            deserialized_numpy = deserializeNumpy(update.tensor)
+            gradients[update.tensor_name] = deserialized_numpy
 
         # Record client in the federation
         self.record_client(context,
-                           deserialized_numpy,
+                           gradients,
                            request.metadata.current_mb,
                            request.metadata.current_epoch,
                            request.header.id_request,
@@ -233,6 +272,71 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
         return True
 
     def sendAggregatedTensor(self, request, context):
+
+        # Record clients waiting
+        self.record_client_waiting_or_consensus(context, True)
+
+        federation_client.FederationClient.set_can_get_update_by_key(
+            context.peer(),
+            self.federation.federation_clients,
+            True)
+
+        # Wait until all the clients in the federation have sent its current iteration gradient
+        wait(lambda: self.can_send_update(), timeout_seconds=120,
+             waiting_for="Update can be sent")
+
+        # Calculate average for each tensor
+        # Get dict of tensor, of entry per update
+        keys = self.federation.federation_clients[0].tensors.keys()
+        averages = {}
+        for key in keys:
+            clients_tensors = [
+                client.tensors[key] for client in self.federation.federation_clients]
+            average_tensor = np.mean(np.stack(clients_tensors), axis=0)
+            averages[key] = average_tensor
+            print("The average tensor " + key + " is: ", average_tensor)
+
+        # Peform updates
+        # TODO: Update for different models
+        self.global_model.optimize_on_minibatch_from_server(averages)
+
+        modelUpdate_ = \
+            modelStateDict_to_proto(self.global_model.model.state_dict(), -1)
+        optUpdate_ = \
+            optStateDict_to_proto(self.global_model.optimizer.state_dict())
+        nNUpdate = federated_pb2.NNUpdate(
+            modelUpdate=modelUpdate_,
+            optUpdate=optUpdate_
+        )
+
+        # Get the client to sent the update to based on the context of the gRPC channel
+        client_to_repond = \
+            federation_client.FederationClient.get_pos_by_key(
+                context.peer(),
+                self.federation.federation_clients)
+
+        # Create request
+        update_name = "Update for client with key " + \
+            str(self.federation.federation_clients[client_to_repond].federation_key) + \
+            " for the iteration " + \
+            str(
+                self.federation.federation_clients[client_to_repond].current_epoch)
+
+        # Send update
+        header = federated_pb2.MessageHeader(id_response=self.id_server,
+                                             message_type=federated_pb2.MessageType.SERVER_AGGREGATED_TENSOR_SEND)
+        print(update_name)
+
+        id_client = federation_client.FederationClient.get_pos_by_key(
+            context.peer(),
+            self.federation.federation_clients)
+
+        request = federated_pb2.ServerAggregatedTensorRequest(
+            header=header, nndata=nNUpdate)
+
+        return request
+
+    def sendAggregatedTensor2(self, request, context):
         """
         Sends the average update to the correspinding client based on the context of the gRPC channel.
 

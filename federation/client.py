@@ -15,6 +15,8 @@ from models.base.pytorchavitm.datasets.bow_dataset import BOWDataset
 from models.federated.federated_avitm import FederatedAVITM
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.pipeline import FeatureUnion
+from utils.auxiliary_functions import (proto_to_modelStateDict,
+                                       proto_to_optStateDict, serializeTensor)
 
 from federation import federated_pb2
 
@@ -50,6 +52,7 @@ class Client:
         self.local_model = None
         self.tmp_local_vocab = get_tmpfile(str(self.id))
         self.tmp_global_vocab = get_tmpfile(str(self.id))
+        self.train_data = None
 
         # Create logger object
         if logger:
@@ -63,9 +66,8 @@ class Client:
         # Send file with vocabulary to server
         self.__send_local_vocab()
 
-        # Wait for the consensed vocabulary
-        self.__wait_for_agreed_vocab()
-
+        # Wait for the consensed vocabulary and initial NN
+        self.__wait_for_agreed_vocab_NN()
 
     def __prepare_vocab_to_send(self):
         """
@@ -112,16 +114,16 @@ class Client:
 
         return
 
-    def __wait_for_agreed_vocab(self):
+    def __wait_for_agreed_vocab_NN(self):
         """
-        Waits by saving the agreed vocabulary sent by the server.
+        Waits while receiving the agreed vocabulary sent by the server.
         """
 
         self.logger.info(
-            'Client %s receiving consensus vocab.', str(self.id))
+            'Client %s receiving consensus vocab and initial NN.', str(self.id))
 
         # Get global dictionary
-        response = self.stub.sendGlobalDic(federated_pb2.Empty())
+        response = self.stub.sendGlobalDicAndInitialNN(federated_pb2.Empty())
 
         # Unprotofy global dictionary
         vocabs = []
@@ -134,49 +136,50 @@ class Client:
 
         self.global_vocab = FeatureUnion(vocabs)
 
+        # Initialize local_model with initial NN
+        modelStateDict = proto_to_modelStateDict(
+            response.initialNN.modelUpdate)
+        optStateDict = proto_to_optStateDict(response.initialNN.optUpdate)
+
+        if self.local_model_type == "prod":
+
+            # Local document-term matrix as function of the global vocabulary
+            train_bow = self.global_vocab.transform(
+                self.local_corpus).toarray()
+
+            # Array mapping from feature integer indices to feature name
+            idx2token = self.global_vocab.get_feature_names_out()
+            self.model_parameters["input_size"] = len(idx2token)
+            self.model_parameters["id2token"] = \
+                {k: v for k, v in zip(range(0, len(idx2token)), idx2token)}
+
+            # The train dataset is an object from the class BOWDataset
+            self.train_data = BOWDataset(train_bow, idx2token)
+
+            self.local_model = \
+                FederatedAVITM(self.model_parameters, self, self.logger)
+
+        elif self.local_model_type == "ctm":
+            print("To be implemented")
+        else:
+            self.logger.error("Provided underlying model not supported")
+
+        self.local_model.model.load_state_dict(modelStateDict)
+        self.local_model.optimizer.load_state_dict(optStateDict)
+
+        self.logger.info(
+            'Client %s initialized local model appropiately.', str(self.id))
+
         return
 
-    def __generate_protos_update(self, gradient):
-        """
-        Generates a prototocol buffer Update message from a Tensor gradient.
-
-        Parameters
-        ----------
-        gradient : torch.Tensor
-            Gradient to be sent in the protocol buffer message
-
-        Returns
-        -------
-        data : federated_pb2.Update
-            Prototocol buffer that is going to be send through the gRPC channel
-        """
-
-        # Name of the update based on client's id
-        update_name = "Update from " + str(self.id)
-
-        # Convert Tensor gradient to bytes object for sending
-        content_bytes = gradient.numpy().tobytes()
-        content_type = str(gradient.numpy().dtype)
-        size = federated_pb2.TensorShape()
-        num_dims = len(gradient.shape)
-        for i in np.arange(num_dims):
-            name = "dim" + str(i)
-            size.dim.extend(
-                [federated_pb2.TensorShape.Dim(size=gradient.shape[i], name=name)])
-        data = federated_pb2.Update(tensor_name=update_name,
-                                    dtype=content_type,
-                                    tensor_shape=size,
-                                    tensor_content=content_bytes)
-        return data
-
-    def send_per_minibatch_gradient(self, gradient, current_mb, current_epoch, num_epochs):
+    def send_per_minibatch_gradient(self, gradients, current_mb, current_epoch, num_epochs):
         """
         Sends a minibatch's gradient update to the server.
 
         Parameters
         ----------
-        gradient : torch.Tensor
-            Gradient to be sent to the server in the current minibatch
+        gradients : List[List[gradient_name,gradient_value]]
+            Gradients to be sent to the server in the current minibatch
         current_mb: int
             Current minibatch, i.e. minibatch to which the gradient that is going to be sent corresponds
         current_epoch: int
@@ -200,12 +203,19 @@ class Client:
                                                 current_epoch=current_epoch,
                                                 num_max_epochs=num_epochs,
                                                 id_machine=int(self.id))
-        # Generate Protos Update
-        data = self.__generate_protos_update(gradient)
+        # Generate Protos Updates
+        updates_ = []
+        for gradient in gradients:
+            tensor_protos = serializeTensor(gradient[1])
+            protos_update = federated_pb2.Update(
+                tensor_name=gradient[0],
+                tensor=tensor_protos
+            )
+            updates_.append(protos_update)
 
         # Generate Protos ClientTensorRequest with the update
         request = federated_pb2.ClientTensorRequest(
-            header=header, metadata=metadata, data=data)
+            header=header, metadata=metadata, updates=updates_)
 
         # Send request to the server and wait for his response
         if self.stub:
@@ -238,30 +248,14 @@ class Client:
         To do so, we send the server the gradients corresponding with the parameter beta of the model, and the server returns an update of such a parameter, which is calculated by averaging the per minibatch beta parameters that he gets from the set of clients that are connected to the federation. After obtaining the beta updates from the server, the client keeps with the training of its own local model. This process is repeated for each minibatch of each epoch.
         """
 
-        if self.local_model_type == "prod":
-            # Local document-term matrix as function of the global vocabulary
-            train_bow = self.global_vocab.transform(
-                self.local_corpus).toarray()
-
-            # Array mapping from feature integer indices to feature name
-            idx2token = self.global_vocab.get_feature_names_out()
-            self.model_parameters["input_size"] = len(idx2token)
-            self.model_parameters["id2token"] = \
-                {k: v for k, v in zip(range(0, len(idx2token)), idx2token)}
-
-            # The train dataset is an object from the class BOWDataset
-            train_data = BOWDataset(train_bow, idx2token)
-
-            self.local_model = \
-                FederatedAVITM(self.model_parameters, self, self.logger)
-
-        elif self.local_model_type == "ctm":
-            print("To be implemented")
-        else:
-            self.logger.error("Provided underlying model not supported")
-
-        self.local_model.fit(train_data)
+        self.local_model.fit(self.train_data)
 
         print("TRAINED")
 
         return
+    
+    def eval_local_model(self, eval_params):
+        self.local_model.get_results_model()
+        self.local_model.evaluate_synthetic_model(
+            eval_params[0], eval_params[1], eval_params[2])
+        print("EVALUATED")

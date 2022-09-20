@@ -1,12 +1,12 @@
 import datetime
-
+from torch import nn
 import numpy as np
+import torch
 from models.base.pytorchavitm.avitm_network.avitm import AVITM
 from models.federated.federated_model import FederatedModel
 from sklearn.preprocessing import normalize
 from torch.utils.data import DataLoader
-
-from utils.auxiliary_functions import save_model_as_npz
+from utils.utils_postprocessing import convert_topic_word_to_init_size
 
 
 class FederatedAVITM(AVITM, FederatedModel):
@@ -65,16 +65,31 @@ class FederatedAVITM(AVITM, FederatedModel):
 
         return loss, train_loss, samples_processed
 
-    def _optimize_on_minibatch(self, X, loss, update, train_loss, samples_processed):
+    def optimize_on_minibatch_from_server(self, updates):
+
+        # Upadate gradients
+        self.model.prior_mean.grad = torch.Tensor(updates["prior_mean"])
+        self.model.prior_variance.grad = torch.Tensor(
+            updates["prior_variance"])
+        self.model.beta.grad = torch.Tensor(updates["beta"])
+
+        # Perform one step of the optimizer (SGD/Adam)
+        self.optimizer.step()
+
+        return
+
+    def _optimize_on_minibatch(self, X, loss, train_loss, samples_processed):
         # Update gradients
         # Parameter0 = prior_mean
         # Parameter1 = prior_variance
         # Parameter2 = beta
         #self.model.prior_mean.grad = update
-        self.model.beta.grad = update
+        #self.model.prior_variance = updates[0]
+        #self.model.prior_variance = updates[1]
+        #self.model.beta.grad = updates[2]
 
         # Perform one step of the optimizer (SGD/Adam)
-        self.optimizer.step()
+        # self.optimizer.step()
 
         # Compute train loss
         samples_processed += X.size()[0]
@@ -120,11 +135,14 @@ class FederatedAVITM(AVITM, FederatedModel):
 
             # Send minibatch' gradient to the server (gradient already converted to np)
             params = {
-                "gradient": self.model.beta,
+                "prior_mean": self.model.prior_mean,
+                "prior_variance": self.model.prior_variance,
+                "beta": self.model.beta,
                 "current_mb": self.current_mb,
                 "current_epoch": self.current_mb,
                 "num_epochs": self.num_epochs
             }
+
             self.fedTrManager.send_gradient_minibatch(params)
 
             self.logger.info(
@@ -132,13 +150,25 @@ class FederatedAVITM(AVITM, FederatedModel):
                 str(self.fedTrManager.client.id), str(self.current_mb),
                 str(self.current_epoch))
 
-            # Update minibatch'gradient with the update from the server
-            deserialized_tensor = self.fedTrManager.get_update_minibatch()
+            # Update model with server's weigths
+            modelStateDict, optStateDict = self.fedTrManager.get_update_minibatch()
+
+            localStateDict = self.model.state_dict()
+            localStateDict["prior_mean"] = modelStateDict["prior_mean"]
+            localStateDict["prior_variance"] = modelStateDict["prior_variance"]
+            localStateDict["beta"] = modelStateDict["beta"]
+
+            #modelStateDict["topic_word_matrix"] = self.model.topic_word_matrix
+            #self.model.prior_mean = modelStateDict["prior_mean"]
+            #self.model.prior_variance = modelStateDict["prior_variance"]
+            #self.model.beta = nn.Parameter(modelStateDict["beta"])
+            self.model.load_state_dict(localStateDict)
+            # self.optimizer.load_state_dict(optStateDict)
 
             # Calculate minibatch's train loss and samples processed
             train_loss, samples_processed = \
                 self._optimize_on_minibatch(
-                    X, loss, deserialized_tensor, train_loss, samples_processed)
+                    X, loss, train_loss, samples_processed)
 
             self.current_mb += 1  # One minibatch ends
         # Training epoch ends
@@ -214,4 +244,42 @@ class FederatedAVITM(AVITM, FederatedModel):
             "data/output_models/model_client_" + \
             str(self.fedTrManager.client.id) + ".npz"
 
-        save_model_as_npz(file_save, self.fedTrManager)
+        #ave_model_as_npz(file_save, self.fedTrManager)
+
+    def evaluate_synthetic_model(self, vocab_size, gt_thetas, gt_betas):
+
+        all_words = \
+            ['wd'+str(word) for word in np.arange(vocab_size+1)
+             if word > 0]
+        self.betas = convert_topic_word_to_init_size(
+            vocab_size=vocab_size,
+            model=self,
+            model_type="avitm",
+            ntopics=self.n_components,
+            id2token=self.tm_params["id2token"],
+            all_words=all_words)
+        
+        print("BETAS")
+        print(self.betas)
+
+        print("BETAS GT")
+        print(gt_betas)
+
+        print('Tópicos (equivalentes) evaluados correctamente:', np.sum(
+            np.max(np.sqrt(self.betas).dot(np.sqrt(gt_betas.T)), axis=0)))
+
+        # Get thetas of the documents corresponding only to the node's corpus
+        inic = (self.fedTrManager.client.id-1)*len(gt_thetas)
+        end = (self.fedTrManager.client.id)*len(gt_thetas)
+        thetas = self.thetas[inic:end, :]
+
+        print("THETAS")
+        print(thetas)
+        print("GT THETAS")
+        print(gt_thetas)
+
+        sim_mat_theoretical = \
+            np.sqrt(gt_thetas[0]).dot(np.sqrt(gt_thetas[0].T))
+        sim_mat_actual = np.sqrt(thetas).dot(np.sqrt(thetas.T))
+        print('Difference in evaluation of doc similarity:', np.sum(
+            np.abs(sim_mat_theoretical - sim_mat_actual))/len(gt_thetas))

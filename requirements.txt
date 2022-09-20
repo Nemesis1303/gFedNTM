@@ -5,7 +5,7 @@ six==1.16.0
 timedelta==2020.12.3
 timeloop==1.0.2
 pytest ~= 5.4
-torch ~= 1.10.2
+torch ~= 1.11.0
 numpy ~= 1.22.1
 waiting ~= 1.4.1
 pdbpp ~= 0.10.3

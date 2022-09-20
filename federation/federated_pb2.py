@@ -20,7 +20,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   syntax='proto3',
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_pb=b'\n\x0f\x66\x65\x64\x65rated.proto\x12\tfederated\"\x07\n\x05\x45mpty\"g\n\x0bTensorShape\x12\'\n\x03\x64im\x18\x02 \x03(\x0b\x32\x1a.federated.TensorShape.Dim\x1a/\n\x03\x44im\x12\x0c\n\x04size\x18\x01 \x01(\x03\x12\x11\n\x04name\x18\x02 \x01(\tH\x00\x88\x01\x01\x42\x07\n\x05_name\"r\n\x06Update\x12\x13\n\x0btensor_name\x18\x01 \x01(\t\x12\r\n\x05\x64type\x18\x02 \x01(\t\x12,\n\x0ctensor_shape\x18\x03 \x01(\x0b\x32\x16.federated.TensorShape\x12\x16\n\x0etensor_content\x18\x04 \x01(\x0c\"n\n\x15MessageAdditionalData\x12\x12\n\ncurrent_mb\x18\x01 \x01(\r\x12\x15\n\rcurrent_epoch\x18\x02 \x01(\r\x12\x16\n\x0enum_max_epochs\x18\x03 \x01(\r\x12\x12\n\nid_machine\x18\x04 \x01(\r\"\xbd\x01\n\rMessageHeader\x12\x17\n\nid_request\x18\x01 \x01(\tH\x00\x88\x01\x01\x12\x18\n\x0bid_response\x18\x02 \x01(\tH\x01\x88\x01\x01\x12\x1a\n\rid_to_request\x18\x03 \x01(\tH\x02\x88\x01\x01\x12,\n\x0cmessage_type\x18\x04 \x01(\x0e\x32\x16.federated.MessageTypeB\r\n\x0b_id_requestB\x0e\n\x0c_id_responseB\x10\n\x0e_id_to_request\"\x94\x01\n\x13\x43lientTensorRequest\x12(\n\x06header\x18\x01 \x01(\x0b\x32\x18.federated.MessageHeader\x12\x32\n\x08metadata\x18\x02 \x01(\x0b\x32 .federated.MessageAdditionalData\x12\x1f\n\x04\x64\x61ta\x18\x03 \x01(\x0b\x32\x11.federated.Update\"\x9e\x01\n\x1dServerAggregatedTensorRequest\x12(\n\x06header\x18\x01 \x01(\x0b\x32\x18.federated.MessageHeader\x12\x32\n\x08metadata\x18\x02 \x01(\x0b\x32 .federated.MessageAdditionalData\x12\x1f\n\x04\x64\x61ta\x18\x03 \x01(\x0b\x32\x11.federated.Update\"v\n\x16\x43lientReceivedResponse\x12(\n\x06header\x18\x01 \x01(\x0b\x32\x18.federated.MessageHeader\x12\x32\n\x08metadata\x18\x02 \x01(\x0b\x32 .federated.MessageAdditionalData\"v\n\x16ServerReceivedResponse\x12(\n\x06header\x18\x01 \x01(\x0b\x32\x18.federated.MessageHeader\x12\x32\n\x08metadata\x18\x02 \x01(\x0b\x32 .federated.MessageAdditionalData\"\x17\n\x05\x43hunk\x12\x0e\n\x06\x62uffer\x18\x01 \x01(\x0c\"\x17\n\x07Request\x12\x0c\n\x04name\x18\x01 \x01(\t\"\x17\n\x05Reply\x12\x0e\n\x06length\x18\x01 \x01(\x05\"\xbb\x01\n\nDictionary\x12)\n\x05pairs\x18\x01 \x03(\x0b\x32\x1a.federated.Dictionary.Pair\x1a\x81\x01\n\x04Pair\x12\x0b\n\x03key\x18\x01 \x01(\t\x12/\n\x05value\x18\x02 \x01(\x0b\x32 .federated.Dictionary.Pair.Value\x1a;\n\x05Value\x12\x10\n\x06svalue\x18\x01 \x01(\tH\x00\x12\x10\n\x06ivalue\x18\x02 \x01(\x05H\x00\x42\x0e\n\x0coneof_values\"2\n\x0c\x46\x65\x61tureUnion\x12\"\n\x03\x64ic\x18\x01 \x03(\x0b\x32\x15.federated.Dictionary*\x82\x01\n\x0bMessageType\x12\x16\n\x12\x43LIENT_TENSOR_SEND\x10\x00\x12\x1b\n\x17\x43LIENT_CONFIRM_RECEIVED\x10\x01\x12!\n\x1dSERVER_AGGREGATED_TENSOR_SEND\x10\x02\x12\x1b\n\x17SERVER_CONFIRM_RECEIVED\x10\x03\x32\x99\x03\n\nFederation\x12V\n\x0fsendLocalTensor\x12\x1e.federated.ClientTensorRequest\x1a!.federated.ServerReceivedResponse\"\x00\x12T\n\x14sendAggregatedTensor\x12\x10.federated.Empty\x1a(.federated.ServerAggregatedTensorRequest\"\x00\x12\x30\n\x06upload\x12\x10.federated.Chunk\x1a\x10.federated.Reply\"\x00(\x01\x12\x32\n\x08\x64ownload\x12\x10.federated.Empty\x1a\x10.federated.Chunk\"\x00\x30\x01\x12\x39\n\x0csendLocalDic\x12\x15.federated.Dictionary\x1a\x10.federated.Reply\"\x00\x12<\n\rsendGlobalDic\x12\x10.federated.Empty\x1a\x17.federated.FeatureUnion\"\x00\x62\x06proto3'
+  serialized_pb=b'\n\x0f\x66\x65\x64\x65rated.proto\x12\tfederated\"\x07\n\x05\x45mpty\"g\n\x0bTensorShape\x12\'\n\x03\x64im\x18\x02 \x03(\x0b\x32\x1a.federated.TensorShape.Dim\x1a/\n\x03\x44im\x12\x0c\n\x04size\x18\x01 \x01(\x03\x12\x11\n\x04name\x18\x02 \x01(\tH\x00\x88\x01\x01\x42\x07\n\x05_name\"]\n\x06Tensor\x12,\n\x0ctensor_shape\x18\x01 \x01(\x0b\x32\x16.federated.TensorShape\x12\r\n\x05\x64type\x18\x02 \x01(\t\x12\x16\n\x0etensor_content\x18\x03 \x01(\x0c\"@\n\x06Update\x12\x13\n\x0btensor_name\x18\x01 \x01(\t\x12!\n\x06tensor\x18\x02 \x01(\x0b\x32\x11.federated.Tensor\"n\n\x15MessageAdditionalData\x12\x12\n\ncurrent_mb\x18\x01 \x01(\r\x12\x15\n\rcurrent_epoch\x18\x02 \x01(\r\x12\x16\n\x0enum_max_epochs\x18\x03 \x01(\r\x12\x12\n\nid_machine\x18\x04 \x01(\r\"\xbd\x01\n\rMessageHeader\x12\x17\n\nid_request\x18\x01 \x01(\tH\x00\x88\x01\x01\x12\x18\n\x0bid_response\x18\x02 \x01(\tH\x01\x88\x01\x01\x12\x1a\n\rid_to_request\x18\x03 \x01(\tH\x02\x88\x01\x01\x12,\n\x0cmessage_type\x18\x04 \x01(\x0e\x32\x16.federated.MessageTypeB\r\n\x0b_id_requestB\x0e\n\x0c_id_responseB\x10\n\x0e_id_to_request\"\x97\x01\n\x13\x43lientTensorRequest\x12(\n\x06header\x18\x01 \x01(\x0b\x32\x18.federated.MessageHeader\x12\x32\n\x08metadata\x18\x02 \x01(\x0b\x32 .federated.MessageAdditionalData\x12\"\n\x07updates\x18\x03 \x03(\x0b\x32\x11.federated.Update\"\xd7\x01\n\x1dServerAggregatedTensorRequest\x12(\n\x06header\x18\x01 \x01(\x0b\x32\x18.federated.MessageHeader\x12\x32\n\x08metadata\x18\x02 \x01(\x0b\x32 .federated.MessageAdditionalData\x12!\n\x04\x64\x61ta\x18\x03 \x01(\x0b\x32\x11.federated.UpdateH\x00\x12%\n\x06nndata\x18\x04 \x01(\x0b\x32\x13.federated.NNUpdateH\x00\x42\x0e\n\x0coneof_values\"v\n\x16\x43lientReceivedResponse\x12(\n\x06header\x18\x01 \x01(\x0b\x32\x18.federated.MessageHeader\x12\x32\n\x08metadata\x18\x02 \x01(\x0b\x32 .federated.MessageAdditionalData\"v\n\x16ServerReceivedResponse\x12(\n\x06header\x18\x01 \x01(\x0b\x32\x18.federated.MessageHeader\x12\x32\n\x08metadata\x18\x02 \x01(\x0b\x32 .federated.MessageAdditionalData\"\x17\n\x05\x43hunk\x12\x0e\n\x06\x62uffer\x18\x01 \x01(\x0c\"\x17\n\x07Request\x12\x0c\n\x04name\x18\x01 \x01(\t\"\x17\n\x05Reply\x12\x0e\n\x06length\x18\x01 \x01(\x05\"\xbb\x01\n\nDictionary\x12)\n\x05pairs\x18\x01 \x03(\x0b\x32\x1a.federated.Dictionary.Pair\x1a\x81\x01\n\x04Pair\x12\x0b\n\x03key\x18\x01 \x01(\t\x12/\n\x05value\x18\x02 \x01(\x0b\x32 .federated.Dictionary.Pair.Value\x1a;\n\x05Value\x12\x10\n\x06svalue\x18\x01 \x01(\tH\x00\x12\x10\n\x06ivalue\x18\x02 \x01(\x05H\x00\x42\x0e\n\x0coneof_values\"Z\n\x0c\x46\x65\x61tureUnion\x12\"\n\x03\x64ic\x18\x01 \x03(\x0b\x32\x15.federated.Dictionary\x12&\n\tinitialNN\x18\x02 \x01(\x0b\x32\x13.federated.NNUpdate\"\xcf\t\n\x0bModelUpdate\x12%\n\nprior_mean\x18\x01 \x01(\x0b\x32\x11.federated.Tensor\x12)\n\x0eprior_variance\x18\x02 \x01(\x0b\x32\x11.federated.Tensor\x12\x1f\n\x04\x62\x65ta\x18\x03 \x01(\x0b\x32\x11.federated.Tensor\x12,\n\x11topic_word_matrix\x18\x04 \x01(\x0b\x32\x11.federated.Tensor\x12\x35\n\x1ainf_net_input_layer_weight\x18\x05 \x01(\x0b\x32\x11.federated.Tensor\x12\x33\n\x18inf_net_input_layer_bias\x18\x06 \x01(\x0b\x32\x11.federated.Tensor\x12\x35\n\x1ainf_net_hiddens_l00_weight\x18\x07 \x01(\x0b\x32\x11.federated.Tensor\x12\x34\n\x19inf_net_hiddens_l_00_bias\x18\x08 \x01(\x0b\x32\x11.federated.Tensor\x12.\n\x13inf_net_f_mu_weight\x18\t \x01(\x0b\x32\x11.federated.Tensor\x12,\n\x11inf_net_f_mu_bias\x18\n \x01(\x0b\x32\x11.federated.Tensor\x12>\n#inf_net_f_mu_batchnorm_running_mean\x18\x0b \x01(\x0b\x32\x11.federated.Tensor\x12=\n\"inf_net_f_mu_batchnorm_running_var\x18\x0c \x01(\x0b\x32\x11.federated.Tensor\x12\x45\n*inf_net_f_mu_batchnorm_num_batches_tracked\x18\r \x01(\x0b\x32\x11.federated.Tensor\x12\x31\n\x16inf_net_f_sigma_weight\x18\x0e \x01(\x0b\x32\x11.federated.Tensor\x12/\n\x14inf_net_f_sigma_bias\x18\x0f \x01(\x0b\x32\x11.federated.Tensor\x12\x41\n&inf_net_f_sigma_batchnorm_running_mean\x18\x10 \x01(\x0b\x32\x11.federated.Tensor\x12@\n%inf_net_f_sigma_batchnorm_running_var\x18\x11 \x01(\x0b\x32\x11.federated.Tensor\x12H\n-inf_net_f_sigma_batchnorm_num_batches_tracked\x18\x12 \x01(\x0b\x32\x11.federated.Tensor\x12\x36\n\x1b\x62\x65ta_batchnorm_running_mean\x18\x13 \x01(\x0b\x32\x11.federated.Tensor\x12\x35\n\x1a\x62\x65ta_batchnorm_running_var\x18\x14 \x01(\x0b\x32\x11.federated.Tensor\x12=\n\"beta_batchnorm_num_batches_tracked\x18\x15 \x01(\x0b\x32\x11.federated.Tensor\x12*\n\x0f\x62\x65st_components\x18\x16 \x01(\x0b\x32\x11.federated.Tensor\x12\x15\n\rcurrent_epoch\x18\x18 \x01(\x05\"\xf4\x03\n\nAdamUpdate\x12*\n\x05state\x18\x01 \x01(\x0b\x32\x1b.federated.AdamUpdate.State\x12\x36\n\x0bparamGroups\x18\x02 \x01(\x0b\x32!.federated.AdamUpdate.ParamGroups\x1a\xc2\x01\n\x05State\x12>\n\x0c\x63ontentState\x18\x02 \x03(\x0b\x32(.federated.AdamUpdate.State.ContentState\x1ay\n\x0c\x43ontentState\x12\x10\n\x08state_id\x18\x01 \x01(\x03\x12\x0c\n\x04step\x18\x02 \x01(\x03\x12\"\n\x07\x65xp_avg\x18\x03 \x01(\x0b\x32\x11.federated.Tensor\x12%\n\nexp_avg_sq\x18\x04 \x01(\x0b\x32\x11.federated.Tensor\x1a\xbc\x01\n\x0bParamGroups\x12\n\n\x02lr\x18\x01 \x01(\x02\x12\x36\n\x05\x62\x65tas\x18\x02 \x01(\x0b\x32\'.federated.AdamUpdate.ParamGroups.Betas\x12\x0b\n\x03\x65ps\x18\x03 \x01(\x02\x12\x14\n\x0cweight_decay\x18\x04 \x01(\x02\x12\x0f\n\x07\x61msgrad\x18\x05 \x01(\x08\x12\x0e\n\x06params\x18\x06 \x03(\x05\x1a%\n\x05\x42\x65tas\x12\r\n\x05\x62\x65ta1\x18\x01 \x01(\x02\x12\r\n\x05\x62\x65ta2\x18\x02 \x01(\x02\"H\n\tOptUpdate\x12+\n\nadamUpdate\x18\x01 \x01(\x0b\x32\x15.federated.AdamUpdateH\x00\x42\x0e\n\x0coneof_values\"`\n\x08NNUpdate\x12+\n\x0bmodelUpdate\x18\x01 \x01(\x0b\x32\x16.federated.ModelUpdate\x12\'\n\toptUpdate\x18\x02 \x01(\x0b\x32\x14.federated.OptUpdate*\x82\x01\n\x0bMessageType\x12\x16\n\x12\x43LIENT_TENSOR_SEND\x10\x00\x12\x1b\n\x17\x43LIENT_CONFIRM_RECEIVED\x10\x01\x12!\n\x1dSERVER_AGGREGATED_TENSOR_SEND\x10\x02\x12\x1b\n\x17SERVER_CONFIRM_RECEIVED\x10\x03\x32\xa5\x03\n\nFederation\x12V\n\x0fsendLocalTensor\x12\x1e.federated.ClientTensorRequest\x1a!.federated.ServerReceivedResponse\"\x00\x12T\n\x14sendAggregatedTensor\x12\x10.federated.Empty\x1a(.federated.ServerAggregatedTensorRequest\"\x00\x12\x30\n\x06upload\x12\x10.federated.Chunk\x1a\x10.federated.Reply\"\x00(\x01\x12\x32\n\x08\x64ownload\x12\x10.federated.Empty\x1a\x10.federated.Chunk\"\x00\x30\x01\x12\x39\n\x0csendLocalDic\x12\x15.federated.Dictionary\x1a\x10.federated.Reply\"\x00\x12H\n\x19sendGlobalDicAndInitialNN\x12\x10.federated.Empty\x1a\x17.federated.FeatureUnion\"\x00\x62\x06proto3'
 )
 
 _MESSAGETYPE = _descriptor.EnumDescriptor(
@@ -53,8 +53,8 @@ _MESSAGETYPE = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   serialized_options=None,
-  serialized_start=1434,
-  serialized_end=1564,
+  serialized_start=3488,
+  serialized_end=3618,
 )
 _sym_db.RegisterEnumDescriptor(_MESSAGETYPE)
 
@@ -166,38 +166,31 @@ _TENSORSHAPE = _descriptor.Descriptor(
 )
 
 
-_UPDATE = _descriptor.Descriptor(
-  name='Update',
-  full_name='federated.Update',
+_TENSOR = _descriptor.Descriptor(
+  name='Tensor',
+  full_name='federated.Tensor',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   create_key=_descriptor._internal_create_key,
   fields=[
     _descriptor.FieldDescriptor(
-      name='tensor_name', full_name='federated.Update.tensor_name', index=0,
-      number=1, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
+      name='tensor_shape', full_name='federated.Tensor.tensor_shape', index=0,
+      number=1, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
     _descriptor.FieldDescriptor(
-      name='dtype', full_name='federated.Update.dtype', index=1,
+      name='dtype', full_name='federated.Tensor.dtype', index=1,
       number=2, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=b"".decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
     _descriptor.FieldDescriptor(
-      name='tensor_shape', full_name='federated.Update.tensor_shape', index=2,
-      number=3, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='tensor_content', full_name='federated.Update.tensor_content', index=3,
-      number=4, type=12, cpp_type=9, label=1,
+      name='tensor_content', full_name='federated.Tensor.tensor_content', index=2,
+      number=3, type=12, cpp_type=9, label=1,
       has_default_value=False, default_value=b"",
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
@@ -215,7 +208,46 @@ _UPDATE = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=144,
-  serialized_end=258,
+  serialized_end=237,
+)
+
+
+_UPDATE = _descriptor.Descriptor(
+  name='Update',
+  full_name='federated.Update',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='tensor_name', full_name='federated.Update.tensor_name', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='tensor', full_name='federated.Update.tensor', index=1,
+      number=2, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=239,
+  serialized_end=303,
 )
 
 
@@ -267,8 +299,8 @@ _MESSAGEADDITIONALDATA = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=260,
-  serialized_end=370,
+  serialized_start=305,
+  serialized_end=415,
 )
 
 
@@ -335,8 +367,8 @@ _MESSAGEHEADER = _descriptor.Descriptor(
       create_key=_descriptor._internal_create_key,
     fields=[]),
   ],
-  serialized_start=373,
-  serialized_end=562,
+  serialized_start=418,
+  serialized_end=607,
 )
 
 
@@ -363,9 +395,9 @@ _CLIENTTENSORREQUEST = _descriptor.Descriptor(
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
     _descriptor.FieldDescriptor(
-      name='data', full_name='federated.ClientTensorRequest.data', index=2,
-      number=3, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
+      name='updates', full_name='federated.ClientTensorRequest.updates', index=2,
+      number=3, type=11, cpp_type=10, label=3,
+      has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
@@ -381,8 +413,8 @@ _CLIENTTENSORREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=565,
-  serialized_end=713,
+  serialized_start=610,
+  serialized_end=761,
 )
 
 
@@ -415,6 +447,13 @@ _SERVERAGGREGATEDTENSORREQUEST = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='nndata', full_name='federated.ServerAggregatedTensorRequest.nndata', index=3,
+      number=4, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
   ],
   extensions=[
   ],
@@ -426,9 +465,14 @@ _SERVERAGGREGATEDTENSORREQUEST = _descriptor.Descriptor(
   syntax='proto3',
   extension_ranges=[],
   oneofs=[
+    _descriptor.OneofDescriptor(
+      name='oneof_values', full_name='federated.ServerAggregatedTensorRequest.oneof_values',
+      index=0, containing_type=None,
+      create_key=_descriptor._internal_create_key,
+    fields=[]),
   ],
-  serialized_start=716,
-  serialized_end=874,
+  serialized_start=764,
+  serialized_end=979,
 )
 
 
@@ -466,8 +510,8 @@ _CLIENTRECEIVEDRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=876,
-  serialized_end=994,
+  serialized_start=981,
+  serialized_end=1099,
 )
 
 
@@ -505,8 +549,8 @@ _SERVERRECEIVEDRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=996,
-  serialized_end=1114,
+  serialized_start=1101,
+  serialized_end=1219,
 )
 
 
@@ -537,8 +581,8 @@ _CHUNK = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1116,
-  serialized_end=1139,
+  serialized_start=1221,
+  serialized_end=1244,
 )
 
 
@@ -569,8 +613,8 @@ _REQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1141,
-  serialized_end=1164,
+  serialized_start=1246,
+  serialized_end=1269,
 )
 
 
@@ -601,8 +645,8 @@ _REPLY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1166,
-  serialized_end=1189,
+  serialized_start=1271,
+  serialized_end=1294,
 )
 
 
@@ -645,8 +689,8 @@ _DICTIONARY_PAIR_VALUE = _descriptor.Descriptor(
       create_key=_descriptor._internal_create_key,
     fields=[]),
   ],
-  serialized_start=1320,
-  serialized_end=1379,
+  serialized_start=1425,
+  serialized_end=1484,
 )
 
 _DICTIONARY_PAIR = _descriptor.Descriptor(
@@ -683,8 +727,8 @@ _DICTIONARY_PAIR = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1250,
-  serialized_end=1379,
+  serialized_start=1355,
+  serialized_end=1484,
 )
 
 _DICTIONARY = _descriptor.Descriptor(
@@ -714,8 +758,8 @@ _DICTIONARY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1192,
-  serialized_end=1379,
+  serialized_start=1297,
+  serialized_end=1484,
 )
 
 
@@ -734,6 +778,13 @@ _FEATUREUNION = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='initialNN', full_name='federated.FeatureUnion.initialNN', index=1,
+      number=2, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
   ],
   extensions=[
   ],
@@ -746,8 +797,496 @@ _FEATUREUNION = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1381,
-  serialized_end=1431,
+  serialized_start=1486,
+  serialized_end=1576,
+)
+
+
+_MODELUPDATE = _descriptor.Descriptor(
+  name='ModelUpdate',
+  full_name='federated.ModelUpdate',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='prior_mean', full_name='federated.ModelUpdate.prior_mean', index=0,
+      number=1, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='prior_variance', full_name='federated.ModelUpdate.prior_variance', index=1,
+      number=2, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='beta', full_name='federated.ModelUpdate.beta', index=2,
+      number=3, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='topic_word_matrix', full_name='federated.ModelUpdate.topic_word_matrix', index=3,
+      number=4, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='inf_net_input_layer_weight', full_name='federated.ModelUpdate.inf_net_input_layer_weight', index=4,
+      number=5, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='inf_net_input_layer_bias', full_name='federated.ModelUpdate.inf_net_input_layer_bias', index=5,
+      number=6, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='inf_net_hiddens_l00_weight', full_name='federated.ModelUpdate.inf_net_hiddens_l00_weight', index=6,
+      number=7, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='inf_net_hiddens_l_00_bias', full_name='federated.ModelUpdate.inf_net_hiddens_l_00_bias', index=7,
+      number=8, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='inf_net_f_mu_weight', full_name='federated.ModelUpdate.inf_net_f_mu_weight', index=8,
+      number=9, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='inf_net_f_mu_bias', full_name='federated.ModelUpdate.inf_net_f_mu_bias', index=9,
+      number=10, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='inf_net_f_mu_batchnorm_running_mean', full_name='federated.ModelUpdate.inf_net_f_mu_batchnorm_running_mean', index=10,
+      number=11, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='inf_net_f_mu_batchnorm_running_var', full_name='federated.ModelUpdate.inf_net_f_mu_batchnorm_running_var', index=11,
+      number=12, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='inf_net_f_mu_batchnorm_num_batches_tracked', full_name='federated.ModelUpdate.inf_net_f_mu_batchnorm_num_batches_tracked', index=12,
+      number=13, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='inf_net_f_sigma_weight', full_name='federated.ModelUpdate.inf_net_f_sigma_weight', index=13,
+      number=14, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='inf_net_f_sigma_bias', full_name='federated.ModelUpdate.inf_net_f_sigma_bias', index=14,
+      number=15, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='inf_net_f_sigma_batchnorm_running_mean', full_name='federated.ModelUpdate.inf_net_f_sigma_batchnorm_running_mean', index=15,
+      number=16, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='inf_net_f_sigma_batchnorm_running_var', full_name='federated.ModelUpdate.inf_net_f_sigma_batchnorm_running_var', index=16,
+      number=17, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='inf_net_f_sigma_batchnorm_num_batches_tracked', full_name='federated.ModelUpdate.inf_net_f_sigma_batchnorm_num_batches_tracked', index=17,
+      number=18, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='beta_batchnorm_running_mean', full_name='federated.ModelUpdate.beta_batchnorm_running_mean', index=18,
+      number=19, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='beta_batchnorm_running_var', full_name='federated.ModelUpdate.beta_batchnorm_running_var', index=19,
+      number=20, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='beta_batchnorm_num_batches_tracked', full_name='federated.ModelUpdate.beta_batchnorm_num_batches_tracked', index=20,
+      number=21, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='best_components', full_name='federated.ModelUpdate.best_components', index=21,
+      number=22, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='current_epoch', full_name='federated.ModelUpdate.current_epoch', index=22,
+      number=24, type=5, cpp_type=1, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=1579,
+  serialized_end=2810,
+)
+
+
+_ADAMUPDATE_STATE_CONTENTSTATE = _descriptor.Descriptor(
+  name='ContentState',
+  full_name='federated.AdamUpdate.State.ContentState',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='state_id', full_name='federated.AdamUpdate.State.ContentState.state_id', index=0,
+      number=1, type=3, cpp_type=2, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='step', full_name='federated.AdamUpdate.State.ContentState.step', index=1,
+      number=2, type=3, cpp_type=2, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='exp_avg', full_name='federated.AdamUpdate.State.ContentState.exp_avg', index=2,
+      number=3, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='exp_avg_sq', full_name='federated.AdamUpdate.State.ContentState.exp_avg_sq', index=3,
+      number=4, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=3001,
+  serialized_end=3122,
+)
+
+_ADAMUPDATE_STATE = _descriptor.Descriptor(
+  name='State',
+  full_name='federated.AdamUpdate.State',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='contentState', full_name='federated.AdamUpdate.State.contentState', index=0,
+      number=2, type=11, cpp_type=10, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[_ADAMUPDATE_STATE_CONTENTSTATE, ],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=2928,
+  serialized_end=3122,
+)
+
+_ADAMUPDATE_PARAMGROUPS_BETAS = _descriptor.Descriptor(
+  name='Betas',
+  full_name='federated.AdamUpdate.ParamGroups.Betas',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='beta1', full_name='federated.AdamUpdate.ParamGroups.Betas.beta1', index=0,
+      number=1, type=2, cpp_type=6, label=1,
+      has_default_value=False, default_value=float(0),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='beta2', full_name='federated.AdamUpdate.ParamGroups.Betas.beta2', index=1,
+      number=2, type=2, cpp_type=6, label=1,
+      has_default_value=False, default_value=float(0),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=3276,
+  serialized_end=3313,
+)
+
+_ADAMUPDATE_PARAMGROUPS = _descriptor.Descriptor(
+  name='ParamGroups',
+  full_name='federated.AdamUpdate.ParamGroups',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='lr', full_name='federated.AdamUpdate.ParamGroups.lr', index=0,
+      number=1, type=2, cpp_type=6, label=1,
+      has_default_value=False, default_value=float(0),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='betas', full_name='federated.AdamUpdate.ParamGroups.betas', index=1,
+      number=2, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='eps', full_name='federated.AdamUpdate.ParamGroups.eps', index=2,
+      number=3, type=2, cpp_type=6, label=1,
+      has_default_value=False, default_value=float(0),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='weight_decay', full_name='federated.AdamUpdate.ParamGroups.weight_decay', index=3,
+      number=4, type=2, cpp_type=6, label=1,
+      has_default_value=False, default_value=float(0),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='amsgrad', full_name='federated.AdamUpdate.ParamGroups.amsgrad', index=4,
+      number=5, type=8, cpp_type=7, label=1,
+      has_default_value=False, default_value=False,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='params', full_name='federated.AdamUpdate.ParamGroups.params', index=5,
+      number=6, type=5, cpp_type=1, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[_ADAMUPDATE_PARAMGROUPS_BETAS, ],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=3125,
+  serialized_end=3313,
+)
+
+_ADAMUPDATE = _descriptor.Descriptor(
+  name='AdamUpdate',
+  full_name='federated.AdamUpdate',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='state', full_name='federated.AdamUpdate.state', index=0,
+      number=1, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='paramGroups', full_name='federated.AdamUpdate.paramGroups', index=1,
+      number=2, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[_ADAMUPDATE_STATE, _ADAMUPDATE_PARAMGROUPS, ],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=2813,
+  serialized_end=3313,
+)
+
+
+_OPTUPDATE = _descriptor.Descriptor(
+  name='OptUpdate',
+  full_name='federated.OptUpdate',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='adamUpdate', full_name='federated.OptUpdate.adamUpdate', index=0,
+      number=1, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+    _descriptor.OneofDescriptor(
+      name='oneof_values', full_name='federated.OptUpdate.oneof_values',
+      index=0, containing_type=None,
+      create_key=_descriptor._internal_create_key,
+    fields=[]),
+  ],
+  serialized_start=3315,
+  serialized_end=3387,
+)
+
+
+_NNUPDATE = _descriptor.Descriptor(
+  name='NNUpdate',
+  full_name='federated.NNUpdate',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='modelUpdate', full_name='federated.NNUpdate.modelUpdate', index=0,
+      number=1, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='optUpdate', full_name='federated.NNUpdate.optUpdate', index=1,
+      number=2, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=3389,
+  serialized_end=3485,
 )
 
 _TENSORSHAPE_DIM.containing_type = _TENSORSHAPE
@@ -755,7 +1294,8 @@ _TENSORSHAPE_DIM.oneofs_by_name['_name'].fields.append(
   _TENSORSHAPE_DIM.fields_by_name['name'])
 _TENSORSHAPE_DIM.fields_by_name['name'].containing_oneof = _TENSORSHAPE_DIM.oneofs_by_name['_name']
 _TENSORSHAPE.fields_by_name['dim'].message_type = _TENSORSHAPE_DIM
-_UPDATE.fields_by_name['tensor_shape'].message_type = _TENSORSHAPE
+_TENSOR.fields_by_name['tensor_shape'].message_type = _TENSORSHAPE
+_UPDATE.fields_by_name['tensor'].message_type = _TENSOR
 _MESSAGEHEADER.fields_by_name['message_type'].enum_type = _MESSAGETYPE
 _MESSAGEHEADER.oneofs_by_name['_id_request'].fields.append(
   _MESSAGEHEADER.fields_by_name['id_request'])
@@ -768,10 +1308,17 @@ _MESSAGEHEADER.oneofs_by_name['_id_to_request'].fields.append(
 _MESSAGEHEADER.fields_by_name['id_to_request'].containing_oneof = _MESSAGEHEADER.oneofs_by_name['_id_to_request']
 _CLIENTTENSORREQUEST.fields_by_name['header'].message_type = _MESSAGEHEADER
 _CLIENTTENSORREQUEST.fields_by_name['metadata'].message_type = _MESSAGEADDITIONALDATA
-_CLIENTTENSORREQUEST.fields_by_name['data'].message_type = _UPDATE
+_CLIENTTENSORREQUEST.fields_by_name['updates'].message_type = _UPDATE
 _SERVERAGGREGATEDTENSORREQUEST.fields_by_name['header'].message_type = _MESSAGEHEADER
 _SERVERAGGREGATEDTENSORREQUEST.fields_by_name['metadata'].message_type = _MESSAGEADDITIONALDATA
 _SERVERAGGREGATEDTENSORREQUEST.fields_by_name['data'].message_type = _UPDATE
+_SERVERAGGREGATEDTENSORREQUEST.fields_by_name['nndata'].message_type = _NNUPDATE
+_SERVERAGGREGATEDTENSORREQUEST.oneofs_by_name['oneof_values'].fields.append(
+  _SERVERAGGREGATEDTENSORREQUEST.fields_by_name['data'])
+_SERVERAGGREGATEDTENSORREQUEST.fields_by_name['data'].containing_oneof = _SERVERAGGREGATEDTENSORREQUEST.oneofs_by_name['oneof_values']
+_SERVERAGGREGATEDTENSORREQUEST.oneofs_by_name['oneof_values'].fields.append(
+  _SERVERAGGREGATEDTENSORREQUEST.fields_by_name['nndata'])
+_SERVERAGGREGATEDTENSORREQUEST.fields_by_name['nndata'].containing_oneof = _SERVERAGGREGATEDTENSORREQUEST.oneofs_by_name['oneof_values']
 _CLIENTRECEIVEDRESPONSE.fields_by_name['header'].message_type = _MESSAGEHEADER
 _CLIENTRECEIVEDRESPONSE.fields_by_name['metadata'].message_type = _MESSAGEADDITIONALDATA
 _SERVERRECEIVEDRESPONSE.fields_by_name['header'].message_type = _MESSAGEHEADER
@@ -787,8 +1334,48 @@ _DICTIONARY_PAIR.fields_by_name['value'].message_type = _DICTIONARY_PAIR_VALUE
 _DICTIONARY_PAIR.containing_type = _DICTIONARY
 _DICTIONARY.fields_by_name['pairs'].message_type = _DICTIONARY_PAIR
 _FEATUREUNION.fields_by_name['dic'].message_type = _DICTIONARY
+_FEATUREUNION.fields_by_name['initialNN'].message_type = _NNUPDATE
+_MODELUPDATE.fields_by_name['prior_mean'].message_type = _TENSOR
+_MODELUPDATE.fields_by_name['prior_variance'].message_type = _TENSOR
+_MODELUPDATE.fields_by_name['beta'].message_type = _TENSOR
+_MODELUPDATE.fields_by_name['topic_word_matrix'].message_type = _TENSOR
+_MODELUPDATE.fields_by_name['inf_net_input_layer_weight'].message_type = _TENSOR
+_MODELUPDATE.fields_by_name['inf_net_input_layer_bias'].message_type = _TENSOR
+_MODELUPDATE.fields_by_name['inf_net_hiddens_l00_weight'].message_type = _TENSOR
+_MODELUPDATE.fields_by_name['inf_net_hiddens_l_00_bias'].message_type = _TENSOR
+_MODELUPDATE.fields_by_name['inf_net_f_mu_weight'].message_type = _TENSOR
+_MODELUPDATE.fields_by_name['inf_net_f_mu_bias'].message_type = _TENSOR
+_MODELUPDATE.fields_by_name['inf_net_f_mu_batchnorm_running_mean'].message_type = _TENSOR
+_MODELUPDATE.fields_by_name['inf_net_f_mu_batchnorm_running_var'].message_type = _TENSOR
+_MODELUPDATE.fields_by_name['inf_net_f_mu_batchnorm_num_batches_tracked'].message_type = _TENSOR
+_MODELUPDATE.fields_by_name['inf_net_f_sigma_weight'].message_type = _TENSOR
+_MODELUPDATE.fields_by_name['inf_net_f_sigma_bias'].message_type = _TENSOR
+_MODELUPDATE.fields_by_name['inf_net_f_sigma_batchnorm_running_mean'].message_type = _TENSOR
+_MODELUPDATE.fields_by_name['inf_net_f_sigma_batchnorm_running_var'].message_type = _TENSOR
+_MODELUPDATE.fields_by_name['inf_net_f_sigma_batchnorm_num_batches_tracked'].message_type = _TENSOR
+_MODELUPDATE.fields_by_name['beta_batchnorm_running_mean'].message_type = _TENSOR
+_MODELUPDATE.fields_by_name['beta_batchnorm_running_var'].message_type = _TENSOR
+_MODELUPDATE.fields_by_name['beta_batchnorm_num_batches_tracked'].message_type = _TENSOR
+_MODELUPDATE.fields_by_name['best_components'].message_type = _TENSOR
+_ADAMUPDATE_STATE_CONTENTSTATE.fields_by_name['exp_avg'].message_type = _TENSOR
+_ADAMUPDATE_STATE_CONTENTSTATE.fields_by_name['exp_avg_sq'].message_type = _TENSOR
+_ADAMUPDATE_STATE_CONTENTSTATE.containing_type = _ADAMUPDATE_STATE
+_ADAMUPDATE_STATE.fields_by_name['contentState'].message_type = _ADAMUPDATE_STATE_CONTENTSTATE
+_ADAMUPDATE_STATE.containing_type = _ADAMUPDATE
+_ADAMUPDATE_PARAMGROUPS_BETAS.containing_type = _ADAMUPDATE_PARAMGROUPS
+_ADAMUPDATE_PARAMGROUPS.fields_by_name['betas'].message_type = _ADAMUPDATE_PARAMGROUPS_BETAS
+_ADAMUPDATE_PARAMGROUPS.containing_type = _ADAMUPDATE
+_ADAMUPDATE.fields_by_name['state'].message_type = _ADAMUPDATE_STATE
+_ADAMUPDATE.fields_by_name['paramGroups'].message_type = _ADAMUPDATE_PARAMGROUPS
+_OPTUPDATE.fields_by_name['adamUpdate'].message_type = _ADAMUPDATE
+_OPTUPDATE.oneofs_by_name['oneof_values'].fields.append(
+  _OPTUPDATE.fields_by_name['adamUpdate'])
+_OPTUPDATE.fields_by_name['adamUpdate'].containing_oneof = _OPTUPDATE.oneofs_by_name['oneof_values']
+_NNUPDATE.fields_by_name['modelUpdate'].message_type = _MODELUPDATE
+_NNUPDATE.fields_by_name['optUpdate'].message_type = _OPTUPDATE
 DESCRIPTOR.message_types_by_name['Empty'] = _EMPTY
 DESCRIPTOR.message_types_by_name['TensorShape'] = _TENSORSHAPE
+DESCRIPTOR.message_types_by_name['Tensor'] = _TENSOR
 DESCRIPTOR.message_types_by_name['Update'] = _UPDATE
 DESCRIPTOR.message_types_by_name['MessageAdditionalData'] = _MESSAGEADDITIONALDATA
 DESCRIPTOR.message_types_by_name['MessageHeader'] = _MESSAGEHEADER
@@ -801,6 +1388,10 @@ DESCRIPTOR.message_types_by_name['Request'] = _REQUEST
 DESCRIPTOR.message_types_by_name['Reply'] = _REPLY
 DESCRIPTOR.message_types_by_name['Dictionary'] = _DICTIONARY
 DESCRIPTOR.message_types_by_name['FeatureUnion'] = _FEATUREUNION
+DESCRIPTOR.message_types_by_name['ModelUpdate'] = _MODELUPDATE
+DESCRIPTOR.message_types_by_name['AdamUpdate'] = _ADAMUPDATE
+DESCRIPTOR.message_types_by_name['OptUpdate'] = _OPTUPDATE
+DESCRIPTOR.message_types_by_name['NNUpdate'] = _NNUPDATE
 DESCRIPTOR.enum_types_by_name['MessageType'] = _MESSAGETYPE
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
@@ -825,6 +1416,13 @@ TensorShape = _reflection.GeneratedProtocolMessageType('TensorShape', (_message.
   })
 _sym_db.RegisterMessage(TensorShape)
 _sym_db.RegisterMessage(TensorShape.Dim)
+
+Tensor = _reflection.GeneratedProtocolMessageType('Tensor', (_message.Message,), {
+  'DESCRIPTOR' : _TENSOR,
+  '__module__' : 'federated_pb2'
+  # @@protoc_insertion_point(class_scope:federated.Tensor)
+  })
+_sym_db.RegisterMessage(Tensor)
 
 Update = _reflection.GeneratedProtocolMessageType('Update', (_message.Message,), {
   'DESCRIPTOR' : _UPDATE,
@@ -926,6 +1524,66 @@ FeatureUnion = _reflection.GeneratedProtocolMessageType('FeatureUnion', (_messag
   })
 _sym_db.RegisterMessage(FeatureUnion)
 
+ModelUpdate = _reflection.GeneratedProtocolMessageType('ModelUpdate', (_message.Message,), {
+  'DESCRIPTOR' : _MODELUPDATE,
+  '__module__' : 'federated_pb2'
+  # @@protoc_insertion_point(class_scope:federated.ModelUpdate)
+  })
+_sym_db.RegisterMessage(ModelUpdate)
+
+AdamUpdate = _reflection.GeneratedProtocolMessageType('AdamUpdate', (_message.Message,), {
+
+  'State' : _reflection.GeneratedProtocolMessageType('State', (_message.Message,), {
+
+    'ContentState' : _reflection.GeneratedProtocolMessageType('ContentState', (_message.Message,), {
+      'DESCRIPTOR' : _ADAMUPDATE_STATE_CONTENTSTATE,
+      '__module__' : 'federated_pb2'
+      # @@protoc_insertion_point(class_scope:federated.AdamUpdate.State.ContentState)
+      })
+    ,
+    'DESCRIPTOR' : _ADAMUPDATE_STATE,
+    '__module__' : 'federated_pb2'
+    # @@protoc_insertion_point(class_scope:federated.AdamUpdate.State)
+    })
+  ,
+
+  'ParamGroups' : _reflection.GeneratedProtocolMessageType('ParamGroups', (_message.Message,), {
+
+    'Betas' : _reflection.GeneratedProtocolMessageType('Betas', (_message.Message,), {
+      'DESCRIPTOR' : _ADAMUPDATE_PARAMGROUPS_BETAS,
+      '__module__' : 'federated_pb2'
+      # @@protoc_insertion_point(class_scope:federated.AdamUpdate.ParamGroups.Betas)
+      })
+    ,
+    'DESCRIPTOR' : _ADAMUPDATE_PARAMGROUPS,
+    '__module__' : 'federated_pb2'
+    # @@protoc_insertion_point(class_scope:federated.AdamUpdate.ParamGroups)
+    })
+  ,
+  'DESCRIPTOR' : _ADAMUPDATE,
+  '__module__' : 'federated_pb2'
+  # @@protoc_insertion_point(class_scope:federated.AdamUpdate)
+  })
+_sym_db.RegisterMessage(AdamUpdate)
+_sym_db.RegisterMessage(AdamUpdate.State)
+_sym_db.RegisterMessage(AdamUpdate.State.ContentState)
+_sym_db.RegisterMessage(AdamUpdate.ParamGroups)
+_sym_db.RegisterMessage(AdamUpdate.ParamGroups.Betas)
+
+OptUpdate = _reflection.GeneratedProtocolMessageType('OptUpdate', (_message.Message,), {
+  'DESCRIPTOR' : _OPTUPDATE,
+  '__module__' : 'federated_pb2'
+  # @@protoc_insertion_point(class_scope:federated.OptUpdate)
+  })
+_sym_db.RegisterMessage(OptUpdate)
+
+NNUpdate = _reflection.GeneratedProtocolMessageType('NNUpdate', (_message.Message,), {
+  'DESCRIPTOR' : _NNUPDATE,
+  '__module__' : 'federated_pb2'
+  # @@protoc_insertion_point(class_scope:federated.NNUpdate)
+  })
+_sym_db.RegisterMessage(NNUpdate)
+
 
 
 _FEDERATION = _descriptor.ServiceDescriptor(
@@ -935,8 +1593,8 @@ _FEDERATION = _descriptor.ServiceDescriptor(
   index=0,
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_start=1567,
-  serialized_end=1976,
+  serialized_start=3621,
+  serialized_end=4042,
   methods=[
   _descriptor.MethodDescriptor(
     name='sendLocalTensor',
@@ -989,8 +1647,8 @@ _FEDERATION = _descriptor.ServiceDescriptor(
     create_key=_descriptor._internal_create_key,
   ),
   _descriptor.MethodDescriptor(
-    name='sendGlobalDic',
-    full_name='federated.Federation.sendGlobalDic',
+    name='sendGlobalDicAndInitialNN',
+    full_name='federated.Federation.sendGlobalDicAndInitialNN',
     index=5,
     containing_service=None,
     input_type=_EMPTY,
