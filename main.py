@@ -43,7 +43,11 @@ def start_server(min_num_clients):
         }
 
 
-    server = grpc.server(futures.ThreadPoolExecutor())
+    opts = [("grpc.keepalive_time_ms", 10000), 
+        ("grpc.keepalive_timeout_ms", 5000), 
+        ("grpc.keepalive_permit_without_calls", True),
+        ("grpc.http2.max_ping_strikes", 0)] 
+    server = grpc.server(futures.ThreadPoolExecutor(),options=opts)
     federated_pb2_grpc.add_FederationServicer_to_server(
         FederatedServer(min_num_clients,model_parameters,"prod"), server)
     server.add_insecure_port('[::]:50051')
@@ -53,7 +57,7 @@ def start_server(min_num_clients):
 
 def start_client(id_client, model_type):
     # Training data
-    file = "data/training_data/synthetic.npz"
+    file = "data/training_data/synthetic2.npz"
     data = np.load(file, allow_pickle=True)
     corpus = data['documents'][id_client-1]
     vocab_size = data['vocab_size']
