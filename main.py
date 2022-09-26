@@ -124,7 +124,7 @@ def start_client(id_client, model_type):
                 ('grpc.max_send_message_length', MAX_MESSAGE_LENGTH),
                 ('grpc.max_receive_message_length', MAX_MESSAGE_LENGTH),
         ]
-        with grpc.insecure_channel('localhost:50051', options = options) as channel:
+        with grpc.insecure_channel('gfedntm-server:50051', options = options) as channel:#localhost
             stub = federated_pb2_grpc.FederationStub(channel)
             client = Client(id_client, stub, model_type, corpus, model_parameters)
             client.train_local_model()

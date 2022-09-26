@@ -31,16 +31,13 @@ def convert_topic_word_to_init_size(vocab_size, model, model_type,
     if model_type == "avitm":
         w_t_distrib = np.zeros((ntopics, vocab_size), dtype=np.float64)
         wd = model.get_topic_word_distribution()
-        #print(wd)
         for i in np.arange(ntopics):
             for idx, word in id2token.items():
                 for j in np.arange(len(all_words)):
-                    if all_words[j] == word:
+                    if all_words[j] == word.split("__")[1]:#word
                         w_t_distrib[i, j] = wd[i][idx]
                         break
         normalized_array = normalize(w_t_distrib,axis=1,norm='l1')
-        print("NON ZERO")
-        print(np.count_nonzero(normalized_array))
         return normalized_array
     else:
         print("Method not impleemnted for the selected model type")

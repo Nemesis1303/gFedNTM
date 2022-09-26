@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  gfedntm-dev:
+    image: nemesis1303/gfedntm
+    container_name: gfedntm-server
+    restart: always
+    tty: true
+    ports:
+      - 8887:8887
+    networks:
+      - gfedntm_network
+    volumes:
+      - gfedntm-dev-volume:/workspace
+
+  gfedntm-server:
+    image: nemesis1303/gfedntm
+    container_name: gfedntm-server
+    restart: always
+    tty: true
+    ports:
+      - 8888:8888
+    networks:
+      - gfedntm_network
+
+  gfedntm-client1:
+    image: nemesis1303/gfedntm
+    container_name: gfedntm-client1
+    restart: always
+    tty: true
+    ports:
+      - 8889:8889
+    networks:
+      - gfedntm_network
+
+  gfedntm-client2:
+    image: nemesis1303/gfedntm
+    container_name: gfedntm-client2
+    restart: always
+    tty: true
+    ports:
+      - 8810:8810
+    networks:
+      - gfedntm_network
+
+networks:
+  gfedntm_network:
+    driver: bridge
+
+volumes:
+  gfedntm-dev-volume:

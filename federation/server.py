@@ -13,7 +13,7 @@ from gensim.test.utils import get_tmpfile
 from models.federated.federated_avitm import FederatedAVITM
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.pipeline import FeatureUnion
-from utils.auxiliary_functions import (deserializeNumpy, get_type_from_string,
+from utils.auxiliary_functions import (deserializeNumpy,
                                        modelStateDict_to_proto,
                                        optStateDict_to_proto)
 from waiting import wait

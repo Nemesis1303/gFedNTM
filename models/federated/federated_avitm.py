@@ -251,10 +251,7 @@ class FederatedAVITM(AVITM, FederatedModel):
         all_words = \
             ['wd'+str(word) for word in np.arange(vocab_size+1)
              if word > 0]
-            
-        print("BETAS")
-        print(self.betas.shape)
-
+    
         self.betas = convert_topic_word_to_init_size(
             vocab_size=vocab_size,
             model=self,
@@ -262,26 +259,11 @@ class FederatedAVITM(AVITM, FederatedModel):
             ntopics=self.n_components,
             id2token=self.tm_params["id2token"],
             all_words=all_words)
-        
-        print(self.betas.shape)
-
         print('Tópicos (equivalentes) evaluados correctamente:', np.sum(
             np.max(np.sqrt(self.betas).dot(np.sqrt(gt_betas.T)), axis=0)))
 
-        # Get thetas of the documents corresponding only to the node's corpus
-        print(len(gt_thetas))
-        inic = (self.fedTrManager.client.id-1)*len(gt_thetas)
-        end = (self.fedTrManager.client.id)*len(gt_thetas)
-
-        print("THETAS")
-        print(self.thetas.shape)
-
-
-        thetas = self.thetas#[inic:end, :]
-
-        
         sim_mat_theoretical = \
             np.sqrt(gt_thetas[0]).dot(np.sqrt(gt_thetas[0].T))
-        sim_mat_actual = np.sqrt(thetas).dot(np.sqrt(thetas.T))
+        sim_mat_actual = np.sqrt(self.thetas).dot(np.sqrt(self.thetas.T))
         print('Difference in evaluation of doc similarity:', np.sum(
             np.abs(sim_mat_theoretical - sim_mat_actual))/len(gt_thetas))
