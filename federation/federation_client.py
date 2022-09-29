@@ -19,7 +19,8 @@ class FederationClient:
         self.current_epoch = -1
         self.current_id_msg = -2
         self.num_max_iter = -3
-        self.curren_mb = -4
+        self.current_mb = -4
+        self.nr_samples = -5
         self.vocab_sent = False
         self.can_get_update = False
 
@@ -30,7 +31,7 @@ class FederationClient:
 
         self.num_max_iter = num_max_iter
 
-    def update_client_state(self, tensors, curren_mb, current_epoch, current_id_msg):
+    def update_client_state(self, tensors, current_mb, current_epoch, current_id_msg):
         """Sets the state of the client, that is:
         - current tensor that is being sent to the server
         - curent minibatch to which the sent tensor belongs to
@@ -39,7 +40,7 @@ class FederationClient:
         """
 
         self.tensors = tensors
-        self.curren_mb = curren_mb
+        self.current_mb = current_mb
         self.current_epoch = current_epoch,
         self.current_id_msg = current_id_msg
 

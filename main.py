@@ -33,7 +33,7 @@ def start_server(min_num_clients):
             "lr": 2e-3,
             "momentum": 0.99,
             "solver": "adam",
-            "num_epochs": 100,
+            "num_epochs": 5,
             "num_samples": 10,
             "num_data_loader_workers": 0,
             "reduce_on_plateau": False,
@@ -124,7 +124,7 @@ def start_client(id_client, model_type):
                 ('grpc.max_send_message_length', MAX_MESSAGE_LENGTH),
                 ('grpc.max_receive_message_length', MAX_MESSAGE_LENGTH),
         ]
-        with grpc.insecure_channel('gfedntm-server:50051', options = options) as channel:#localhost
+        with grpc.insecure_channel('localhost:50051', options = options) as channel:#gfedntm-server
             stub = federated_pb2_grpc.FederationStub(channel)
             client = Client(id_client, stub, model_type, corpus, model_parameters)
             client.train_local_model()

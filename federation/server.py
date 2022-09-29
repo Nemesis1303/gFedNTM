@@ -31,7 +31,7 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
     def __init__(self, min_num_clients, model_params, model_type, logger=None):
         self.federation = federation.Federation()
         self.min_num_clients = min_num_clients
-        self.minibatch = -1
+        self.current_minibatch = -1
         self.current_epoch = -2
         self.id_server = "IDS" + "_" + str(round(time.time()))
         self.path_global_corpus = get_tmpfile(str(self.id_server))
@@ -51,7 +51,7 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
             logging.basicConfig(format=FMT, level='INFO')
             self.logger = logging.getLogger('Server')
 
-    def record_client_consensus(self, context, path_tmp_local_corpus):
+    def record_client_consensus(self, context, path_tmp_local_corpus, nr_samples):
         """
         Method to record the communication between a server and one of the clients in the federation at the time the clients first try to send its local vocabulary.
 
@@ -61,6 +61,7 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
             An AuthMetadataContext providing information on the RPC
         path_tmp_local_corpus: pathlib.Path
             Path to the temporary file where the local corpus of the client currently under communication is located
+        nr_samples: Number of client's data points 
         """
 
         def unregister_client():
@@ -71,6 +72,7 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
                 federation_client.FederationClient.get_pos_by_key(
                     context.peer(), self.federation.federation_clients)
             self.federation.federation_clients[client].vocab_sent = True
+            self.federation.federation_clients[client].nr_samples = nr_samples
             self.federation.disconnect(context.peer())
 
         context.add_callback(unregister_client)
@@ -127,19 +129,52 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
         self.federation.connect_waiting_or_consensus(context.peer(), waiting)
 
     def sendLocalDic(self, request, context):
+        """
+        Sends an ACK response to the client after receiving his local dictionary update.
+
+        Parameters
+        ----------
+        request: ClientTensorRequest
+            Request of the client for sending its vocabulary dictionary
+        context: AuthMetadataContext
+            Context of the RPC communication between the client and the server
+
+        Returns
+        -------
+        response : ServerReceivedResponse
+            Server's response to confirm a client that its sent vocabulary dictionary was received
+        """
 
         path_tmp_local_corpus = get_tmpfile(context.peer())
-        self.record_client_consensus(context, path_tmp_local_corpus)
 
-        # Get client's vocab
+        # Get client's vocab and save it dicts list
         vocab = dict([(pair.key, pair.value.ivalue)
                      for pair in request.pairs])
-        # Save vocab to temporal file
-        #save_dict_as_json(vocab, path_tmp_local_corpus)
         self.dicts.append(vocab)
+
+        cv = CountVectorizer(vocabulary=vocab)
+        nr_samples = len(cv.get_feature_names_out())
+
+        self.record_client_consensus(context, path_tmp_local_corpus, nr_samples)
+
         return federated_pb2.Reply(length=len(vocab))
 
     def sendGlobalDicAndInitialNN(self, request, context):
+        """
+        Sends the common vocabulary and the initialized NN to the correspinding client based on the context of the gRPC channel.
+
+        Parameters
+        ----------
+        request: federated_pb2.Empty
+            Empty protocol buffer coming from the client
+        context: AuthMetadataContext
+            Context of the RPC communication between the client and the server
+
+        Returns
+        -------
+        request: federated_pb2.ServerAggregatedTensorReques
+            Request with the common vocabulary and the initialized NN
+        """
 
         # Record clients waiting for the consensed request
         self.record_client_waiting_or_consensus(context, False)
@@ -267,11 +302,31 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
         if len(self.federation.federation_clients) < self.min_num_clients:
             return False
         for client in self.federation.federation_clients:
+            if client.current_mb != self.current_minibatch:
+                print("DIFERENT")
+                print(client.current_mb)
+                print(self.current_minibatch)
+                #return False
             if not client.can_get_update:
                 return False
         return True
 
     def sendAggregatedTensor(self, request, context):
+        """
+        Sends the average update to the correspinding client based on the context of the gRPC channel.
+
+        Parameters
+        ----------
+        request: federated_pb2.Empty
+            Empty protocol buffer coming from the client
+        context: AuthMetadataContext
+            Context of the RPC communication between the client and the server
+
+        Returns
+        -------
+        request: federated_pb2.ServerAggregatedTensorRequest
+            Request with the aggregated tensor
+        """
 
         # Record clients waiting
         self.record_client_waiting_or_consensus(context, True)
@@ -291,7 +346,7 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
         averages = {}
         for key in keys:
             clients_tensors = [
-                client.tensors[key] for client in self.federation.federation_clients]
+                client.tensors[key]*client.nr_samples for client in self.federation.federation_clients]
             average_tensor = np.mean(np.stack(clients_tensors), axis=0)
             averages[key] = average_tensor
             print("The average tensor " + key + " is: ", average_tensor)
@@ -333,83 +388,5 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
 
         request = federated_pb2.ServerAggregatedTensorRequest(
             header=header, nndata=nNUpdate)
-
-        return request
-
-    def sendAggregatedTensor2(self, request, context):
-        """
-        Sends the average update to the correspinding client based on the context of the gRPC channel.
-
-        Parameters
-        ----------
-        request: federated_pb2.Empty
-            Empty protocol buffer coming from the client
-        context: AuthMetadataContext
-            Context of the RPC communication between the client and the server
-
-        Returns
-        -------
-        request: federated_pb2.ServerAggregatedTensorReques
-            Request with the aggregated tensor
-        """
-
-        # Record clients waiting
-        self.record_client_waiting_or_consensus(context, True)
-
-        federation_client.FederationClient.set_can_get_update_by_key(
-            context.peer(),
-            self.federation.federation_clients,
-            True)
-
-        # Wait until all the clients in the federation have sent its current iteration gradient
-        wait(lambda: self.can_send_update(), timeout_seconds=120,
-             waiting_for="Update can be sent")
-
-        # print(self.federation.federation_clients[0].tensor.shape)
-        # print(self.federation.federation_clients[1].tensor.shape)
-        # print(self.federation.federation_clients[2].tensor.shape)
-        # print(self.federation.federation_clients[3].tensor.shape)
-        # print(self.federation.federation_clients[4].tensor.shape)
-
-        # Calculate average
-        clients_tensors = [
-            client.tensor for client in self.federation.federation_clients]
-        average_tensor = np.mean(np.stack(clients_tensors), axis=0)
-        print("The average tensor is: ", average_tensor)
-
-        # Serialize tensor
-        content_bytes = average_tensor.tobytes()
-        size = federated_pb2.TensorShape()
-        num_dims = len(average_tensor.shape)
-        for i in np.arange(num_dims):
-            name = "dim" + str(i)
-            size.dim.extend(
-                [federated_pb2.TensorShape.Dim(size=average_tensor.shape[i], name=name)])
-
-        # Get the client to sent the update to based on the context of the gRPC channel
-        client_to_repond = \
-            federation_client.FederationClient.get_pos_by_key(
-                context.peer(),
-                self.federation.federation_clients)
-
-        # Create request
-        update_name = "Update for client with key " + \
-            str(self.federation.federation_clients[client_to_repond].federation_key) + \
-            " for the iteration " + \
-            str(
-                self.federation.federation_clients[client_to_repond].current_epoch)
-
-        data = federated_pb2.Update(tensor_name=update_name,
-                                    tensor_shape=size, tensor_content=content_bytes)
-        # Send update
-        header = federated_pb2.MessageHeader(id_response=self.id_server,
-                                             message_type=federated_pb2.MessageType.SERVER_AGGREGATED_TENSOR_SEND)
-        print(update_name)
-
-        id_client = federation_client.FederationClient.get_pos_by_key(
-            context.peer(),
-            self.federation.federation_clients)
-
-        request = federated_pb2.ServerAggregatedTensorRequest(
-            header=header, data=data)
+        
         return request
