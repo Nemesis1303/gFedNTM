@@ -1,5 +1,11 @@
 version: '3.8'
 
+x-services-volume:
+  &services-volume
+  type: bind
+  source: ./data/output_models
+  target: workspace/data/output_models
+
 services:
   gfedntm-dev:
     image: nemesis1303/gfedntm
@@ -17,6 +23,7 @@ services:
     image: nemesis1303/gfedntm
     container_name: gfedntm-server
     restart: always
+    command: python3 workspace/main.py --min_clients_federation 2
     tty: true
     ports:
       - 8888:8888
@@ -27,21 +34,27 @@ services:
     image: nemesis1303/gfedntm
     container_name: gfedntm-client1
     restart: always
+    command: python3 workspace/main.py --id 1
     tty: true
     ports:
       - 8889:8889
     networks:
       - gfedntm_network
+    volumes:
+      - ./data/output_models:/workspace/data/output_models
 
   gfedntm-client2:
     image: nemesis1303/gfedntm
     container_name: gfedntm-client2
     restart: always
+    command: python3 workspace/main.py --id 2
     tty: true
     ports:
       - 8810:8810
     networks:
       - gfedntm_network
+    volumes:
+      - ./data/output_models:/workspace/data/output_models
 
 networks:
   gfedntm_network:

@@ -6,6 +6,7 @@ from models.base.pytorchavitm.avitm_network.avitm import AVITM
 from models.federated.federated_model import FederatedModel
 from sklearn.preprocessing import normalize
 from torch.utils.data import DataLoader
+from utils.auxiliary_functions import save_model_as_npz
 from utils.utils_postprocessing import convert_topic_word_to_init_size
 
 
@@ -241,10 +242,10 @@ class FederatedAVITM(AVITM, FederatedModel):
         self.betas = self.get_topic_word_distribution()
 
         file_save = \
-            "data/output_models/model_client_" + \
+            "workspace/data/output_models/model_client_" + \
             str(self.fedTrManager.client.id) + ".npz"
 
-        #ave_model_as_npz(file_save, self.fedTrManager)
+        save_model_as_npz(file_save, self)
 
     def evaluate_synthetic_model(self, vocab_size, gt_thetas, gt_betas):
 

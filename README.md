@@ -29,3 +29,9 @@ python3 main.py --min_clients_federation <min_clients_federation> --model_type <
 ```
 python3 main.py --id <id> --source <path_to_training_data> 
 ```
+
+## Build image
+
+```
+docker build .  -t nemesis1303/gfedntm:latest
+```

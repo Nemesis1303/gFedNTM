@@ -59,7 +59,7 @@ def pickler(file: str, ob):
     return
 
 
-def save_model_as_npz(npzfile, client):
+def save_model_as_npz(npzfile, federated_model):
     """Saves the matrixes that characterize a topic model in a numpy npz filel.
 
     Args:
@@ -67,24 +67,24 @@ def save_model_as_npz(npzfile, client):
         client (): 
     """
 
-    if isinstance(client.local_model.thetas, sparse.csr_matrix):
+    if isinstance(federated_model.thetas, sparse.csr_matrix):
         np.savez(
             npzfile,
-            betas=client.local_model.betas,
-            thetas_data=client.local_model.thetas.data,
-            thetas_indices=client.local_model.thetas.indices,
-            thetas_indptr=client.local_model.thetas.indptr,
-            thetas_shape=client.local_model.thetas.shape,
-            ntopics=client.local_model.n_components,
-            topics=client.local_model.topics
+            betas=federated_model.betas,
+            thetas_data=federated_model.thetas.data,
+            thetas_indices=federated_model.thetas.indices,
+            thetas_indptr=federated_model.thetas.indptr,
+            thetas_shape=federated_model.thetas.shape,
+            ntopics=federated_model.n_components,
+            topics=federated_model.topics
         )
     else:
         np.savez(
             npzfile,
-            betas=client.local_model.betas,
-            thetas=client.local_model.doc_topic_distrib,
-            ntopics=client.local_model.n_components,
-            topics=client.local_model.topics
+            betas=federated_model.betas,
+            thetas=federated_model.thetas,
+            ntopics=federated_model.n_components,
+            topics=federated_model.topics
         )
 
 
