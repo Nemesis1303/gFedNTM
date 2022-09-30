@@ -1,0 +1,213 @@
+syntax = "proto3";
+
+package federated;
+
+/* Empty protocol buffer used in the client to wait for the server's update
+ */
+message Empty {}
+
+/* Protocol buffer that defines the dimensions of a tensor such as {"input", 30}, {"output", 40} for a 30 x 40 2D tensor.
+   The dimensions follow an "in-memory" layout, meaning that the first entry is the outermost dimensions used to 
+   layout the values, while the last entry is the innermost dimension.
+   Data structre based on the code available at:
+   https://github.com/tensorflow/tensorflow/blob/9590c4c32dd4346ea5c35673336f5912c6072bf2/tensorflow/core/framework/tensor_shape.proto
+ */
+message TensorShape {
+  // One dimension of the tensor.
+  message Dim {
+    int64 size = 1;           // Size of the tensor in that dimension (must be >=1, -1 = "unknown" dimension)
+    optional string name = 2; // Name of the tensor dimension.
+  };
+  repeated Dim dim = 2;
+};
+
+
+message Tensor {
+  TensorShape tensor_shape = 1; // Shape of the gradient tensor
+  string dtype = 2;
+  bytes tensor_content = 3; 
+}
+
+ /* Protocol buffer representing a federated update. */
+ message Update {
+  string tensor_name = 1;       // Name of the gradient that is being transmitted, e.g. "doc-topics distribution"
+  Tensor tensor = 2;
+  //string dtype = 2;             // Type of the tensor data (neccessary for correct deserialization)
+  //TensorShape tensor_shape = 3; // Shape of the gradient tensor
+  //bytes tensor_content = 4;     // Actual content of the tensor
+};
+
+message MessageAdditionalData {
+  uint32 current_mb = 1;      // Minibatch to which the current message data corresponds
+  uint32 current_epoch = 2;   // Epoch to which the current message data corresponds
+  uint32 num_max_epochs = 3;  // Maximum number of epoch that the federation has
+  uint32 id_machine = 4;
+}
+
+enum MessageType {
+  CLIENT_TENSOR_SEND = 0;
+  CLIENT_CONFIRM_RECEIVED = 1;
+  SERVER_AGGREGATED_TENSOR_SEND = 2;
+  SERVER_CONFIRM_RECEIVED = 3; 
+}
+
+message MessageHeader {
+  optional string id_request = 1;
+  optional string id_response = 2;
+  optional string id_to_request = 3;
+  MessageType message_type = 4;
+}
+
+message ClientTensorRequest {
+  MessageHeader header = 1;
+  MessageAdditionalData metadata = 2;
+  repeated Update updates = 3;
+  //Update data = 3;
+}
+
+message ServerAggregatedTensorRequest {
+  MessageHeader header = 1;
+  MessageAdditionalData metadata = 2;
+  
+  oneof oneof_values {
+    Update data = 3;
+    NNUpdate nndata = 4;
+  }
+}
+
+message ClientReceivedResponse {
+  MessageHeader header = 1;
+  MessageAdditionalData metadata = 2;
+}
+
+message ServerReceivedResponse {
+  MessageHeader header = 1;
+  MessageAdditionalData metadata = 2;
+}
+
+message Chunk {
+  bytes buffer = 1;
+}
+
+message Request {
+  string name = 1;
+}
+
+message Reply {
+  int32 length = 1;
+}
+
+message Tuple {
+  message Valuet {
+    oneof oneof_values {
+        string svalue = 1;
+        int32 ivalue = 2;
+        float fvalue = 3;
+    }
+  };
+  repeated Valuet values = 1;
+}
+
+message Dictionary {
+  message Pair {
+    string key = 1;
+   
+    message Value {
+      oneof oneof_values {
+          string svalue = 1;
+          int32 ivalue = 2;
+          float fvalue = 3;
+          Tuple tvalue = 4;
+          bool bvalue = 5;
+      }
+    };
+    Value value = 2;
+  };
+  repeated Pair pairs = 1;
+}
+
+message FeatureUnion {
+  repeated Dictionary dic = 1;
+  NNUpdate initialNN = 2;
+  Dictionary model_params = 3;
+  string model_type = 4;
+}
+
+message ModelUpdate {
+  Tensor prior_mean = 1;
+  Tensor prior_variance = 2;
+  Tensor beta = 3;
+  Tensor topic_word_matrix = 4;
+  Tensor inf_net_input_layer_weight = 5;
+  Tensor inf_net_input_layer_bias = 6;
+  Tensor inf_net_hiddens_l00_weight = 7;
+  Tensor inf_net_hiddens_l_00_bias = 8; 
+  Tensor inf_net_f_mu_weight = 9;
+  Tensor inf_net_f_mu_bias = 10;
+  Tensor inf_net_f_mu_batchnorm_running_mean = 11;
+  Tensor inf_net_f_mu_batchnorm_running_var = 12;
+  Tensor inf_net_f_mu_batchnorm_num_batches_tracked = 13;
+  Tensor inf_net_f_sigma_weight = 14;
+  Tensor inf_net_f_sigma_bias = 15;
+  Tensor inf_net_f_sigma_batchnorm_running_mean = 16;
+  Tensor inf_net_f_sigma_batchnorm_running_var = 17;
+  Tensor inf_net_f_sigma_batchnorm_num_batches_tracked = 18;
+  Tensor beta_batchnorm_running_mean = 19;
+  Tensor beta_batchnorm_running_var = 20;
+  Tensor beta_batchnorm_num_batches_tracked = 21;
+  Tensor best_components = 22;
+  int32 current_epoch = 24;
+}
+
+message AdamUpdate {
+
+  message State {
+    
+    message ContentState {
+      int64 state_id = 1;
+      int64 step = 2;
+      Tensor exp_avg = 3;
+      Tensor exp_avg_sq = 4;
+    };
+    repeated ContentState contentState = 2;
+  };
+
+  State state = 1;
+
+  message ParamGroups {
+    float lr = 1;
+  
+    message Betas {
+      float beta1 = 1;
+      float beta2 = 2;
+    }
+  
+    Betas betas = 2;
+    float eps = 3;
+    float weight_decay = 4;
+    bool amsgrad = 5;
+    repeated int32 params = 6;
+  };
+
+  ParamGroups paramGroups = 2;
+}
+
+message OptUpdate { 
+  oneof oneof_values {
+    AdamUpdate  adamUpdate = 1;
+  }
+}
+
+message NNUpdate {
+  ModelUpdate modelUpdate = 1;
+  OptUpdate optUpdate = 2;
+}
+
+service Federation {
+  rpc sendLocalTensor(ClientTensorRequest) returns (ServerReceivedResponse) {}
+  rpc sendAggregatedTensor(Empty) returns (ServerAggregatedTensorRequest) {}
+  rpc upload(stream Chunk) returns (Reply) {}
+  rpc download(Empty) returns (stream Chunk) {}
+  rpc sendLocalDic(Dictionary) returns (Reply) {}
+  rpc sendGlobalDicAndInitialNN(Empty) returns (FeatureUnion) {}
+}

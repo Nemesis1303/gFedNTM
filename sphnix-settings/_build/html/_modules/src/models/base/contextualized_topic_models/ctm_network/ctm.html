@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>src.models.base.contextualized_topic_models.ctm_network.ctm &mdash; Topic Modeler documentation</title>
+      <link rel="stylesheet" href="../../../../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../../../../" id="documentation_options" src="../../../../../../_static/documentation_options.js"></script>
+        <script src="../../../../../../_static/jquery.js"></script>
+        <script src="../../../../../../_static/underscore.js"></script>
+        <script src="../../../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../../../../_static/doctools.js"></script>
+        <script src="../../../../../../_static/sphinx_highlight.js"></script>
+    <script src="../../../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../../../../../index.html" class="icon icon-home"> gFedNTM
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <!-- Local TOC -->
+              <div class="local-toc"></div>
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../../index.html">gFedNTM</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../../../../../index.html">Module code</a> &raquo;</li>
+      <li>src.models.base.contextualized_topic_models.ctm_network.ctm</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for src.models.base.contextualized_topic_models.ctm_network.ctm</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">import</span> <span class="nn">multiprocessing</span> <span class="k">as</span> <span class="nn">mp</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">from</span> <span class="nn">scipy.special</span> <span class="kn">import</span> <span class="n">softmax</span>
+<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">optim</span>
+<span class="kn">from</span> <span class="nn">torch.optim.lr_scheduler</span> <span class="kn">import</span> <span class="n">ReduceLROnPlateau</span>
+<span class="kn">from</span> <span class="nn">torch.utils.data</span> <span class="kn">import</span> <span class="n">DataLoader</span>
+<span class="kn">from</span> <span class="nn">tqdm</span> <span class="kn">import</span> <span class="n">tqdm</span>
+
+<span class="c1"># Local imports</span>
+<span class="kn">from</span> <span class="nn">.decoding_network</span> <span class="kn">import</span> <span class="n">DecoderNetwork</span>
+<span class="kn">from</span> <span class="nn">...utils.early_stopping.pytorchtools</span> <span class="kn">import</span> <span class="n">EarlyStopping</span>
+
+
+<div class="viewcode-block" id="CTM"><a class="viewcode-back" href="../../../../../../src.models.base.contextualized_topic_models.ctm_network.ctm.html#src.models.base.contextualized_topic_models.ctm_network.ctm.CTM">[docs]</a><span class="k">class</span> <span class="nc">CTM</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class to train the contextualized topic model. </span>
+<span class="sd">    This is the more general class, so in order to create one of the CTM models, the subclasses ZeroShotTM and CombinedTM should be used.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="CTM.__init__"><a class="viewcode-back" href="../../../../../../src.models.base.contextualized_topic_models.ctm_network.ctm.html#src.models.base.contextualized_topic_models.ctm_network.ctm.CTM.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">logger</span><span class="p">,</span> <span class="n">input_size</span><span class="p">,</span> <span class="n">contextual_size</span><span class="p">,</span><span class="n">inference_type</span><span class="o">=</span><span class="s2">&quot;combined&quot;</span><span class="p">,</span> <span class="n">n_components</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">model_type</span><span class="o">=</span><span class="s1">&#39;prodLDA&#39;</span><span class="p">,</span> <span class="n">hidden_sizes</span><span class="o">=</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">),</span> <span class="n">activation</span><span class="o">=</span><span class="s1">&#39;softplus&#39;</span><span class="p">,</span> <span class="n">dropout</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">learn_priors</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span> <span class="n">lr</span><span class="o">=</span><span class="mf">2e-3</span><span class="p">,</span> <span class="n">momentum</span><span class="o">=</span><span class="mf">0.99</span><span class="p">,</span> <span class="n">solver</span><span class="o">=</span><span class="s1">&#39;adam&#39;</span><span class="p">,</span> <span class="n">num_epochs</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">num_samples</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">reduce_on_plateau</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">topic_prior_mean</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">topic_prior_variance</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">num_data_loader_workers</span><span class="o">=</span><span class="n">mp</span><span class="o">.</span><span class="n">cpu_count</span><span class="p">(),</span> <span class="n">label_size</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">loss_weights</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Sets the main attributes to create a specific CTM model.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        logger: Logger  </span>
+<span class="sd">            Object used to emit log messages</span>
+<span class="sd">        input_size : int</span>
+<span class="sd">            Dimension of the input</span>
+<span class="sd">        contextual_size : int</span>
+<span class="sd">            Dimension of the input that comes from the embeddings. </span>
+<span class="sd">            F.e. for BERT, it is 768</span>
+<span class="sd">        inference_type: string (default=&#39;combined&#39;)</span>
+<span class="sd">            Type of inference network to be used. It can be either &#39;combined&#39; or &#39;contextual&#39;</span>
+<span class="sd">        n_components : int (default=10)</span>
+<span class="sd">            Number of topic components</span>
+<span class="sd">        model_type : string (default=&#39;prodLDA&#39;)</span>
+<span class="sd">            Type of the model that is going to be trained, &#39;prodLDA&#39; or &#39;LDA&#39;</span>
+<span class="sd">        hidden_sizes : tuple, length = n_layers (default=(100,100))</span>
+<span class="sd">            Size of the hidden layer</span>
+<span class="sd">        activation : string (default=&#39;softplus&#39;)</span>
+<span class="sd">            Activation function to be used, chosen from &#39;softplus&#39;, &#39;relu&#39;, &#39;sigmoid&#39;, &#39;leakyrelu&#39;, &#39;rrelu&#39;, &#39;elu&#39;, &#39;selu&#39; or &#39;tanh&#39;</span>
+<span class="sd">        dropout : float (default=0.2)</span>
+<span class="sd">            Percent of neurons to drop out.</span>
+<span class="sd">        learn_priors : bool, (default=True)</span>
+<span class="sd">            If true, priors are made learnable parameters</span>
+<span class="sd">        batch_size : int (default=64)</span>
+<span class="sd">            Size of the batch to use for training</span>
+<span class="sd">        lr: float (defualt=2e-3)</span>
+<span class="sd">            Learning rate to be used for training</span>
+<span class="sd">        momentum: folat (default=0.99)</span>
+<span class="sd">            Momemtum to be used for training</span>
+<span class="sd">        solver: string (default=&#39;adam&#39;)</span>
+<span class="sd">            NN optimizer to be used, chosen from &#39;adagrad&#39;, &#39;adam&#39;, &#39;sgd&#39;, &#39;adadelta&#39; or &#39;rmsprop&#39; </span>
+<span class="sd">        num_epochs: int (default=100)</span>
+<span class="sd">            Number of epochs to train for</span>
+<span class="sd">        num_samples: int (default=10)</span>
+<span class="sd">            Number of times the theta needs to be sampled</span>
+<span class="sd">        reduce_on_plateau: bool (default=False)</span>
+<span class="sd">            If true, reduce learning rate by 10x on plateau of 10 epochs </span>
+<span class="sd">        topic_prior_mean: double (default=0.0)</span>
+<span class="sd">            Mean parameter of the prior</span>
+<span class="sd">        topic_prior_variance: double (default=None)</span>
+<span class="sd">            Variance parameter of the prior</span>
+<span class="sd">        num_data_loader_workers: int (default=0)</span>
+<span class="sd">            Number of subprocesses to use for data loading</span>
+<span class="sd">        label_size: int (default=0)</span>
+<span class="sd">            Number of total labels</span>
+<span class="sd">        loss_weights: dict</span>
+<span class="sd">            It contains the name of the weight parameter (key) and the weight (value) for each loss.</span>
+<span class="sd">        verbose: bool</span>
+<span class="sd">            If True, additional logs are displayed</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">input_size</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">and</span> <span class="n">input_size</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> \
+            <span class="s2">&quot;input_size must by type int &gt; 0.&quot;</span>
+        <span class="k">assert</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">n_components</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">n_components</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">))</span> <span class="ow">and</span> <span class="n">n_components</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> \
+            <span class="s2">&quot;n_components must by type int &gt; 0.&quot;</span>
+        <span class="k">assert</span> <span class="n">model_type</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;LDA&#39;</span><span class="p">,</span> <span class="s1">&#39;prodLDA&#39;</span><span class="p">],</span> \
+            <span class="s2">&quot;model must be &#39;LDA&#39; or &#39;prodLDA&#39;.&quot;</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">hidden_sizes</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">),</span> \
+            <span class="s2">&quot;hidden_sizes must be type tuple.&quot;</span>
+        <span class="k">assert</span> <span class="n">activation</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;softplus&#39;</span><span class="p">,</span> <span class="s1">&#39;relu&#39;</span><span class="p">,</span> <span class="s1">&#39;sigmoid&#39;</span><span class="p">,</span> <span class="s1">&#39;swish&#39;</span><span class="p">,</span> <span class="s1">&#39;tanh&#39;</span><span class="p">,</span> <span class="s1">&#39;leakyrelu&#39;</span><span class="p">,</span>
+                              <span class="s1">&#39;rrelu&#39;</span><span class="p">,</span> <span class="s1">&#39;elu&#39;</span><span class="p">,</span> <span class="s1">&#39;selu&#39;</span><span class="p">],</span> \
+            <span class="s2">&quot;activation must be &#39;softplus&#39;, &#39;relu&#39;, &#39;sigmoid&#39;, &#39;swish&#39;, &#39;leakyrelu&#39;,&quot;</span> \
+            <span class="s2">&quot; &#39;rrelu&#39;, &#39;elu&#39;, &#39;selu&#39; or &#39;tanh&#39;.&quot;</span>
+        <span class="k">assert</span> <span class="n">dropout</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;dropout must be &gt;= 0.&quot;</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">batch_size</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">and</span> <span class="n">batch_size</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> \
+            <span class="s2">&quot;batch_size must be int &gt; 0.&quot;</span>
+        <span class="k">assert</span> <span class="n">lr</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;lr must be &gt; 0.&quot;</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">momentum</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span> <span class="ow">and</span> <span class="n">momentum</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">momentum</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">,</span> \
+            <span class="s2">&quot;momentum must be 0 &lt; float &lt;= 1.&quot;</span>
+        <span class="k">assert</span> <span class="n">solver</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;adagrad&#39;</span><span class="p">,</span> <span class="s1">&#39;adam&#39;</span><span class="p">,</span> <span class="s1">&#39;sgd&#39;</span><span class="p">,</span> <span class="s1">&#39;adadelta&#39;</span><span class="p">,</span> <span class="s1">&#39;rmsprop&#39;</span><span class="p">],</span> \
+            <span class="s2">&quot;solver must be &#39;adam&#39;, &#39;adadelta&#39;, &#39;sgd&#39;, &#39;rmsprop&#39; or &#39;adagrad&#39;&quot;</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">reduce_on_plateau</span><span class="p">,</span> <span class="nb">bool</span><span class="p">),</span> \
+            <span class="s2">&quot;reduce_on_plateau must be type bool.&quot;</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">topic_prior_mean</span><span class="p">,</span> <span class="nb">float</span><span class="p">),</span> \
+            <span class="s2">&quot;topic_prior_mean must be type float&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">device</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">&quot;cuda&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">()</span>
+            <span class="k">else</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">&quot;cpu&quot;</span><span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="c1"># General attributes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="o">=</span> <span class="n">logger</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">input_size</span> <span class="o">=</span> <span class="n">input_size</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_components</span> <span class="o">=</span> <span class="n">n_components</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model_type</span> <span class="o">=</span> <span class="n">model_type</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hidden_sizes</span> <span class="o">=</span> <span class="n">hidden_sizes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">activation</span> <span class="o">=</span> <span class="n">activation</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dropout</span> <span class="o">=</span> <span class="n">dropout</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">learn_priors</span> <span class="o">=</span> <span class="n">learn_priors</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span> <span class="o">=</span> <span class="n">batch_size</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lr</span> <span class="o">=</span> <span class="n">lr</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_samples</span> <span class="o">=</span> <span class="n">num_samples</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">contextual_size</span> <span class="o">=</span> <span class="n">contextual_size</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">momentum</span> <span class="o">=</span> <span class="n">momentum</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">solver</span> <span class="o">=</span> <span class="n">solver</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_epochs</span> <span class="o">=</span> <span class="n">num_epochs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reduce_on_plateau</span> <span class="o">=</span> <span class="n">reduce_on_plateau</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_data_loader_workers</span> <span class="o">=</span> <span class="n">num_data_loader_workers</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">topic_prior_mean</span> <span class="o">=</span> <span class="n">topic_prior_mean</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">topic_prior_variance</span> <span class="o">=</span> <span class="n">topic_prior_variance</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="n">verbose</span>
+
+        <span class="c1"># Performance attributes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">best_loss_train</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s1">&#39;inf&#39;</span><span class="p">)</span>
+
+        <span class="c1"># Training attributes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model_dir</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">train_data</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nn_epoch</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="c1"># Larned topics</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">best_components</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">if</span> <span class="n">loss_weights</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">weights</span> <span class="o">=</span> <span class="n">loss_weights</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">weights</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;beta&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">}</span>
+
+        <span class="c1"># Initialize inference avitm network</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">DecoderNetwork</span><span class="p">(</span>
+            <span class="n">input_size</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">contextual_size</span><span class="p">,</span> <span class="n">inference_type</span><span class="p">,</span> <span class="n">n_components</span><span class="p">,</span> <span class="n">model_type</span><span class="p">,</span> <span class="n">hidden_sizes</span><span class="p">,</span> <span class="n">activation</span><span class="p">,</span>
+            <span class="n">dropout</span><span class="p">,</span> <span class="n">learn_priors</span><span class="p">,</span> <span class="n">label_size</span><span class="o">=</span><span class="n">label_size</span><span class="p">)</span>
+
+        <span class="c1"># Initialize Early Stopping method to stop the training if validation loss doesn&#39;t improve after a given patience.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">early_stopping</span> <span class="o">=</span> <span class="n">EarlyStopping</span><span class="p">(</span><span class="n">patience</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="c1"># Initialize optimizer</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">solver</span> <span class="o">==</span> <span class="s1">&#39;adam&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span> <span class="o">=</span> <span class="n">optim</span><span class="o">.</span><span class="n">Adam</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">lr</span><span class="o">=</span><span class="n">lr</span><span class="p">,</span> <span class="n">betas</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">momentum</span><span class="p">,</span> <span class="mf">0.99</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">solver</span> <span class="o">==</span> <span class="s1">&#39;sgd&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span> <span class="o">=</span> <span class="n">optim</span><span class="o">.</span><span class="n">SGD</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">lr</span><span class="o">=</span><span class="n">lr</span><span class="p">,</span> <span class="n">momentum</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">momentum</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">solver</span> <span class="o">==</span> <span class="s1">&#39;adagrad&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span> <span class="o">=</span> <span class="n">optim</span><span class="o">.</span><span class="n">Adagrad</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">lr</span><span class="o">=</span><span class="n">lr</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">solver</span> <span class="o">==</span> <span class="s1">&#39;adadelta&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span> <span class="o">=</span> <span class="n">optim</span><span class="o">.</span><span class="n">Adadelta</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">lr</span><span class="o">=</span><span class="n">lr</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">solver</span> <span class="o">==</span> <span class="s1">&#39;rmsprop&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span> <span class="o">=</span> <span class="n">optim</span><span class="o">.</span><span class="n">RMSprop</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">lr</span><span class="o">=</span><span class="n">lr</span><span class="p">,</span> <span class="n">momentum</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">momentum</span><span class="p">)</span>
+
+        <span class="c1"># Initialize lr scheduler</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">reduce_on_plateau</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">scheduler</span> <span class="o">=</span> <span class="n">ReduceLROnPlateau</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span><span class="p">,</span> <span class="n">patience</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+
+        <span class="c1"># Use cuda if available</span>
+        <span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">USE_CUDA</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">USE_CUDA</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_loss</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">word_dists</span><span class="p">,</span> <span class="n">prior_mean</span><span class="p">,</span> <span class="n">prior_variance</span><span class="p">,</span>
+              <span class="n">posterior_mean</span><span class="p">,</span> <span class="n">posterior_variance</span><span class="p">,</span> <span class="n">posterior_log_variance</span><span class="p">):</span>
+
+        <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        Defines the loss function utilized to optimize the parameter values in the AVITM model, and thus, in the CTM</span>
+<span class="sd">        models.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        inputs: torch.Tensor [self.batch_size, self.input_size]</span>
+<span class="sd">            Data samples propagated through the AVITM network before the learnable parameters are updated</span>
+<span class="sd">        word_dists: torch.nn.parameter.Parameter, [self.batch_size, self.input_size]</span>
+<span class="sd">            Mixture of multinomials for each word</span>
+<span class="sd">        prior_mean: torch.nn.parameter.Parameter, [self.n_components]</span>
+<span class="sd">            Learnable parameter from the decoder network that defines the mean of the approximate variational posterior (q(θ)) defined as a logistic normal</span>
+<span class="sd">        prior_variance: torch.Tensor [self.n_components]</span>
+<span class="sd">            Learnable parameter from the decoder network that defines the covariance of the approximate variational posterior (q(θ)) defined as a logistic normal</span>
+<span class="sd">        posterior_mean: torch.Tensor [self.batch_size, self.n_components]</span>
+<span class="sd">            Output of the encoder network that defines the mean parameter (μ1) of the logistic normal distribution used to approximate the Dirichlet prior ((p(θ|α)) according to the Laplace approximation</span>
+<span class="sd">        posterior_variance: torch.Tensor [self.batch_size, self.n_components]</span>
+<span class="sd">            Exponential of the posterior_log_variance </span>
+<span class="sd">        posterior_log_variance: torch.Tensor [self.batch_size, self.n_components]</span>
+<span class="sd">            Output of the encoder network that defines the covariance parameter (Σ1) of the logistic normal distribution used to approximate the Dirichlet prior ((p(θ|α)) according to the Laplace approximation</span>
+<span class="sd">        </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        KL: torch.Tensor</span>
+<span class="sd">            KL term</span>
+<span class="sd">        RL: torch.Tensor</span>
+<span class="sd">            Reconstruction term</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1">###########</span>
+        <span class="c1"># KL term #</span>
+        <span class="c1">###########</span>
+        <span class="c1"># Var division term</span>
+        <span class="n">var_division</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">posterior_variance</span> <span class="o">/</span> <span class="n">prior_variance</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="c1"># Diff means term</span>
+        <span class="n">diff_means</span> <span class="o">=</span> <span class="n">prior_mean</span> <span class="o">-</span> <span class="n">posterior_mean</span>
+        <span class="n">diff_term</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span>
+            <span class="p">(</span><span class="n">diff_means</span> <span class="o">*</span> <span class="n">diff_means</span><span class="p">)</span> <span class="o">/</span> <span class="n">prior_variance</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="c1"># Logvar det division term</span>
+        <span class="n">logvar_det_division</span> <span class="o">=</span> \
+            <span class="n">prior_variance</span><span class="o">.</span><span class="n">log</span><span class="p">()</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">-</span> <span class="n">posterior_log_variance</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="c1"># Combine terms</span>
+        <span class="n">KL</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">var_division</span> <span class="o">+</span> <span class="n">diff_term</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_components</span> <span class="o">+</span> <span class="n">logvar_det_division</span><span class="p">)</span>
+
+        <span class="c1">#######################</span>
+        <span class="c1"># Reconstruction term #</span>
+        <span class="c1">#######################</span>
+        <span class="n">RL</span> <span class="o">=</span> <span class="o">-</span><span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">inputs</span> <span class="o">*</span> <span class="n">torch</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">word_dists</span> <span class="o">+</span> <span class="mf">1e-10</span><span class="p">),</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">KL</span><span class="p">,</span> <span class="n">RL</span>
+
+    <span class="k">def</span> <span class="nf">_train_epoch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">loader</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Trains an epoch.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        loader: DataLoader</span>
+<span class="sd">            Python iterable over the training dataset with which the epoch is going to be trained.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        samples_processed: int</span>
+<span class="sd">            Number of processed samples</span>
+<span class="sd">        train_loss: float</span>
+<span class="sd">            Training loss</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
+
+        <span class="n">train_loss</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">samples_processed</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="k">for</span> <span class="n">batch_samples</span> <span class="ow">in</span> <span class="n">loader</span><span class="p">:</span>
+            <span class="c1"># batch_size x vocab_size</span>
+            <span class="n">X_bow</span> <span class="o">=</span> <span class="n">batch_samples</span><span class="p">[</span><span class="s1">&#39;X_bow&#39;</span><span class="p">]</span>
+            <span class="n">X_bow</span> <span class="o">=</span> <span class="n">X_bow</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">X_bow</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">X_contextual</span> <span class="o">=</span> <span class="n">batch_samples</span><span class="p">[</span><span class="s1">&#39;X_contextual&#39;</span><span class="p">]</span>
+
+            <span class="k">if</span> <span class="s2">&quot;labels&quot;</span> <span class="ow">in</span> <span class="n">batch_samples</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="n">labels</span> <span class="o">=</span> <span class="n">batch_samples</span><span class="p">[</span><span class="s2">&quot;labels&quot;</span><span class="p">]</span>
+                <span class="n">labels</span> <span class="o">=</span> <span class="n">labels</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">labels</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+                <span class="n">labels</span> <span class="o">=</span> <span class="n">labels</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">labels</span> <span class="o">=</span> <span class="kc">None</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">USE_CUDA</span><span class="p">:</span>
+                <span class="n">X_bow</span> <span class="o">=</span> <span class="n">X_bow</span><span class="o">.</span><span class="n">cuda</span><span class="p">()</span>
+                <span class="n">X_contextual</span> <span class="o">=</span> <span class="n">X_contextual</span><span class="o">.</span><span class="n">cuda</span><span class="p">()</span>
+
+            <span class="c1"># forward pass</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">()</span>
+            <span class="n">prior_mean</span><span class="p">,</span> <span class="n">prior_variance</span><span class="p">,</span> \
+            <span class="n">posterior_mean</span><span class="p">,</span> <span class="n">posterior_variance</span><span class="p">,</span> <span class="n">posterior_log_variance</span><span class="p">,</span> \
+            <span class="n">word_dists</span><span class="p">,</span> <span class="n">estimated_labels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="n">X_bow</span><span class="p">,</span> <span class="n">X_contextual</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
+
+            <span class="c1"># backward pass</span>
+            <span class="n">kl_loss</span><span class="p">,</span> <span class="n">rl_loss</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_loss</span><span class="p">(</span><span class="n">X_bow</span><span class="p">,</span> <span class="n">word_dists</span><span class="p">,</span> <span class="n">prior_mean</span><span class="p">,</span> <span class="n">prior_variance</span><span class="p">,</span> <span class="n">posterior_mean</span><span class="p">,</span>
+                                          <span class="n">posterior_variance</span><span class="p">,</span> <span class="n">posterior_log_variance</span><span class="p">)</span>
+
+            <span class="n">loss</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="p">[</span><span class="s2">&quot;beta&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="n">kl_loss</span> <span class="o">+</span> <span class="n">rl_loss</span>
+            <span class="n">loss</span> <span class="o">=</span> <span class="n">loss</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+
+            <span class="k">if</span> <span class="n">labels</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">target_labels</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+                <span class="n">label_loss</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">CrossEntropyLoss</span><span class="p">()(</span><span class="n">estimated_labels</span><span class="p">,</span> <span class="n">target_labels</span><span class="p">)</span>
+                <span class="n">loss</span> <span class="o">+=</span> <span class="n">label_loss</span>
+
+            <span class="n">loss</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
+
+            <span class="c1"># compute train loss</span>
+            <span class="n">samples_processed</span> <span class="o">+=</span> <span class="n">X_bow</span><span class="o">.</span><span class="n">size</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">train_loss</span> <span class="o">+=</span> <span class="n">loss</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+
+        <span class="n">train_loss</span> <span class="o">/=</span> <span class="n">samples_processed</span>
+
+        <span class="k">return</span> <span class="n">samples_processed</span><span class="p">,</span> <span class="n">train_loss</span>
+
+    <span class="k">def</span> <span class="nf">_validate_epoch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">loader</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Validates an epoch.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        loader: DataLoader</span>
+<span class="sd">            Python iterable over the validation dataset with which the epoch is going to be evaluated.</span>
+<span class="sd">            </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        samples_processed: int</span>
+<span class="sd">            Number of processed samples</span>
+<span class="sd">        val_loss: float</span>
+<span class="sd">            Validation loss</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+        <span class="n">val_loss</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">samples_processed</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="k">for</span> <span class="n">batch_samples</span> <span class="ow">in</span> <span class="n">loader</span><span class="p">:</span>
+            <span class="c1"># batch_size x vocab_size</span>
+            <span class="n">X_bow</span> <span class="o">=</span> <span class="n">batch_samples</span><span class="p">[</span><span class="s1">&#39;X_bow&#39;</span><span class="p">]</span>
+            <span class="n">X_bow</span> <span class="o">=</span> <span class="n">X_bow</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">X_bow</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">X_contextual</span> <span class="o">=</span> <span class="n">batch_samples</span><span class="p">[</span><span class="s1">&#39;X_contextual&#39;</span><span class="p">]</span>
+
+            <span class="k">if</span> <span class="s2">&quot;labels&quot;</span> <span class="ow">in</span> <span class="n">batch_samples</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="n">labels</span> <span class="o">=</span> <span class="n">batch_samples</span><span class="p">[</span><span class="s2">&quot;labels&quot;</span><span class="p">]</span>
+                <span class="n">labels</span> <span class="o">=</span> <span class="n">labels</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+                <span class="n">labels</span> <span class="o">=</span> <span class="n">labels</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">labels</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">labels</span> <span class="o">=</span> <span class="kc">None</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">USE_CUDA</span><span class="p">:</span>
+                <span class="n">X_bow</span> <span class="o">=</span> <span class="n">X_bow</span><span class="o">.</span><span class="n">cuda</span><span class="p">()</span>
+                <span class="n">X_contextual</span> <span class="o">=</span> <span class="n">X_contextual</span><span class="o">.</span><span class="n">cuda</span><span class="p">()</span>
+
+            <span class="c1"># forward pass</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">()</span>
+            <span class="n">prior_mean</span><span class="p">,</span> <span class="n">prior_variance</span><span class="p">,</span> \
+            <span class="n">posterior_mean</span><span class="p">,</span> <span class="n">posterior_variance</span><span class="p">,</span> <span class="n">posterior_log_variance</span><span class="p">,</span> \
+            <span class="n">word_dists</span><span class="p">,</span> <span class="n">estimated_labels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="n">X_bow</span><span class="p">,</span> <span class="n">X_contextual</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
+
+            <span class="n">kl_loss</span><span class="p">,</span> <span class="n">rl_loss</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_loss</span><span class="p">(</span><span class="n">X_bow</span><span class="p">,</span> <span class="n">word_dists</span><span class="p">,</span> <span class="n">prior_mean</span><span class="p">,</span> <span class="n">prior_variance</span><span class="p">,</span>
+                                          <span class="n">posterior_mean</span><span class="p">,</span> <span class="n">posterior_variance</span><span class="p">,</span> <span class="n">posterior_log_variance</span><span class="p">)</span>
+
+            <span class="n">loss</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="p">[</span><span class="s2">&quot;beta&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="n">kl_loss</span> <span class="o">+</span> <span class="n">rl_loss</span>
+            <span class="n">loss</span> <span class="o">=</span> <span class="n">loss</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+
+            <span class="k">if</span> <span class="n">labels</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">target_labels</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="n">label_loss</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">CrossEntropyLoss</span><span class="p">()(</span><span class="n">estimated_labels</span><span class="p">,</span> <span class="n">target_labels</span><span class="p">)</span>
+                <span class="n">loss</span> <span class="o">+=</span> <span class="n">label_loss</span>
+
+            <span class="c1"># compute train loss</span>
+            <span class="n">samples_processed</span> <span class="o">+=</span> <span class="n">X_bow</span><span class="o">.</span><span class="n">size</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">val_loss</span> <span class="o">+=</span> <span class="n">loss</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+
+        <span class="n">val_loss</span> <span class="o">/=</span> <span class="n">samples_processed</span>
+
+        <span class="k">return</span> <span class="n">samples_processed</span><span class="p">,</span> <span class="n">val_loss</span>
+
+<div class="viewcode-block" id="CTM.fit"><a class="viewcode-back" href="../../../../../../src.models.base.contextualized_topic_models.ctm_network.ctm.html#src.models.base.contextualized_topic_models.ctm_network.ctm.CTM.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">train_dataset</span><span class="p">,</span> <span class="n">validation_dataset</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">save_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">patience</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">delta</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">n_samples</span><span class="o">=</span><span class="mi">20</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Trains the CTM model.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        train_dataset: CTMDataset</span>
+<span class="sd">            Dataset used for training the CTM model.</span>
+<span class="sd">        validation_dataset: CTMDataset</span>
+<span class="sd">            Dataset used for validating the CTM model.</span>
+<span class="sd">            If not None, the training stops if validation loss does not imporve after a given patience.</span>
+<span class="sd">        save_dir: str (default=None)</span>
+<span class="sd">            Directory to save checkpoint models to.</span>
+<span class="sd">        patience: int (default=5)</span>
+<span class="sd">            How long to wait after last time validation loss improved</span>
+<span class="sd">        delta: int (default=0)</span>
+<span class="sd">            Minimum change in the monitored quantity to qualify as an improvement</span>
+<span class="sd">        n_samples: int (default=20)</span>
+<span class="sd">            Number of samples of the document topic distribution </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Print settings to output file</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Settings: </span><span class="se">\n\</span>
+<span class="s2">                   N Components: </span><span class="si">{}</span><span class="se">\n\</span>
+<span class="s2">                   Topic Prior Mean: </span><span class="si">{}</span><span class="se">\n\</span>
+<span class="s2">                   Topic Prior Variance: </span><span class="si">{}</span><span class="se">\n\</span>
+<span class="s2">                   Model Type: </span><span class="si">{}</span><span class="se">\n\</span>
+<span class="s2">                   Hidden Sizes: </span><span class="si">{}</span><span class="se">\n\</span>
+<span class="s2">                   Activation: </span><span class="si">{}</span><span class="se">\n\</span>
+<span class="s2">                   Dropout: </span><span class="si">{}</span><span class="se">\n\</span>
+<span class="s2">                   Learn Priors: </span><span class="si">{}</span><span class="se">\n\</span>
+<span class="s2">                   Learning Rate: </span><span class="si">{}</span><span class="se">\n\</span>
+<span class="s2">                   Momentum: </span><span class="si">{}</span><span class="se">\n\</span>
+<span class="s2">                   Reduce On Plateau: </span><span class="si">{}</span><span class="se">\n\</span>
+<span class="s2">                   Save Dir: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">n_components</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">topic_prior_mean</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">topic_prior_variance</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_type</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">hidden_sizes</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">activation</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dropout</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">learn_priors</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">lr</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">momentum</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">reduce_on_plateau</span><span class="p">,</span> <span class="n">save_dir</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">model_dir</span> <span class="o">=</span> <span class="n">save_dir</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">train_data</span> <span class="o">=</span> <span class="n">train_dataset</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">validation_data</span> <span class="o">=</span> <span class="n">validation_dataset</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">validation_data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">early_stopping</span> <span class="o">=</span> <span class="n">EarlyStopping</span><span class="p">(</span><span class="n">patience</span><span class="o">=</span><span class="n">patience</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="n">save_dir</span><span class="p">,</span> <span class="n">delta</span><span class="o">=</span><span class="n">delta</span><span class="p">)</span>
+
+        <span class="n">train_loader</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">train_data</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                  <span class="n">num_workers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">num_data_loader_workers</span><span class="p">)</span>
+
+        <span class="c1"># init training variables</span>
+        <span class="n">train_loss</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">samples_processed</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="c1"># train loop</span>
+        <span class="n">pbar</span> <span class="o">=</span> <span class="n">tqdm</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_epochs</span><span class="p">,</span> <span class="n">position</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">leave</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">epoch</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_epochs</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">nn_epoch</span> <span class="o">=</span> <span class="n">epoch</span>
+            <span class="c1"># train epoch</span>
+            <span class="n">s</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
+            <span class="n">sp</span><span class="p">,</span> <span class="n">train_loss</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_train_epoch</span><span class="p">(</span><span class="n">train_loader</span><span class="p">)</span>
+            <span class="n">samples_processed</span> <span class="o">+=</span> <span class="n">sp</span>
+            <span class="n">e</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
+            <span class="n">pbar</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">best_components</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">beta</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">validation_data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+
+                <span class="n">validation_loader</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">validation_data</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                    <span class="n">num_workers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">num_data_loader_workers</span><span class="p">)</span>
+
+                <span class="c1"># train epoch</span>
+                <span class="n">s</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
+                <span class="n">val_samples_processed</span><span class="p">,</span> <span class="n">val_loss</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validate_epoch</span><span class="p">(</span><span class="n">validation_loader</span><span class="p">)</span>
+                <span class="n">e</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
+
+                <span class="c1"># report</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Epoch: [</span><span class="si">{}</span><span class="s2">/</span><span class="si">{}</span><span class="s2">]</span><span class="se">\t</span><span class="s2">Samples: [</span><span class="si">{}</span><span class="s2">/</span><span class="si">{}</span><span class="s2">]</span><span class="se">\t</span><span class="s2">Validation Loss: </span><span class="si">{}</span><span class="se">\t</span><span class="s2">Time: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                        <span class="n">epoch</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_epochs</span><span class="p">,</span> <span class="n">val_samples_processed</span><span class="p">,</span>
+                        <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">validation_data</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_epochs</span><span class="p">,</span> <span class="n">val_loss</span><span class="p">,</span> <span class="n">e</span> <span class="o">-</span> <span class="n">s</span><span class="p">))</span>
+
+                <span class="n">pbar</span><span class="o">.</span><span class="n">set_description</span><span class="p">(</span>
+                    <span class="s2">&quot;Epoch: [</span><span class="si">{}</span><span class="s2">/</span><span class="si">{}</span><span class="s2">]</span><span class="se">\t</span><span class="s2"> Seen Samples: [</span><span class="si">{}</span><span class="s2">/</span><span class="si">{}</span><span class="s2">]</span><span class="se">\t</span><span class="s2">Train Loss: </span><span class="si">{}</span><span class="se">\t</span><span class="s2">Valid Loss: </span><span class="si">{}</span><span class="se">\t</span><span class="s2">Time: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                        <span class="n">epoch</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_epochs</span><span class="p">,</span> <span class="n">samples_processed</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">train_data</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_epochs</span><span class="p">,</span>
+                        <span class="n">train_loss</span><span class="p">,</span> <span class="n">val_loss</span><span class="p">,</span> <span class="n">e</span> <span class="o">-</span> <span class="n">s</span><span class="p">))</span>
+
+                <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">val_loss</span><span class="p">)</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">train_loss</span><span class="p">):</span>
+                    <span class="k">break</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">early_stopping</span><span class="p">(</span><span class="n">val_loss</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">early_stopping</span><span class="o">.</span><span class="n">early_stop</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Early stopping&quot;</span><span class="p">)</span>
+                        <span class="k">break</span>
+
+            <span class="n">pbar</span><span class="o">.</span><span class="n">set_description</span><span class="p">(</span>
+                <span class="s2">&quot;Epoch: [</span><span class="si">{}</span><span class="s2">/</span><span class="si">{}</span><span class="s2">]</span><span class="se">\t</span><span class="s2"> Seen Samples: [</span><span class="si">{}</span><span class="s2">/</span><span class="si">{}</span><span class="s2">]</span><span class="se">\t</span><span class="s2">Train Loss: </span><span class="si">{}</span><span class="se">\t</span><span class="s2">Time: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="n">epoch</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_epochs</span><span class="p">,</span> <span class="n">samples_processed</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">train_data</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_epochs</span><span class="p">,</span>
+                    <span class="n">train_loss</span><span class="p">,</span> <span class="n">e</span> <span class="o">-</span> <span class="n">s</span><span class="p">))</span>
+
+        <span class="n">pbar</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">training_doc_topic_distributions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_doc_topic_distribution</span><span class="p">(</span><span class="n">train_dataset</span><span class="p">,</span> <span class="n">n_samples</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CTM.get_predicted_topics"><a class="viewcode-back" href="../../../../../../src.models.base.contextualized_topic_models.ctm_network.ctm.html#src.models.base.contextualized_topic_models.ctm_network.ctm.CTM.get_predicted_topics">[docs]</a>    <span class="k">def</span> <span class="nf">get_predicted_topics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataset</span><span class="p">,</span> <span class="n">n_samples</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the a list containing the predicted topic for each document (length: number of documents).</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        dataset: CTMDataset </span>
+<span class="sd">            Dataset to infer topics</span>
+<span class="sd">        n_samples: int </span>
+<span class="sd">            Number of sampling of theta</span>
+<span class="sd">        </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        predicted_topics: List</span>
+<span class="sd">            the predicted topics</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">predicted_topics</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">thetas</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_doc_topic_distribution</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">n_samples</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">idd</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">dataset</span><span class="p">)):</span>
+            <span class="n">predicted_topic</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">thetas</span><span class="p">[</span><span class="n">idd</span><span class="p">]</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">thetas</span><span class="p">[</span><span class="n">idd</span><span class="p">]))</span>
+            <span class="n">predicted_topics</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">predicted_topic</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">predicted_topics</span></div>
+
+<div class="viewcode-block" id="CTM.get_doc_topic_distribution"><a class="viewcode-back" href="../../../../../../src.models.base.contextualized_topic_models.ctm_network.ctm.html#src.models.base.contextualized_topic_models.ctm_network.ctm.CTM.get_doc_topic_distribution">[docs]</a>    <span class="k">def</span> <span class="nf">get_doc_topic_distribution</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataset</span><span class="p">,</span> <span class="n">n_samples</span><span class="o">=</span><span class="mi">20</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Gets the document-topic distribution for a dataset of topics. Includes multiple sampling to reduce variation via</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        dataset: CTMDataset</span>
+<span class="sd">            Dataset whose document-topic distribution is being calculated</span>
+<span class="sd">        n_samples: int (default=20)</span>
+<span class="sd">           Number of sample to collect to estimate the final distribution (the more the better).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        doct_topic_distrib: numpy.ndarray</span>
+<span class="sd">            A CxD matrix where C is the number of components and D is number of documents in the dataset given as argument</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+
+        <span class="n">loader</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span>
+            <span class="n">dataset</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">num_workers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">num_data_loader_workers</span><span class="p">)</span>
+
+        <span class="n">pbar</span> <span class="o">=</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">n_samples</span><span class="p">,</span> <span class="n">position</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">leave</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="n">final_thetas</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">sample_index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_samples</span><span class="p">):</span>
+
+            <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
+                <span class="n">collect_theta</span> <span class="o">=</span> <span class="p">[]</span>
+
+                <span class="k">for</span> <span class="n">batch_samples</span> <span class="ow">in</span> <span class="n">loader</span><span class="p">:</span>
+                    <span class="c1"># batch_size x vocab_size</span>
+                    <span class="n">X_bow</span> <span class="o">=</span> <span class="n">batch_samples</span><span class="p">[</span><span class="s1">&#39;X_bow&#39;</span><span class="p">]</span>
+                    <span class="n">X_bow</span> <span class="o">=</span> <span class="n">X_bow</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">X_bow</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+                    <span class="n">X_contextual</span> <span class="o">=</span> <span class="n">batch_samples</span><span class="p">[</span><span class="s1">&#39;X_contextual&#39;</span><span class="p">]</span>
+
+                    <span class="k">if</span> <span class="s2">&quot;labels&quot;</span> <span class="ow">in</span> <span class="n">batch_samples</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                        <span class="n">labels</span> <span class="o">=</span> <span class="n">batch_samples</span><span class="p">[</span><span class="s2">&quot;labels&quot;</span><span class="p">]</span>
+                        <span class="n">labels</span> <span class="o">=</span> <span class="n">labels</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+                        <span class="n">labels</span> <span class="o">=</span> <span class="n">labels</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">labels</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">labels</span> <span class="o">=</span> <span class="kc">None</span>
+
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">USE_CUDA</span><span class="p">:</span>
+                        <span class="n">X_bow</span> <span class="o">=</span> <span class="n">X_bow</span><span class="o">.</span><span class="n">cuda</span><span class="p">()</span>
+                        <span class="n">X_contextual</span> <span class="o">=</span> <span class="n">X_contextual</span><span class="o">.</span><span class="n">cuda</span><span class="p">()</span>
+
+                    <span class="c1"># forward pass</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">()</span>
+                    <span class="n">collect_theta</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">get_theta</span><span class="p">(</span><span class="n">X_bow</span><span class="p">,</span> <span class="n">X_contextual</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
+
+                <span class="n">pbar</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+                <span class="n">pbar</span><span class="o">.</span><span class="n">set_description</span><span class="p">(</span><span class="s2">&quot;Sampling: [</span><span class="si">{}</span><span class="s2">/</span><span class="si">{}</span><span class="s2">]&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sample_index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">n_samples</span><span class="p">))</span>
+
+                <span class="n">final_thetas</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">collect_theta</span><span class="p">))</span>
+        <span class="n">pbar</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+        <span class="n">doct_topic_distrib</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">final_thetas</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="o">/</span> <span class="n">n_samples</span>
+        <span class="k">return</span> <span class="n">doct_topic_distrib</span></div>
+
+<div class="viewcode-block" id="CTM.get_topic_word_matrix"><a class="viewcode-back" href="../../../../../../src.models.base.contextualized_topic_models.ctm_network.ctm.html#src.models.base.contextualized_topic_models.ctm_network.ctm.CTM.get_topic_word_matrix">[docs]</a>    <span class="k">def</span> <span class="nf">get_topic_word_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Gets the topic-word matrix associated with the trained model. If model_type is LDA, the matrix is normalized; otherwise, it is unnormalized.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        topic_word_mat: numpy.ndarray</span>
+<span class="sd">            A CxV matrix where C is the number of components and V is the vocabulary length</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">topic_word_mat</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">topic_word_matrix</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">topic_word_mat</span></div>
+
+<div class="viewcode-block" id="CTM.get_topic_word_distribution"><a class="viewcode-back" href="../../../../../../src.models.base.contextualized_topic_models.ctm_network.ctm.html#src.models.base.contextualized_topic_models.ctm_network.ctm.CTM.get_topic_word_distribution">[docs]</a>    <span class="k">def</span> <span class="nf">get_topic_word_distribution</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Gets the topic-word distriubtion associated with the trained model.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        topic_word_distrib: numpy.ndarray</span>
+<span class="sd">            A CxV matrix where C is the number of components and V is the vocabulary length</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">mat</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_topic_word_matrix</span><span class="p">()</span>
+        <span class="n">topic_word_distrib</span> <span class="o">=</span> <span class="n">softmax</span><span class="p">(</span><span class="n">mat</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">topic_word_distrib</span></div>
+
+<div class="viewcode-block" id="CTM.get_word_distribution_by_topic_id"><a class="viewcode-back" href="../../../../../../src.models.base.contextualized_topic_models.ctm_network.ctm.html#src.models.base.contextualized_topic_models.ctm_network.ctm.CTM.get_word_distribution_by_topic_id">[docs]</a>    <span class="k">def</span> <span class="nf">get_word_distribution_by_topic_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">topic</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Gets the word probability distribution of a topic sorted by probability.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        topic: int</span>
+<span class="sd">            Identifier of the topic</span>
+<span class="sd">       </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        t: List(tuple)</span>
+<span class="sd">            List of tuples with the form (word, probability) sorted by the probability in descending order.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">topic</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_components</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;Topic id must be lower than the number of topics&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">wd</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_topic_word_distribution</span><span class="p">()</span>
+            <span class="n">t</span> <span class="o">=</span> <span class="p">[(</span><span class="n">word</span><span class="p">,</span> <span class="n">wd</span><span class="p">[</span><span class="n">topic</span><span class="p">][</span><span class="n">idx</span><span class="p">])</span> <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">word</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">train_data</span><span class="o">.</span><span class="n">idx2token</span><span class="o">.</span><span class="n">items</span><span class="p">()]</span>
+            <span class="n">t</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="o">-</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">t</span></div>
+
+<div class="viewcode-block" id="CTM.get_top_documents_per_topic_id"><a class="viewcode-back" href="../../../../../../src.models.base.contextualized_topic_models.ctm_network.ctm.html#src.models.base.contextualized_topic_models.ctm_network.ctm.CTM.get_top_documents_per_topic_id">[docs]</a>    <span class="k">def</span> <span class="nf">get_top_documents_per_topic_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">unpreprocessed_corpus</span><span class="p">,</span> <span class="n">document_topic_distributions</span><span class="p">,</span> <span class="n">topic_id</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">5</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Gets the word probability distribution of a topic sorted by probability.</span>
+
+<span class="sd">        # @ TODO: Complete docs</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        unpreprocessed_corpus: </span>
+
+<span class="sd">        document_topic_distributions:</span>
+
+<span class="sd">        topic_id:</span>
+
+<span class="sd">        k:</span>
+<span class="sd">       </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        res: </span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">probability_list</span> <span class="o">=</span> <span class="n">document_topic_distributions</span><span class="o">.</span><span class="n">T</span><span class="p">[</span><span class="n">topic_id</span><span class="p">]</span>
+        <span class="n">ind</span> <span class="o">=</span> <span class="n">probability_list</span><span class="o">.</span><span class="n">argsort</span><span class="p">()[</span><span class="o">-</span><span class="n">k</span><span class="p">:][::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">ind</span><span class="p">:</span>
+            <span class="n">res</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">unpreprocessed_corpus</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">document_topic_distributions</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">topic_id</span><span class="p">]))</span>
+        <span class="k">return</span> <span class="n">res</span></div>
+
+<div class="viewcode-block" id="CTM.get_topics"><a class="viewcode-back" href="../../../../../../src.models.base.contextualized_topic_models.ctm_network.ctm.html#src.models.base.contextualized_topic_models.ctm_network.ctm.CTM.get_topics">[docs]</a>    <span class="k">def</span> <span class="nf">get_topics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">10</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Retrieves the k most significant words belonging to each of the trained topics.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        k: int (default=10)</span>
+<span class="sd">            Number of words to return per topic.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        topics_list: List[List[str]]</span>
+<span class="sd">            List of the model&#39;s topics, each of them described as a list with the k most significant words belonging to it</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">assert</span> <span class="n">k</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_size</span><span class="p">,</span> <span class="s2">&quot;k must be &lt;= input size.&quot;</span>
+        <span class="n">component_dists</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">best_components</span>
+        <span class="n">topics</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
+        <span class="n">topics_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_components</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_components</span><span class="p">):</span>
+                <span class="n">_</span><span class="p">,</span> <span class="n">idxs</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">topk</span><span class="p">(</span><span class="n">component_dists</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">k</span><span class="p">)</span>
+                <span class="n">component_words</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">train_data</span><span class="o">.</span><span class="n">idx2token</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+                                   <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">idxs</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()]</span>
+                <span class="n">topics</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">component_words</span>
+                <span class="n">topics_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">component_words</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">topics_list</span></div>
+
+<div class="viewcode-block" id="CTM.get_most_likely_topic"><a class="viewcode-back" href="../../../../../../src.models.base.contextualized_topic_models.ctm_network.ctm.html#src.models.base.contextualized_topic_models.ctm_network.ctm.CTM.get_most_likely_topic">[docs]</a>    <span class="k">def</span> <span class="nf">get_most_likely_topic</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">doc_topic_distribution</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Gets the most likely topic for each document</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        doc_topic_distribution: ndarray</span>
+<span class="sd">            Document-topic distribution</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        t: List[int]</span>
+<span class="sd">           Most likely topics for each document</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">t</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">doc_topic_distribution</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">t</span></div>
+
+    <span class="k">def</span> <span class="nf">_format_file</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">model_dir</span> <span class="o">=</span> <span class="s2">&quot;contextualized_topic_model_nc_</span><span class="si">{}</span><span class="s2">_tpm_</span><span class="si">{}</span><span class="s2">_tpv_</span><span class="si">{}</span><span class="s2">_hs_</span><span class="si">{}</span><span class="s2">_ac_</span><span class="si">{}</span><span class="s2">_do_</span><span class="si">{}</span><span class="s2">_lr_</span><span class="si">{}</span><span class="s2">_mo_</span><span class="si">{}</span><span class="s2">_rp_</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span> \
+            <span class="nb">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_components</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mi">1</span> <span class="o">-</span> <span class="p">(</span><span class="mf">1.</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_components</span><span class="p">),</span>
+                   <span class="bp">self</span><span class="o">.</span><span class="n">model_type</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">hidden_sizes</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">activation</span><span class="p">,</span>
+                   <span class="bp">self</span><span class="o">.</span><span class="n">dropout</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lr</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">momentum</span><span class="p">,</span>
+                   <span class="bp">self</span><span class="o">.</span><span class="n">reduce_on_plateau</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">model_dir</span>
+
+<div class="viewcode-block" id="CTM.save"><a class="viewcode-back" href="../../../../../../src.models.base.contextualized_topic_models.ctm_network.ctm.html#src.models.base.contextualized_topic_models.ctm_network.ctm.CTM.save">[docs]</a>    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">models_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Saves the trained model as Pytorch object</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        model_dir: os.PathLike object</span>
+<span class="sd">            Path to directory for saving NN models.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">models_dir</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">):</span>
+
+            <span class="n">model_dir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_format_file</span><span class="p">()</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">models_dir</span><span class="p">,</span> <span class="n">model_dir</span><span class="p">)):</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">models_dir</span><span class="p">,</span> <span class="n">model_dir</span><span class="p">))</span>
+
+            <span class="n">filename</span> <span class="o">=</span> <span class="s2">&quot;epoch_</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nn_epoch</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;.pth&#39;</span>
+            <span class="n">fileloc</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">models_dir</span><span class="p">,</span> <span class="n">model_dir</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fileloc</span><span class="p">,</span> <span class="s1">&#39;wb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+                <span class="n">torch</span><span class="o">.</span><span class="n">save</span><span class="p">({</span><span class="s1">&#39;state_dict&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">state_dict</span><span class="p">(),</span>
+                            <span class="s1">&#39;dcue_dict&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">},</span> <span class="n">file</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CTM.load"><a class="viewcode-back" href="../../../../../../src.models.base.contextualized_topic_models.ctm_network.ctm.html#src.models.base.contextualized_topic_models.ctm_network.ctm.CTM.load">[docs]</a>    <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model_dir</span><span class="p">,</span> <span class="n">epoch</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Loads a previously trained model.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        model_dir: os.PathLike object</span>
+<span class="sd">            Path to directory for saving NN models.</span>
+<span class="sd">        epoch: int</span>
+<span class="sd">            Epoch of model to load.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">epoch_file</span> <span class="o">=</span> <span class="s2">&quot;epoch_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">epoch</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;.pth&quot;</span>
+        <span class="n">model_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">model_dir</span><span class="p">,</span> <span class="n">epoch_file</span><span class="p">)</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">model_file</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">model_dict</span><span class="p">:</span>
+            <span class="n">checkpoint</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">model_dict</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="ow">in</span> <span class="n">checkpoint</span><span class="p">[</span><span class="s1">&#39;dcue_dict&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span><span class="n">checkpoint</span><span class="p">[</span><span class="s1">&#39;state_dict&#39;</span><span class="p">])</span></div>
+    
+<div class="viewcode-block" id="CTM.get_ldavis_data_format"><a class="viewcode-back" href="../../../../../../src.models.base.contextualized_topic_models.ctm_network.ctm.html#src.models.base.contextualized_topic_models.ctm_network.ctm.CTM.get_ldavis_data_format">[docs]</a>    <span class="k">def</span> <span class="nf">get_ldavis_data_format</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vocab</span><span class="p">,</span> <span class="n">dataset</span><span class="p">,</span> <span class="n">n_samples</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the data that can be used in input to pyldavis to plot</span>
+<span class="sd">        the topics</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">term_frequency</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">X_bow</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">term_frequency</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="n">doc_lengths</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">X_bow</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">doc_lengths</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="n">term_topic</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_topic_word_distribution</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">term_topic</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="n">doc_topic_distribution</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_doc_topic_distribution</span><span class="p">(</span>
+            <span class="n">dataset</span><span class="p">,</span> <span class="n">n_samples</span><span class="o">=</span><span class="n">n_samples</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">doc_topic_distribution</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">vocab</span><span class="p">))</span>
+
+        <span class="n">data</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;topic_term_dists&#39;</span><span class="p">:</span> <span class="n">term_topic</span><span class="p">,</span>
+                <span class="s1">&#39;doc_topic_dists&#39;</span><span class="p">:</span> <span class="n">doc_topic_distribution</span><span class="p">,</span>
+                <span class="s1">&#39;doc_lengths&#39;</span><span class="p">:</span> <span class="n">doc_lengths</span><span class="p">,</span>
+                <span class="s1">&#39;vocab&#39;</span><span class="p">:</span> <span class="n">vocab</span><span class="p">,</span>
+                <span class="s1">&#39;term_frequency&#39;</span><span class="p">:</span> <span class="n">term_frequency</span><span class="p">}</span>
+
+        <span class="k">return</span> <span class="n">data</span></div></div>
+
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">******************************************************************************</span>
+<span class="sd">***                              ZeroShotTM                                ***</span>
+<span class="sd">******************************************************************************</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+
+<div class="viewcode-block" id="ZeroShotTM"><a class="viewcode-back" href="../../../../../../src.models.base.contextualized_topic_models.ctm_network.ctm.html#src.models.base.contextualized_topic_models.ctm_network.ctm.ZeroShotTM">[docs]</a><span class="k">class</span> <span class="nc">ZeroShotTM</span><span class="p">(</span><span class="n">CTM</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;ZeroShotTM, as described in https://arxiv.org/pdf/2004.07737v1.pdf</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="ZeroShotTM.__init__"><a class="viewcode-back" href="../../../../../../src.models.base.contextualized_topic_models.ctm_network.ctm.html#src.models.base.contextualized_topic_models.ctm_network.ctm.ZeroShotTM.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">inference_type</span> <span class="o">=</span> <span class="s2">&quot;zeroshot&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">,</span> <span class="n">inference_type</span><span class="o">=</span><span class="n">inference_type</span><span class="p">)</span></div></div>
+
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">******************************************************************************</span>
+<span class="sd">***                              CombinedTM                                ***</span>
+<span class="sd">******************************************************************************</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+
+<div class="viewcode-block" id="CombinedTM"><a class="viewcode-back" href="../../../../../../src.models.base.contextualized_topic_models.ctm_network.ctm.html#src.models.base.contextualized_topic_models.ctm_network.ctm.CombinedTM">[docs]</a><span class="k">class</span> <span class="nc">CombinedTM</span><span class="p">(</span><span class="n">CTM</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;CombinedTM, as described in https://arxiv.org/pdf/2004.03974.pdf</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="CombinedTM.__init__"><a class="viewcode-back" href="../../../../../../src.models.base.contextualized_topic_models.ctm_network.ctm.html#src.models.base.contextualized_topic_models.ctm_network.ctm.CombinedTM.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">inference_type</span> <span class="o">=</span> <span class="s2">&quot;combined&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">,</span> <span class="n">inference_type</span><span class="o">=</span><span class="n">inference_type</span><span class="p">)</span></div></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, L. Calvo-Bartolomé,  J. Arenas-García,.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>src.federation.server module &mdash; Topic Modeler documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> gFedNTM
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <!-- Local TOC -->
+              <div class="local-toc"><ul>
+<li><a class="reference internal" href="#">src.federation.server module</a><ul>
+<li><a class="reference internal" href="#src.federation.server.FederatedServer"><code class="docutils literal notranslate"><span class="pre">FederatedServer</span></code></a><ul>
+<li><a class="reference internal" href="#src.federation.server.FederatedServer.__init__"><code class="docutils literal notranslate"><span class="pre">FederatedServer.__init__()</span></code></a></li>
+<li><a class="reference internal" href="#src.federation.server.FederatedServer.record_client_consensus"><code class="docutils literal notranslate"><span class="pre">FederatedServer.record_client_consensus()</span></code></a></li>
+<li><a class="reference internal" href="#src.federation.server.FederatedServer.record_client"><code class="docutils literal notranslate"><span class="pre">FederatedServer.record_client()</span></code></a></li>
+<li><a class="reference internal" href="#src.federation.server.FederatedServer.record_client_waiting_or_consensus"><code class="docutils literal notranslate"><span class="pre">FederatedServer.record_client_waiting_or_consensus()</span></code></a></li>
+<li><a class="reference internal" href="#src.federation.server.FederatedServer.sendLocalDic"><code class="docutils literal notranslate"><span class="pre">FederatedServer.sendLocalDic()</span></code></a></li>
+<li><a class="reference internal" href="#src.federation.server.FederatedServer.sendGlobalDicAndInitialNN"><code class="docutils literal notranslate"><span class="pre">FederatedServer.sendGlobalDicAndInitialNN()</span></code></a></li>
+<li><a class="reference internal" href="#src.federation.server.FederatedServer.can_send_aggragated_vocab"><code class="docutils literal notranslate"><span class="pre">FederatedServer.can_send_aggragated_vocab()</span></code></a></li>
+<li><a class="reference internal" href="#src.federation.server.FederatedServer.sendLocalTensor"><code class="docutils literal notranslate"><span class="pre">FederatedServer.sendLocalTensor()</span></code></a></li>
+<li><a class="reference internal" href="#src.federation.server.FederatedServer.can_send_update"><code class="docutils literal notranslate"><span class="pre">FederatedServer.can_send_update()</span></code></a></li>
+<li><a class="reference internal" href="#src.federation.server.FederatedServer.sendAggregatedTensor"><code class="docutils literal notranslate"><span class="pre">FederatedServer.sendAggregatedTensor()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">gFedNTM</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>src.federation.server module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/src.federation.server.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-src.federation.server">
+<span id="src-federation-server-module"></span><h1>src.federation.server module<a class="headerlink" href="#module-src.federation.server" title="Permalink to this heading"></a></h1>
+<p>Created on Feb 1, 2022</p>
+<p><em>Code author: L. Calvo-Bartolomé (<a class="reference external" href="mailto:lcalvo&#37;&#52;&#48;pa&#46;uc3m&#46;es">lcalvo<span>&#64;</span>pa<span>&#46;</span>uc3m<span>&#46;</span>es</a>)</em></p>
+<dl class="py class">
+<dt class="sig sig-object py" id="src.federation.server.FederatedServer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">src.federation.server.</span></span><span class="sig-name descname"><span class="pre">FederatedServer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">min_num_clients</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/federation/server.html#FederatedServer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.federation.server.FederatedServer" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="src.protos.federated_pb2_grpc.html#src.protos.federated_pb2_grpc.FederationServicer" title="src.protos.federated_pb2_grpc.FederationServicer"><code class="xref py py-class docutils literal notranslate"><span class="pre">FederationServicer</span></code></a></p>
+<p>Class that describes the behaviour of the GRPC server to which several clients are connected to create a federation for the joint training of a topic model.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="src.federation.server.FederatedServer.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">min_num_clients</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/federation/server.html#FederatedServer.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.federation.server.FederatedServer.__init__" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.federation.server.FederatedServer.record_client_consensus">
+<span class="sig-name descname"><span class="pre">record_client_consensus</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path_tmp_local_corpus</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nr_samples</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/federation/server.html#FederatedServer.record_client_consensus"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.federation.server.FederatedServer.record_client_consensus" title="Permalink to this definition"></a></dt>
+<dd><p>Method to record the communication between a server and one of the clients in the federation at the time the clients first try to send its local vocabulary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>context</strong> (<em>AuthMetadataContext</em>) – An AuthMetadataContext providing information on the RPC</p></li>
+<li><p><strong>path_tmp_local_corpus</strong> (<em>pathlib.Path</em>) – Path to the temporary file where the local corpus of the client currently under communication is located</p></li>
+<li><p><strong>nr_samples</strong> (<em>Number</em><em> of </em><em>client's data points</em>) – </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.federation.server.FederatedServer.record_client">
+<span class="sig-name descname"><span class="pre">record_client</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gradient</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">current_mb</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">current_iter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">current_id_msg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_max_iter</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/federation/server.html#FederatedServer.record_client"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.federation.server.FederatedServer.record_client" title="Permalink to this definition"></a></dt>
+<dd><p>Method to record the communication between a server and one of the clients in the federation at the time the clients send its updates.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>context</strong> (<em>AuthMetadataContext</em>) – An AuthMetadataContext providing information on the RPC</p></li>
+<li><p><strong>gradient</strong> (<em>Pytorch.Tensor</em>) – Gradient that the client is sending to the server at “current_iter” on “current_id_msg”</p></li>
+<li><p><strong>current_mb</strong> (<em>int</em>) – Minibatch that corresponds with the gradient that is being sent by the client</p></li>
+<li><p><strong>current_iter</strong> (<em>int</em>) – Epoch that corresponds with the gradient that is being sent by the client</p></li>
+<li><p><strong>current_id_msg</strong> (<em>int</em>) – Id of the message with which the gradient is being sent</p></li>
+<li><p><strong>num_max_iter</strong> (<em>int</em>) – Number of epochs with which the model is being trained</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.federation.server.FederatedServer.record_client_waiting_or_consensus">
+<span class="sig-name descname"><span class="pre">record_client_waiting_or_consensus</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">waiting</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/federation/server.html#FederatedServer.record_client_waiting_or_consensus"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.federation.server.FederatedServer.record_client_waiting_or_consensus" title="Permalink to this definition"></a></dt>
+<dd><p>Method to record the communication between a server and one of the clients in the federation at the time the client is waiting for server to send the consensed vocabulary or during the waiting time of the consensed vocabulary sending</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>context</strong> (<em>AuthMetadataContext</em>) – An AuthMetadataContext providing information on the RPC</p></li>
+<li><p><strong>waiting</strong> (<em>bool</em>) – Whether the client is waiting for the vocabulary consensus sending or the vocabulary consensus is already happening</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.federation.server.FederatedServer.sendLocalDic">
+<span class="sig-name descname"><span class="pre">sendLocalDic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/federation/server.html#FederatedServer.sendLocalDic"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.federation.server.FederatedServer.sendLocalDic" title="Permalink to this definition"></a></dt>
+<dd><p>Sends an ACK response to the client after receiving his local dictionary update.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>request</strong> (<em>ClientTensorRequest</em>) – Request of the client for sending its vocabulary dictionary</p></li>
+<li><p><strong>context</strong> (<em>AuthMetadataContext</em>) – Context of the RPC communication between the client and the server</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>response</strong> – Server’s response to confirm a client that its sent vocabulary dictionary was received</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>ServerReceivedResponse</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.federation.server.FederatedServer.sendGlobalDicAndInitialNN">
+<span class="sig-name descname"><span class="pre">sendGlobalDicAndInitialNN</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/federation/server.html#FederatedServer.sendGlobalDicAndInitialNN"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.federation.server.FederatedServer.sendGlobalDicAndInitialNN" title="Permalink to this definition"></a></dt>
+<dd><p>Sends the common vocabulary and the initialized NN to the correspinding client based on the context of the gRPC channel.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>request</strong> (<em>federated_pb2.Empty</em>) – Empty protocol buffer coming from the client</p></li>
+<li><p><strong>context</strong> (<em>AuthMetadataContext</em>) – Context of the RPC communication between the client and the server</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>request</strong> – Request with the common vocabulary and the initialized NN</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>federated_pb2.ServerAggregatedTensorReques</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.federation.server.FederatedServer.can_send_aggragated_vocab">
+<span class="sig-name descname"><span class="pre">can_send_aggragated_vocab</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/federation/server.html#FederatedServer.can_send_aggragated_vocab"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.federation.server.FederatedServer.can_send_aggragated_vocab" title="Permalink to this definition"></a></dt>
+<dd><p>Checks whether all the clients meet the necessary condition for the sending of the consensed vocabulary.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.federation.server.FederatedServer.sendLocalTensor">
+<span class="sig-name descname"><span class="pre">sendLocalTensor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/federation/server.html#FederatedServer.sendLocalTensor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.federation.server.FederatedServer.sendLocalTensor" title="Permalink to this definition"></a></dt>
+<dd><p>Sends an ACK response to the client after receiving his local tensor update.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>request</strong> (<em>ClientTensorRequest</em>) – Request of the client for sending an iteration’s gradient</p></li>
+<li><p><strong>context</strong> (<em>AuthMetadataContext</em>) – Context of the RPC communication between the client and the server</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>response</strong> – Server’s response to confirm a client that its sent gradient was received</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>ServerReceivedResponse</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.federation.server.FederatedServer.can_send_update">
+<span class="sig-name descname"><span class="pre">can_send_update</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/federation/server.html#FederatedServer.can_send_update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.federation.server.FederatedServer.can_send_update" title="Permalink to this definition"></a></dt>
+<dd><p>Checks the conditions that need to be fullfilled in order to send the average tensor update to the clients.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>boolean: True if the aggragate update can be sent.</p></li>
+</ul>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.federation.server.FederatedServer.sendAggregatedTensor">
+<span class="sig-name descname"><span class="pre">sendAggregatedTensor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/federation/server.html#FederatedServer.sendAggregatedTensor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.federation.server.FederatedServer.sendAggregatedTensor" title="Permalink to this definition"></a></dt>
+<dd><p>Sends the average update to the correspinding client based on the context of the gRPC channel.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>request</strong> (<em>federated_pb2.Empty</em>) – Empty protocol buffer coming from the client</p></li>
+<li><p><strong>context</strong> (<em>AuthMetadataContext</em>) – Context of the RPC communication between the client and the server</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>request</strong> – Request with the aggregated tensor</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>federated_pb2.ServerAggregatedTensorRequest</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, L. Calvo-Bartolomé,  J. Arenas-García,.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>src.models.base.pytorchavitm.avitm_network.avitm module &mdash; Topic Modeler documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> gFedNTM
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <!-- Local TOC -->
+              <div class="local-toc"><ul>
+<li><a class="reference internal" href="#">src.models.base.pytorchavitm.avitm_network.avitm module</a><ul>
+<li><a class="reference internal" href="#src.models.base.pytorchavitm.avitm_network.avitm.AVITM"><code class="docutils literal notranslate"><span class="pre">AVITM</span></code></a><ul>
+<li><a class="reference internal" href="#src.models.base.pytorchavitm.avitm_network.avitm.AVITM.__init__"><code class="docutils literal notranslate"><span class="pre">AVITM.__init__()</span></code></a></li>
+<li><a class="reference internal" href="#src.models.base.pytorchavitm.avitm_network.avitm.AVITM.fit"><code class="docutils literal notranslate"><span class="pre">AVITM.fit()</span></code></a></li>
+<li><a class="reference internal" href="#src.models.base.pytorchavitm.avitm_network.avitm.AVITM.get_predicted_topics"><code class="docutils literal notranslate"><span class="pre">AVITM.get_predicted_topics()</span></code></a></li>
+<li><a class="reference internal" href="#src.models.base.pytorchavitm.avitm_network.avitm.AVITM.get_doc_topic_distribution"><code class="docutils literal notranslate"><span class="pre">AVITM.get_doc_topic_distribution()</span></code></a></li>
+<li><a class="reference internal" href="#src.models.base.pytorchavitm.avitm_network.avitm.AVITM.get_topic_word_matrix"><code class="docutils literal notranslate"><span class="pre">AVITM.get_topic_word_matrix()</span></code></a></li>
+<li><a class="reference internal" href="#src.models.base.pytorchavitm.avitm_network.avitm.AVITM.get_topic_word_distribution"><code class="docutils literal notranslate"><span class="pre">AVITM.get_topic_word_distribution()</span></code></a></li>
+<li><a class="reference internal" href="#src.models.base.pytorchavitm.avitm_network.avitm.AVITM.get_topics"><code class="docutils literal notranslate"><span class="pre">AVITM.get_topics()</span></code></a></li>
+<li><a class="reference internal" href="#src.models.base.pytorchavitm.avitm_network.avitm.AVITM.save"><code class="docutils literal notranslate"><span class="pre">AVITM.save()</span></code></a></li>
+<li><a class="reference internal" href="#src.models.base.pytorchavitm.avitm_network.avitm.AVITM.load"><code class="docutils literal notranslate"><span class="pre">AVITM.load()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">gFedNTM</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>src.models.base.pytorchavitm.avitm_network.avitm module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/src.models.base.pytorchavitm.avitm_network.avitm.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-src.models.base.pytorchavitm.avitm_network.avitm">
+<span id="src-models-base-pytorchavitm-avitm-network-avitm-module"></span><h1>src.models.base.pytorchavitm.avitm_network.avitm module<a class="headerlink" href="#module-src.models.base.pytorchavitm.avitm_network.avitm" title="Permalink to this heading"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="src.models.base.pytorchavitm.avitm_network.avitm.AVITM">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">src.models.base.pytorchavitm.avitm_network.avitm.</span></span><span class="sig-name descname"><span class="pre">AVITM</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">logger</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_components</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'prodLDA'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hidden_sizes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(100,</span> <span class="pre">100)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">activation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'softplus'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dropout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learn_priors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">64</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.002</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">momentum</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.99</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">solver</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'adam'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_epochs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reduce_on_plateau</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">topic_prior_mean</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">topic_prior_variance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_data_loader_workers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/models/base/pytorchavitm/avitm_network/avitm.html#AVITM"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.models.base.pytorchavitm.avitm_network.avitm.AVITM" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Class to train an AVITM model.</p>
+<p>Sets the main attributes to create a specific AVITM.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input_size</strong> (<em>int</em>) – Dimension of the input</p></li>
+<li><p><strong>n_components</strong> (<em>int</em><em> (</em><em>default=10</em><em>)</em>) – Number of topic components</p></li>
+<li><p><strong>model_type</strong> (<em>string</em><em> (</em><em>default='prodLDA'</em><em>)</em>) – Type of the model that is going to be trained, ‘prodLDA’ or ‘LDA’</p></li>
+<li><p><strong>hidden_sizes</strong> (<em>tuple</em><em>, </em><em>length = n_layers</em><em> (</em><em>default=</em><em>(</em><em>100</em><em>,</em><em>100</em><em>)</em><em>)</em>) – Size of the hidden layer</p></li>
+<li><p><strong>activation</strong> (<em>string</em><em> (</em><em>default='softplus'</em><em>)</em>) – Activation function to be used, chosen from ‘softplus’, ‘relu’, ‘sigmoid’, ‘leakyrelu’, ‘rrelu’, ‘elu’,
+‘selu’ or ‘tanh’</p></li>
+<li><p><strong>dropout</strong> (<em>float</em><em> (</em><em>default=0.2</em><em>)</em>) – Percent of neurons to drop out.</p></li>
+<li><p><strong>learn_priors</strong> (<em>bool</em><em>, </em><em>(</em><em>default=True</em><em>)</em>) – If true, priors are made learnable parameters</p></li>
+<li><p><strong>batch_size</strong> (<em>int</em><em> (</em><em>default=64</em><em>)</em>) – Size of the batch to use for training</p></li>
+<li><p><strong>lr</strong> (<em>float</em><em> (</em><em>defualt=2e-3</em><em>)</em>) – Learning rate to be used for training</p></li>
+<li><p><strong>momentum</strong> (<em>folat</em><em> (</em><em>default=0.99</em><em>)</em>) – Momemtum to be used for training</p></li>
+<li><p><strong>solver</strong> (<em>string</em><em> (</em><em>default='adam'</em><em>)</em>) – NN optimizer to be used, chosen from ‘adagrad’, ‘adam’, ‘sgd’, ‘adadelta’ or ‘rmsprop’</p></li>
+<li><p><strong>num_epochs</strong> (<em>int</em><em> (</em><em>default=100</em><em>)</em>) – Number of epochs to train for</p></li>
+<li><p><strong>reduce_on_plateau</strong> (<em>bool</em><em> (</em><em>default=False</em><em>)</em>) – If true, reduce learning rate by 10x on plateau of 10 epochs</p></li>
+<li><p><strong>topic_prior_mean</strong> (<em>double</em><em> (</em><em>default=0.0</em><em>)</em>) – Mean parameter of the prior</p></li>
+<li><p><strong>topic_prior_variance</strong> (<em>double</em><em> (</em><em>default=None</em><em>)</em>) – Variance parameter of the prior</p></li>
+<li><p><strong>num_samples</strong> (<em>int</em><em> (</em><em>default=10</em><em>)</em>) – Number of times the theta needs to be sampled</p></li>
+<li><p><strong>num_data_loader_workers</strong> (<em>int</em><em> (</em><em>default=0</em><em>)</em>) – Number of subprocesses to use for data loading</p></li>
+<li><p><strong>verbose</strong> (<em>bool</em>) – If True, additional logs are displayed</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="src.models.base.pytorchavitm.avitm_network.avitm.AVITM.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">logger</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_components</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'prodLDA'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hidden_sizes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(100,</span> <span class="pre">100)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">activation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'softplus'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dropout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learn_priors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">64</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.002</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">momentum</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.99</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">solver</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'adam'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_epochs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reduce_on_plateau</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">topic_prior_mean</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">topic_prior_variance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_data_loader_workers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/models/base/pytorchavitm/avitm_network/avitm.html#AVITM.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.models.base.pytorchavitm.avitm_network.avitm.AVITM.__init__" title="Permalink to this definition"></a></dt>
+<dd><p>Sets the main attributes to create a specific AVITM.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input_size</strong> (<em>int</em>) – Dimension of the input</p></li>
+<li><p><strong>n_components</strong> (<em>int</em><em> (</em><em>default=10</em><em>)</em>) – Number of topic components</p></li>
+<li><p><strong>model_type</strong> (<em>string</em><em> (</em><em>default='prodLDA'</em><em>)</em>) – Type of the model that is going to be trained, ‘prodLDA’ or ‘LDA’</p></li>
+<li><p><strong>hidden_sizes</strong> (<em>tuple</em><em>, </em><em>length = n_layers</em><em> (</em><em>default=</em><em>(</em><em>100</em><em>,</em><em>100</em><em>)</em><em>)</em>) – Size of the hidden layer</p></li>
+<li><p><strong>activation</strong> (<em>string</em><em> (</em><em>default='softplus'</em><em>)</em>) – Activation function to be used, chosen from ‘softplus’, ‘relu’, ‘sigmoid’, ‘leakyrelu’, ‘rrelu’, ‘elu’,
+‘selu’ or ‘tanh’</p></li>
+<li><p><strong>dropout</strong> (<em>float</em><em> (</em><em>default=0.2</em><em>)</em>) – Percent of neurons to drop out.</p></li>
+<li><p><strong>learn_priors</strong> (<em>bool</em><em>, </em><em>(</em><em>default=True</em><em>)</em>) – If true, priors are made learnable parameters</p></li>
+<li><p><strong>batch_size</strong> (<em>int</em><em> (</em><em>default=64</em><em>)</em>) – Size of the batch to use for training</p></li>
+<li><p><strong>lr</strong> (<em>float</em><em> (</em><em>defualt=2e-3</em><em>)</em>) – Learning rate to be used for training</p></li>
+<li><p><strong>momentum</strong> (<em>folat</em><em> (</em><em>default=0.99</em><em>)</em>) – Momemtum to be used for training</p></li>
+<li><p><strong>solver</strong> (<em>string</em><em> (</em><em>default='adam'</em><em>)</em>) – NN optimizer to be used, chosen from ‘adagrad’, ‘adam’, ‘sgd’, ‘adadelta’ or ‘rmsprop’</p></li>
+<li><p><strong>num_epochs</strong> (<em>int</em><em> (</em><em>default=100</em><em>)</em>) – Number of epochs to train for</p></li>
+<li><p><strong>reduce_on_plateau</strong> (<em>bool</em><em> (</em><em>default=False</em><em>)</em>) – If true, reduce learning rate by 10x on plateau of 10 epochs</p></li>
+<li><p><strong>topic_prior_mean</strong> (<em>double</em><em> (</em><em>default=0.0</em><em>)</em>) – Mean parameter of the prior</p></li>
+<li><p><strong>topic_prior_variance</strong> (<em>double</em><em> (</em><em>default=None</em><em>)</em>) – Variance parameter of the prior</p></li>
+<li><p><strong>num_samples</strong> (<em>int</em><em> (</em><em>default=10</em><em>)</em>) – Number of times the theta needs to be sampled</p></li>
+<li><p><strong>num_data_loader_workers</strong> (<em>int</em><em> (</em><em>default=0</em><em>)</em>) – Number of subprocesses to use for data loading</p></li>
+<li><p><strong>verbose</strong> (<em>bool</em>) – If True, additional logs are displayed</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.models.base.pytorchavitm.avitm_network.avitm.AVITM.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">validation_dataset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">patience</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">20</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/models/base/pytorchavitm/avitm_network/avitm.html#AVITM.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.models.base.pytorchavitm.avitm_network.avitm.AVITM.fit" title="Permalink to this definition"></a></dt>
+<dd><p>Trains the AVITM model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>train_dataset</strong> (<a class="reference internal" href="src.models.base.pytorchavitm.datasets.bow_dataset.html#src.models.base.pytorchavitm.datasets.bow_dataset.BOWDataset" title="src.models.base.pytorchavitm.datasets.bow_dataset.BOWDataset"><em>BOWDataset</em></a>) – Dataset used for training the AVITM model.</p></li>
+<li><p><strong>validation_dataset</strong> (<a class="reference internal" href="src.models.base.pytorchavitm.datasets.bow_dataset.html#src.models.base.pytorchavitm.datasets.bow_dataset.BOWDataset" title="src.models.base.pytorchavitm.datasets.bow_dataset.BOWDataset"><em>BOWDataset</em></a>) – Dataset used for validating the AVITM model.</p></li>
+<li><p><strong>save_dir</strong> (<em>str</em><em> (</em><em>default=None</em><em>)</em>) – Directory to save checkpoint models to.</p></li>
+<li><p><strong>patience</strong> (<em>int</em><em> (</em><em>default=5</em><em>)</em>) – How long to wait after last time validation loss improved</p></li>
+<li><p><strong>delta</strong> (<em>int</em><em> (</em><em>default=0</em><em>)</em>) – Minimum change in the monitored quantity to qualify as an improvement</p></li>
+<li><p><strong>n_samples</strong> (<em>int</em><em> (</em><em>default=20</em><em>)</em>) – Number of samples of the document topic distribution</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.models.base.pytorchavitm.avitm_network.avitm.AVITM.get_predicted_topics">
+<span class="sig-name descname"><span class="pre">get_predicted_topics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_samples</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/models/base/pytorchavitm/avitm_network/avitm.html#AVITM.get_predicted_topics"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.models.base.pytorchavitm.avitm_network.avitm.AVITM.get_predicted_topics" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the a list containing the predicted topic for each document (length: number of documents).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dataset</strong> (<a class="reference internal" href="src.models.base.pytorchavitm.datasets.bow_dataset.html#src.models.base.pytorchavitm.datasets.bow_dataset.BOWDataset" title="src.models.base.pytorchavitm.datasets.bow_dataset.BOWDataset"><em>BOWDataset</em></a>) – Dataset to infer topics</p></li>
+<li><p><strong>n_samples</strong> (<em>int</em>) – Number of sampling of theta</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>predicted_topics</strong> – the predicted topics</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>List</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.models.base.pytorchavitm.avitm_network.avitm.AVITM.get_doc_topic_distribution">
+<span class="sig-name descname"><span class="pre">get_doc_topic_distribution</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">20</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/models/base/pytorchavitm/avitm_network/avitm.html#AVITM.get_doc_topic_distribution"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.models.base.pytorchavitm.avitm_network.avitm.AVITM.get_doc_topic_distribution" title="Permalink to this definition"></a></dt>
+<dd><p>Gets the document-topic distribution for a dataset of topics. Includes multiple sampling to reduce variation via</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dataset</strong> (<a class="reference internal" href="src.models.base.pytorchavitm.datasets.bow_dataset.html#src.models.base.pytorchavitm.datasets.bow_dataset.BOWDataset" title="src.models.base.pytorchavitm.datasets.bow_dataset.BOWDataset"><em>BOWDataset</em></a>) – Dataset whose document-topic distribution is being calculated</p></li>
+<li><p><strong>n_samples</strong> (<em>int</em><em> (</em><em>default=20</em><em>)</em>) – Number of sample to collect to estimate the final distribution (the more the better).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>doct_topic_distrib</strong> – A CxD matrix where C is the number of components and D is number of documents in the dataset given as argument</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>numpy.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.models.base.pytorchavitm.avitm_network.avitm.AVITM.get_topic_word_matrix">
+<span class="sig-name descname"><span class="pre">get_topic_word_matrix</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/models/base/pytorchavitm/avitm_network/avitm.html#AVITM.get_topic_word_matrix"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.models.base.pytorchavitm.avitm_network.avitm.AVITM.get_topic_word_matrix" title="Permalink to this definition"></a></dt>
+<dd><p>Gets the topic-word matrix associated with the trained model. If model_type is LDA, the matrix is normalized;
+otherwise, it is unnormalized.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>topic_word_mat</strong> – A CxV matrix where C is the number of components and V is the vocabulary length</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>numpy.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.models.base.pytorchavitm.avitm_network.avitm.AVITM.get_topic_word_distribution">
+<span class="sig-name descname"><span class="pre">get_topic_word_distribution</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/models/base/pytorchavitm/avitm_network/avitm.html#AVITM.get_topic_word_distribution"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.models.base.pytorchavitm.avitm_network.avitm.AVITM.get_topic_word_distribution" title="Permalink to this definition"></a></dt>
+<dd><p>Gets the topic-word distriubtion associated with the trained model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>topic_word_distrib</strong> – A CxV matrix where C is the number of components and V is the vocabulary length</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>numpy.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.models.base.pytorchavitm.avitm_network.avitm.AVITM.get_topics">
+<span class="sig-name descname"><span class="pre">get_topics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">k</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/models/base/pytorchavitm/avitm_network/avitm.html#AVITM.get_topics"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.models.base.pytorchavitm.avitm_network.avitm.AVITM.get_topics" title="Permalink to this definition"></a></dt>
+<dd><p>Retrieves the k most significant words belonging to each of the trained topics.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>k</strong> (<em>int</em><em> (</em><em>default=10</em><em>)</em>) – Number of words to return per topic.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>topics_list</strong> – List of the model’s topics, each of them described as a list with the k most significant words belonging to it</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>List[List[str]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.models.base.pytorchavitm.avitm_network.avitm.AVITM.save">
+<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">models_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/models/base/pytorchavitm/avitm_network/avitm.html#AVITM.save"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.models.base.pytorchavitm.avitm_network.avitm.AVITM.save" title="Permalink to this definition"></a></dt>
+<dd><p>Saves the trained model as Pytorch object</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>model_dir</strong> (<em>os.PathLike object</em>) – Path to directory for saving NN models.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.models.base.pytorchavitm.avitm_network.avitm.AVITM.load">
+<span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epoch</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/models/base/pytorchavitm/avitm_network/avitm.html#AVITM.load"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.models.base.pytorchavitm.avitm_network.avitm.AVITM.load" title="Permalink to this definition"></a></dt>
+<dd><p>Loads a previously trained model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model_dir</strong> (<em>os.PathLike object</em>) – Path to directory for saving NN models.</p></li>
+<li><p><strong>epoch</strong> (<em>int</em>) – Epoch of model to load.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, L. Calvo-Bartolomé,  J. Arenas-García,.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

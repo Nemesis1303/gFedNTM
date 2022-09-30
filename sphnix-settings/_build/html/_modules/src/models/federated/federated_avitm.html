@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>src.models.federated.federated_avitm &mdash; Topic Modeler documentation</title>
+      <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+        <script src="../../../../_static/sphinx_highlight.js"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../../../index.html" class="icon icon-home"> gFedNTM
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <!-- Local TOC -->
+              <div class="local-toc"></div>
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">gFedNTM</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+      <li>src.models.federated.federated_avitm</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for src.models.federated.federated_avitm</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">from</span> <span class="nn">src.models.base.pytorchavitm.avitm_network.avitm</span> <span class="kn">import</span> <span class="n">AVITM</span>
+<span class="kn">from</span> <span class="nn">src.models.federated.federated_model</span> <span class="kn">import</span> <span class="n">FederatedModel</span>
+<span class="kn">from</span> <span class="nn">sklearn.preprocessing</span> <span class="kn">import</span> <span class="n">normalize</span>
+<span class="kn">from</span> <span class="nn">torch.utils.data</span> <span class="kn">import</span> <span class="n">DataLoader</span>
+<span class="kn">from</span> <span class="nn">src.utils.auxiliary_functions</span> <span class="kn">import</span> <span class="n">save_model_as_npz</span>
+<span class="kn">from</span> <span class="nn">src.utils.utils_postprocessing</span> <span class="kn">import</span> <span class="n">convert_topic_word_to_init_size</span>
+
+
+<div class="viewcode-block" id="FederatedAVITM"><a class="viewcode-back" href="../../../../src.models.federated.federated_avitm.html#src.models.federated.federated_avitm.FederatedAVITM">[docs]</a><span class="k">class</span> <span class="nc">FederatedAVITM</span><span class="p">(</span><span class="n">AVITM</span><span class="p">,</span> <span class="n">FederatedModel</span><span class="p">):</span>
+<div class="viewcode-block" id="FederatedAVITM.__init__"><a class="viewcode-back" href="../../../../src.models.federated.federated_avitm.html#src.models.federated.federated_avitm.FederatedAVITM.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tm_params</span><span class="p">,</span> <span class="n">client</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+
+        <span class="n">FederatedModel</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tm_params</span><span class="p">,</span> <span class="n">client</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+
+        <span class="n">AVITM</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">logger</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="p">,</span>
+            <span class="n">input_size</span><span class="o">=</span><span class="n">tm_params</span><span class="p">[</span><span class="s2">&quot;input_size&quot;</span><span class="p">],</span>
+            <span class="n">n_components</span><span class="o">=</span><span class="n">tm_params</span><span class="p">[</span><span class="s2">&quot;n_components&quot;</span><span class="p">],</span>
+            <span class="n">model_type</span><span class="o">=</span><span class="n">tm_params</span><span class="p">[</span><span class="s2">&quot;model_type&quot;</span><span class="p">],</span>
+            <span class="n">hidden_sizes</span><span class="o">=</span><span class="n">tm_params</span><span class="p">[</span><span class="s2">&quot;hidden_sizes&quot;</span><span class="p">],</span>
+            <span class="n">activation</span><span class="o">=</span><span class="n">tm_params</span><span class="p">[</span><span class="s2">&quot;activation&quot;</span><span class="p">],</span>
+            <span class="n">dropout</span><span class="o">=</span><span class="n">tm_params</span><span class="p">[</span><span class="s2">&quot;dropout&quot;</span><span class="p">],</span>
+            <span class="n">learn_priors</span><span class="o">=</span><span class="n">tm_params</span><span class="p">[</span><span class="s2">&quot;learn_priors&quot;</span><span class="p">],</span>
+            <span class="n">batch_size</span><span class="o">=</span><span class="n">tm_params</span><span class="p">[</span><span class="s2">&quot;batch_size&quot;</span><span class="p">],</span>
+            <span class="n">lr</span><span class="o">=</span><span class="n">tm_params</span><span class="p">[</span><span class="s2">&quot;lr&quot;</span><span class="p">],</span>
+            <span class="n">momentum</span><span class="o">=</span><span class="n">tm_params</span><span class="p">[</span><span class="s2">&quot;momentum&quot;</span><span class="p">],</span>
+            <span class="n">solver</span><span class="o">=</span><span class="n">tm_params</span><span class="p">[</span><span class="s2">&quot;solver&quot;</span><span class="p">],</span>
+            <span class="n">num_epochs</span><span class="o">=</span><span class="n">tm_params</span><span class="p">[</span><span class="s2">&quot;num_epochs&quot;</span><span class="p">],</span>
+            <span class="n">reduce_on_plateau</span><span class="o">=</span><span class="n">tm_params</span><span class="p">[</span><span class="s2">&quot;reduce_on_plateau&quot;</span><span class="p">],</span>
+            <span class="n">topic_prior_mean</span><span class="o">=</span><span class="n">tm_params</span><span class="p">[</span><span class="s2">&quot;topic_prior_mean&quot;</span><span class="p">],</span>
+            <span class="n">topic_prior_variance</span><span class="o">=</span><span class="n">tm_params</span><span class="p">[</span><span class="s2">&quot;topic_prior_variance&quot;</span><span class="p">],</span>
+            <span class="n">num_samples</span><span class="o">=</span><span class="n">tm_params</span><span class="p">[</span><span class="s2">&quot;num_samples&quot;</span><span class="p">],</span>
+            <span class="n">num_data_loader_workers</span><span class="o">=</span><span class="n">tm_params</span><span class="p">[</span><span class="s2">&quot;num_data_loader_workers&quot;</span><span class="p">],</span>
+            <span class="n">verbose</span><span class="o">=</span><span class="n">tm_params</span><span class="p">[</span><span class="s2">&quot;verbose&quot;</span><span class="p">])</span>
+
+        <span class="c1"># Current epoch for tracking federated model</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">current_mb</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+
+        <span class="c1"># Training set info parameters</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">train_data</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">id2token</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tm_params</span><span class="p">[</span><span class="s2">&quot;id2token&quot;</span><span class="p">]</span>
+
+        <span class="c1"># Post-training parameters</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">topics</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">thetas</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">betas</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+    <span class="k">def</span> <span class="nf">_train_minibatch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">train_loss</span><span class="p">,</span> <span class="n">samples_processed</span><span class="p">):</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">USE_CUDA</span><span class="p">:</span>
+            <span class="n">X</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">cuda</span><span class="p">()</span>
+
+        <span class="c1"># Forward pass</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">()</span>  <span class="c1"># Update gradients to zero</span>
+        <span class="n">prior_mean</span><span class="p">,</span> <span class="n">prior_var</span><span class="p">,</span> <span class="n">posterior_mean</span><span class="p">,</span> <span class="n">posterior_var</span><span class="p">,</span> <span class="n">posterior_log_var</span><span class="p">,</span> <span class="n">word_dists</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">(</span>
+            <span class="n">X</span><span class="p">)</span>
+
+        <span class="c1"># Backward pass: Compute gradients</span>
+        <span class="n">loss</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_loss</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">word_dists</span><span class="p">,</span> <span class="n">prior_mean</span><span class="p">,</span> <span class="n">prior_var</span><span class="p">,</span>
+                          <span class="n">posterior_mean</span><span class="p">,</span> <span class="n">posterior_var</span><span class="p">,</span> <span class="n">posterior_log_var</span><span class="p">)</span>
+        <span class="n">loss</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">loss</span><span class="p">,</span> <span class="n">train_loss</span><span class="p">,</span> <span class="n">samples_processed</span>
+
+<div class="viewcode-block" id="FederatedAVITM.optimize_on_minibatch_from_server"><a class="viewcode-back" href="../../../../src.models.federated.federated_avitm.html#src.models.federated.federated_avitm.FederatedAVITM.optimize_on_minibatch_from_server">[docs]</a>    <span class="k">def</span> <span class="nf">optimize_on_minibatch_from_server</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">updates</span><span class="p">):</span>
+
+        <span class="c1"># Upadate gradients</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">prior_mean</span><span class="o">.</span><span class="n">grad</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">(</span><span class="n">updates</span><span class="p">[</span><span class="s2">&quot;prior_mean&quot;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">prior_variance</span><span class="o">.</span><span class="n">grad</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">(</span>
+            <span class="n">updates</span><span class="p">[</span><span class="s2">&quot;prior_variance&quot;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">beta</span><span class="o">.</span><span class="n">grad</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">(</span><span class="n">updates</span><span class="p">[</span><span class="s2">&quot;beta&quot;</span><span class="p">])</span>
+
+        <span class="c1"># Perform one step of the optimizer (SGD/Adam)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
+
+        <span class="k">return</span></div>
+
+    <span class="k">def</span> <span class="nf">_optimize_on_minibatch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">loss</span><span class="p">,</span> <span class="n">train_loss</span><span class="p">,</span> <span class="n">samples_processed</span><span class="p">):</span>
+        <span class="c1"># Update gradients</span>
+        <span class="c1"># Parameter0 = prior_mean</span>
+        <span class="c1"># Parameter1 = prior_variance</span>
+        <span class="c1"># Parameter2 = beta</span>
+        <span class="c1">#self.model.prior_mean.grad = update</span>
+        <span class="c1">#self.model.prior_variance = updates[0]</span>
+        <span class="c1">#self.model.prior_variance = updates[1]</span>
+        <span class="c1">#self.model.beta.grad = updates[2]</span>
+
+        <span class="c1"># Perform one step of the optimizer (SGD/Adam)</span>
+        <span class="c1"># self.optimizer.step()</span>
+
+        <span class="c1"># Compute train loss</span>
+        <span class="n">samples_processed</span> <span class="o">+=</span> <span class="n">X</span><span class="o">.</span><span class="n">size</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">train_loss</span> <span class="o">+=</span> <span class="n">loss</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">train_loss</span><span class="p">,</span> <span class="n">samples_processed</span>
+
+    <span class="k">def</span> <span class="nf">_train_epoch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">loader</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Trains one epoch of the local AVITM model.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        loader: DataLoader</span>
+<span class="sd">            Python iterable over the training dataset with which the epoch is going to be trained.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        samples_processed: int</span>
+<span class="sd">            Number of processed samples</span>
+<span class="sd">        train_loss: float</span>
+<span class="sd">            Training loss</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
+
+        <span class="n">train_loss</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">samples_processed</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="c1"># Counter for the current minibatch</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">current_mb</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="c1"># Training epoch starts</span>
+        <span class="k">for</span> <span class="n">batch_samples</span> <span class="ow">in</span> <span class="n">loader</span><span class="p">:</span>
+
+            <span class="c1"># Get samples in minibatch</span>
+            <span class="n">X</span> <span class="o">=</span> <span class="n">batch_samples</span><span class="p">[</span><span class="s1">&#39;X&#39;</span><span class="p">]</span>
+
+            <span class="c1"># Get gradients minibatch</span>
+            <span class="n">loss</span><span class="p">,</span> <span class="n">train_loss</span><span class="p">,</span> <span class="n">samples_processed</span> <span class="o">=</span> \
+                <span class="bp">self</span><span class="o">.</span><span class="n">_train_minibatch</span><span class="p">(</span>
+                    <span class="n">X</span><span class="p">,</span> <span class="n">train_loss</span><span class="p">,</span> <span class="n">samples_processed</span><span class="p">)</span>
+
+            <span class="c1"># Send minibatch&#39; gradient to the server (gradient already converted to np)</span>
+            <span class="n">params</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">&quot;prior_mean&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">prior_mean</span><span class="p">,</span>
+                <span class="s2">&quot;prior_variance&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">prior_variance</span><span class="p">,</span>
+                <span class="s2">&quot;beta&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">beta</span><span class="p">,</span>
+                <span class="s2">&quot;current_mb&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_mb</span><span class="p">,</span>
+                <span class="s2">&quot;current_epoch&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_mb</span><span class="p">,</span>
+                <span class="s2">&quot;num_epochs&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_epochs</span>
+            <span class="p">}</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">fedTrManager</span><span class="o">.</span><span class="n">send_gradient_minibatch</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                <span class="s1">&#39;Client </span><span class="si">%s</span><span class="s1"> sent gradient </span><span class="si">%s</span><span class="s1">/</span><span class="si">%s</span><span class="s1"> and is waiting for updates.&#39;</span><span class="p">,</span>
+                <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fedTrManager</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">id</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">current_mb</span><span class="p">),</span>
+                <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">current_epoch</span><span class="p">))</span>
+
+            <span class="c1"># Update model with server&#39;s weigths</span>
+            <span class="n">modelStateDict</span><span class="p">,</span> <span class="n">optStateDict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fedTrManager</span><span class="o">.</span><span class="n">get_update_minibatch</span><span class="p">()</span>
+
+            <span class="n">localStateDict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">state_dict</span><span class="p">()</span>
+            <span class="n">localStateDict</span><span class="p">[</span><span class="s2">&quot;prior_mean&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">modelStateDict</span><span class="p">[</span><span class="s2">&quot;prior_mean&quot;</span><span class="p">]</span>
+            <span class="n">localStateDict</span><span class="p">[</span><span class="s2">&quot;prior_variance&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">modelStateDict</span><span class="p">[</span><span class="s2">&quot;prior_variance&quot;</span><span class="p">]</span>
+            <span class="n">localStateDict</span><span class="p">[</span><span class="s2">&quot;beta&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">modelStateDict</span><span class="p">[</span><span class="s2">&quot;beta&quot;</span><span class="p">]</span>
+
+            <span class="c1">#modelStateDict[&quot;topic_word_matrix&quot;] = self.model.topic_word_matrix</span>
+            <span class="c1">#self.model.prior_mean = modelStateDict[&quot;prior_mean&quot;]</span>
+            <span class="c1">#self.model.prior_variance = modelStateDict[&quot;prior_variance&quot;]</span>
+            <span class="c1">#self.model.beta = nn.Parameter(modelStateDict[&quot;beta&quot;])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span><span class="n">localStateDict</span><span class="p">)</span>
+            <span class="c1"># self.optimizer.load_state_dict(optStateDict)</span>
+
+            <span class="c1"># Calculate minibatch&#39;s train loss and samples processed</span>
+            <span class="n">train_loss</span><span class="p">,</span> <span class="n">samples_processed</span> <span class="o">=</span> \
+                <span class="bp">self</span><span class="o">.</span><span class="n">_optimize_on_minibatch</span><span class="p">(</span>
+                    <span class="n">X</span><span class="p">,</span> <span class="n">loss</span><span class="p">,</span> <span class="n">train_loss</span><span class="p">,</span> <span class="n">samples_processed</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">current_mb</span> <span class="o">+=</span> <span class="mi">1</span>  <span class="c1"># One minibatch ends</span>
+        <span class="c1"># Training epoch ends</span>
+
+        <span class="c1"># Calculate epoch&#39;s train loss and samples processed</span>
+        <span class="n">train_loss</span> <span class="o">/=</span> <span class="n">samples_processed</span>
+
+        <span class="k">return</span> <span class="n">samples_processed</span><span class="p">,</span> <span class="n">train_loss</span>
+
+<div class="viewcode-block" id="FederatedAVITM.fit"><a class="viewcode-back" href="../../../../src.models.federated.federated_avitm.html#src.models.federated.federated_avitm.FederatedAVITM.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">train_data</span><span class="p">,</span> <span class="n">save_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Trains a federated AVITM model. </span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        save_dir: pathlib.Path, optional</span>
+<span class="sd">            Directory to save checkpoint models to, defaults to None.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">model_dir</span> <span class="o">=</span> <span class="n">save_dir</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">train_data</span> <span class="o">=</span> <span class="n">train_data</span>
+        <span class="c1"># TODO: Include validation data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">current_minibatch</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">current_epoch</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="n">train_loader</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">train_data</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span>
+            <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">num_workers</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+        <span class="c1"># Initialize training variables</span>
+        <span class="n">train_loss</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">samples_processed</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="c1"># Training of the local model</span>
+        <span class="k">for</span> <span class="n">epoch</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_epochs</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">current_epoch</span> <span class="o">=</span> <span class="n">epoch</span>
+
+            <span class="c1"># Train epoch</span>
+            <span class="n">s</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
+            <span class="n">sp</span><span class="p">,</span> <span class="n">train_loss</span> <span class="o">=</span> \
+                <span class="bp">self</span><span class="o">.</span><span class="n">_train_epoch</span><span class="p">(</span><span class="n">train_loader</span><span class="p">)</span>
+            <span class="n">samples_processed</span> <span class="o">+=</span> <span class="n">sp</span>
+            <span class="n">e</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
+
+            <span class="c1"># report</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Epoch: [</span><span class="si">{}</span><span class="s2">/</span><span class="si">{}</span><span class="s2">]</span><span class="se">\t</span><span class="s2">Samples: [</span><span class="si">{}</span><span class="s2">/</span><span class="si">{}</span><span class="s2">]</span><span class="se">\t</span><span class="s2">Train Loss: </span><span class="si">{}</span><span class="se">\t</span><span class="s2">Time: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">epoch</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_epochs</span><span class="p">,</span> <span class="n">samples_processed</span><span class="p">,</span>
+                <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">train_data</span><span class="p">)</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">num_epochs</span><span class="p">,</span> <span class="n">train_loss</span><span class="p">,</span> <span class="n">e</span> <span class="o">-</span> <span class="n">s</span><span class="p">))</span>
+
+            <span class="c1"># save best</span>
+            <span class="k">if</span> <span class="n">train_loss</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">best_loss_train</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">best_components</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">beta</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">best_loss_train</span> <span class="o">=</span> <span class="n">train_loss</span>
+
+                <span class="k">if</span> <span class="n">save_dir</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">save_dir</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="FederatedAVITM.get_results_model"><a class="viewcode-back" href="../../../../src.models.federated.federated_avitm.html#src.models.federated.federated_avitm.FederatedAVITM.get_results_model">[docs]</a>    <span class="k">def</span> <span class="nf">get_results_model</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="c1"># Get topics</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">topics</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_topics</span><span class="p">()</span>
+
+        <span class="c1"># Get doc-topic distribution</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">thetas</span> <span class="o">=</span> \
+            <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_doc_topic_distribution</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">train_data</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">thetas</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">thetas</span> <span class="o">&lt;</span> <span class="mf">3e-3</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">thetas</span> <span class="o">=</span> <span class="n">normalize</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">thetas</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="s1">&#39;l1&#39;</span><span class="p">)</span>
+
+        <span class="c1"># Get word-topic distribution</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">betas</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_topic_word_distribution</span><span class="p">()</span>
+
+        <span class="n">file_save</span> <span class="o">=</span> \
+            <span class="s2">&quot;workspace/data/output_models/model_client_&quot;</span> <span class="o">+</span> \
+            <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fedTrManager</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">id</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;.npz&quot;</span>
+
+        <span class="n">save_model_as_npz</span><span class="p">(</span><span class="n">file_save</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="FederatedAVITM.evaluate_synthetic_model"><a class="viewcode-back" href="../../../../src.models.federated.federated_avitm.html#src.models.federated.federated_avitm.FederatedAVITM.evaluate_synthetic_model">[docs]</a>    <span class="k">def</span> <span class="nf">evaluate_synthetic_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vocab_size</span><span class="p">,</span> <span class="n">gt_thetas</span><span class="p">,</span> <span class="n">gt_betas</span><span class="p">):</span>
+
+        <span class="n">all_words</span> <span class="o">=</span> \
+            <span class="p">[</span><span class="s1">&#39;wd&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">word</span><span class="p">)</span> <span class="k">for</span> <span class="n">word</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">vocab_size</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+             <span class="k">if</span> <span class="n">word</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">]</span>
+    
+        <span class="bp">self</span><span class="o">.</span><span class="n">betas</span> <span class="o">=</span> <span class="n">convert_topic_word_to_init_size</span><span class="p">(</span>
+            <span class="n">vocab_size</span><span class="o">=</span><span class="n">vocab_size</span><span class="p">,</span>
+            <span class="n">model</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span>
+            <span class="n">model_type</span><span class="o">=</span><span class="s2">&quot;avitm&quot;</span><span class="p">,</span>
+            <span class="n">ntopics</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_components</span><span class="p">,</span>
+            <span class="n">id2token</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tm_params</span><span class="p">[</span><span class="s2">&quot;id2token&quot;</span><span class="p">],</span>
+            <span class="n">all_words</span><span class="o">=</span><span class="n">all_words</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Tópicos (equivalentes) evaluados correctamente:&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">betas</span><span class="p">)</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">gt_betas</span><span class="o">.</span><span class="n">T</span><span class="p">)),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)))</span>
+
+        <span class="n">sim_mat_theoretical</span> <span class="o">=</span> \
+            <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">gt_thetas</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">gt_thetas</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">T</span><span class="p">))</span>
+        <span class="n">sim_mat_actual</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">thetas</span><span class="p">)</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">thetas</span><span class="o">.</span><span class="n">T</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Difference in evaluation of doc similarity:&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">sim_mat_theoretical</span> <span class="o">-</span> <span class="n">sim_mat_actual</span><span class="p">))</span><span class="o">/</span><span class="nb">len</span><span class="p">(</span><span class="n">gt_thetas</span><span class="p">))</span></div></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, L. Calvo-Bartolomé,  J. Arenas-García,.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
