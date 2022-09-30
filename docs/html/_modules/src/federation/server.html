@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>src.federation.server &mdash; Topic Modeler documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/sphinx_highlight.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../../index.html" class="icon icon-home"> gFedNTM
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <!-- Local TOC -->
+              <div class="local-toc"></div>
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">gFedNTM</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+      <li>src.federation.server</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for src.federation.server</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Created on Feb 1, 2022</span>
+
+<span class="sd">.. codeauthor:: L. Calvo-Bartolomé (lcalvo@pa.uc3m.es)</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">time</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">gensim.test.utils</span> <span class="kn">import</span> <span class="n">get_tmpfile</span>
+<span class="kn">from</span> <span class="nn">src.models.federated.federated_avitm</span> <span class="kn">import</span> <span class="n">FederatedAVITM</span>
+<span class="kn">from</span> <span class="nn">src.protos</span> <span class="kn">import</span> <span class="n">federated_pb2</span><span class="p">,</span> <span class="n">federated_pb2_grpc</span>
+<span class="kn">from</span> <span class="nn">sklearn.feature_extraction.text</span> <span class="kn">import</span> <span class="n">CountVectorizer</span>
+<span class="kn">from</span> <span class="nn">sklearn.pipeline</span> <span class="kn">import</span> <span class="n">FeatureUnion</span>
+<span class="kn">from</span> <span class="nn">src.utils.auxiliary_functions</span> <span class="kn">import</span> <span class="p">(</span><span class="n">deserializeNumpy</span><span class="p">,</span>
+                       <span class="n">modelStateDict_to_proto</span><span class="p">,</span>
+                       <span class="n">optStateDict_to_proto</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">waiting</span> <span class="kn">import</span> <span class="n">wait</span>
+
+<span class="kn">from</span> <span class="nn">src.federation</span> <span class="kn">import</span> <span class="n">federation</span><span class="p">,</span> <span class="n">federation_client</span>
+
+<span class="n">GRPC_TRACE</span> <span class="o">=</span> <span class="nb">all</span>
+
+
+<div class="viewcode-block" id="FederatedServer"><a class="viewcode-back" href="../../../src.federation.server.html#src.federation.server.FederatedServer">[docs]</a><span class="k">class</span> <span class="nc">FederatedServer</span><span class="p">(</span><span class="n">federated_pb2_grpc</span><span class="o">.</span><span class="n">FederationServicer</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class that describes the behaviour of the GRPC server to which several clients are connected to create a federation for the joint training of a topic model.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="FederatedServer.__init__"><a class="viewcode-back" href="../../../src.federation.server.html#src.federation.server.FederatedServer.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">min_num_clients</span><span class="p">,</span> <span class="n">model_params</span><span class="p">,</span> <span class="n">model_type</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_federation</span> <span class="o">=</span> <span class="n">federation</span><span class="o">.</span><span class="n">Federation</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_min_num_clients</span> <span class="o">=</span> <span class="n">min_num_clients</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_current_minibatch</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_current_epoch</span> <span class="o">=</span> <span class="o">-</span><span class="mi">2</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_id_server</span> <span class="o">=</span> <span class="s2">&quot;IDS&quot;</span> <span class="o">+</span> <span class="s2">&quot;_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dicts</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_global_model</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_model_type</span> <span class="o">=</span> <span class="n">model_type</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_model_parameters</span> <span class="o">=</span> <span class="n">model_params</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_global_vocab</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="c1"># Create logger object</span>
+        <span class="k">if</span> <span class="n">logger</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span> <span class="o">=</span> <span class="n">logger</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="kn">import</span> <span class="nn">logging</span>
+            <span class="n">FMT</span> <span class="o">=</span> <span class="s1">&#39;[</span><span class="si">%(asctime)-15s</span><span class="s1">] [</span><span class="si">%(filename)s</span><span class="s1">] [</span><span class="si">%(levelname)s</span><span class="s1">] </span><span class="si">%(message)s</span><span class="s1">&#39;</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="nb">format</span><span class="o">=</span><span class="n">FMT</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="s1">&#39;INFO&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s1">&#39;Server&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="FederatedServer.record_client_consensus"><a class="viewcode-back" href="../../../src.federation.server.html#src.federation.server.FederatedServer.record_client_consensus">[docs]</a>    <span class="k">def</span> <span class="nf">record_client_consensus</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="p">,</span> <span class="n">path_tmp_local_corpus</span><span class="p">,</span> <span class="n">nr_samples</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Method to record the communication between a server and one of the clients in the federation at the time the clients first try to send its local vocabulary.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        context : AuthMetadataContext</span>
+<span class="sd">            An AuthMetadataContext providing information on the RPC</span>
+<span class="sd">        path_tmp_local_corpus: pathlib.Path</span>
+<span class="sd">            Path to the temporary file where the local corpus of the client currently under communication is located</span>
+<span class="sd">        nr_samples: Number of client&#39;s data points </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">def</span> <span class="nf">unregister_client</span><span class="p">():</span>
+            <span class="sd">&quot;&quot;&quot;No-parameter callable to be called on RPC termination, that invokes the Federation&#39;s disconnect method when a client finishes a communication with the server.</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_federation</span><span class="o">.</span><span class="n">federation_clients</span><span class="p">)</span>
+            <span class="n">client</span> <span class="o">=</span> \
+                <span class="n">federation_client</span><span class="o">.</span><span class="n">FederationClient</span><span class="o">.</span><span class="n">get_pos_by_key</span><span class="p">(</span>
+                    <span class="n">context</span><span class="o">.</span><span class="n">peer</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_federation</span><span class="o">.</span><span class="n">federation_clients</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_federation</span><span class="o">.</span><span class="n">federation_clients</span><span class="p">[</span><span class="n">client</span><span class="p">]</span><span class="o">.</span><span class="n">vocab_sent</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_federation</span><span class="o">.</span><span class="n">federation_clients</span><span class="p">[</span><span class="n">client</span><span class="p">]</span><span class="o">.</span><span class="n">nr_samples</span> <span class="o">=</span> <span class="n">nr_samples</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_federation</span><span class="o">.</span><span class="n">disconnect</span><span class="p">(</span><span class="n">context</span><span class="o">.</span><span class="n">peer</span><span class="p">())</span>
+
+        <span class="n">context</span><span class="o">.</span><span class="n">add_callback</span><span class="p">(</span><span class="n">unregister_client</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_federation</span><span class="o">.</span><span class="n">connect_consensus</span><span class="p">(</span>
+            <span class="n">context</span><span class="o">.</span><span class="n">peer</span><span class="p">(),</span> <span class="n">path_tmp_local_corpus</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="FederatedServer.record_client"><a class="viewcode-back" href="../../../src.federation.server.html#src.federation.server.FederatedServer.record_client">[docs]</a>    <span class="k">def</span> <span class="nf">record_client</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="p">,</span> <span class="n">gradient</span><span class="p">,</span> <span class="n">current_mb</span><span class="p">,</span> <span class="n">current_iter</span><span class="p">,</span> <span class="n">current_id_msg</span><span class="p">,</span> <span class="n">num_max_iter</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Method to record the communication between a server and one of the clients in the federation at the time the clients send its updates.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        context : AuthMetadataContext</span>
+<span class="sd">            An AuthMetadataContext providing information on the RPC</span>
+<span class="sd">        gradient: Pytorch.Tensor</span>
+<span class="sd">            Gradient that the client is sending to the server at &quot;current_iter&quot; on &quot;current_id_msg&quot;</span>
+<span class="sd">        current_mb: int</span>
+<span class="sd">            Minibatch that corresponds with the gradient that is being sent by the client</span>
+<span class="sd">        current_iter: int</span>
+<span class="sd">            Epoch that corresponds with the gradient that is being sent by the client</span>
+<span class="sd">        current_id_msg: int</span>
+<span class="sd">            Id of the message with which the gradient is being sent</span>
+<span class="sd">        num_max_iter: int</span>
+<span class="sd">            Number of epochs with which the model is being trained</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">def</span> <span class="nf">unregister_client</span><span class="p">():</span>
+            <span class="sd">&quot;&quot;&quot;No-parameter callable to be called on RPC termination, that invokes the Federation&#39;s disconnect method when a client finishes a communication with the server.</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_federation</span><span class="o">.</span><span class="n">disconnect</span><span class="p">(</span><span class="n">context</span><span class="o">.</span><span class="n">peer</span><span class="p">())</span>
+
+        <span class="n">context</span><span class="o">.</span><span class="n">add_callback</span><span class="p">(</span><span class="n">unregister_client</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_federation</span><span class="o">.</span><span class="n">connect_update</span><span class="p">(</span>
+            <span class="n">context</span><span class="o">.</span><span class="n">peer</span><span class="p">(),</span> <span class="n">gradient</span><span class="p">,</span> <span class="n">current_mb</span><span class="p">,</span> <span class="n">current_iter</span><span class="p">,</span> <span class="n">current_id_msg</span><span class="p">,</span> <span class="n">num_max_iter</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="FederatedServer.record_client_waiting_or_consensus"><a class="viewcode-back" href="../../../src.federation.server.html#src.federation.server.FederatedServer.record_client_waiting_or_consensus">[docs]</a>    <span class="k">def</span> <span class="nf">record_client_waiting_or_consensus</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="p">,</span> <span class="n">waiting</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Method to record the communication between a server and one of the clients in the federation at the time the client is waiting for server to send the consensed vocabulary or during the waiting time of the consensed vocabulary sending</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        context : AuthMetadataContext</span>
+<span class="sd">            An AuthMetadataContext providing information on the RPC</span>
+<span class="sd">        waiting: bool</span>
+<span class="sd">            Whether the client is waiting for the vocabulary consensus sending or the vocabulary consensus is already happening</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">def</span> <span class="nf">unregister_client</span><span class="p">():</span>
+            <span class="sd">&quot;&quot;&quot;No-parameter callable to be called on RPC termination, that invokes the Federation&#39;s disconnect method when a client finishes a communication with the server.</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_federation</span><span class="o">.</span><span class="n">disconnect</span><span class="p">(</span><span class="n">context</span><span class="o">.</span><span class="n">peer</span><span class="p">())</span>
+
+        <span class="n">context</span><span class="o">.</span><span class="n">add_callback</span><span class="p">(</span><span class="n">unregister_client</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_federation</span><span class="o">.</span><span class="n">connect_waiting_or_consensus</span><span class="p">(</span><span class="n">context</span><span class="o">.</span><span class="n">peer</span><span class="p">(),</span> <span class="n">waiting</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="FederatedServer.sendLocalDic"><a class="viewcode-back" href="../../../src.federation.server.html#src.federation.server.FederatedServer.sendLocalDic">[docs]</a>    <span class="k">def</span> <span class="nf">sendLocalDic</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Sends an ACK response to the client after receiving his local dictionary update.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        request: ClientTensorRequest</span>
+<span class="sd">            Request of the client for sending its vocabulary dictionary</span>
+<span class="sd">        context: AuthMetadataContext</span>
+<span class="sd">            Context of the RPC communication between the client and the server</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        response : ServerReceivedResponse</span>
+<span class="sd">            Server&#39;s response to confirm a client that its sent vocabulary dictionary was received</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">path_tmp_local_corpus</span> <span class="o">=</span> <span class="n">get_tmpfile</span><span class="p">(</span><span class="n">context</span><span class="o">.</span><span class="n">peer</span><span class="p">())</span>
+
+        <span class="c1"># Get client&#39;s vocab and save it dicts list</span>
+        <span class="n">vocab</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">([(</span><span class="n">pair</span><span class="o">.</span><span class="n">key</span><span class="p">,</span> <span class="n">pair</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">ivalue</span><span class="p">)</span>
+                     <span class="k">for</span> <span class="n">pair</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">pairs</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dicts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">vocab</span><span class="p">)</span>
+
+        <span class="n">cv</span> <span class="o">=</span> <span class="n">CountVectorizer</span><span class="p">(</span><span class="n">vocabulary</span><span class="o">=</span><span class="n">vocab</span><span class="p">)</span>
+        <span class="n">nr_samples</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">cv</span><span class="o">.</span><span class="n">get_feature_names_out</span><span class="p">())</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">record_client_consensus</span><span class="p">(</span>
+            <span class="n">context</span><span class="p">,</span> <span class="n">path_tmp_local_corpus</span><span class="p">,</span> <span class="n">nr_samples</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">federated_pb2</span><span class="o">.</span><span class="n">Reply</span><span class="p">(</span><span class="n">length</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">vocab</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="FederatedServer.sendGlobalDicAndInitialNN"><a class="viewcode-back" href="../../../src.federation.server.html#src.federation.server.FederatedServer.sendGlobalDicAndInitialNN">[docs]</a>    <span class="k">def</span> <span class="nf">sendGlobalDicAndInitialNN</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Sends the common vocabulary and the initialized NN to the correspinding client based on the context of the gRPC channel.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        request: federated_pb2.Empty</span>
+<span class="sd">            Empty protocol buffer coming from the client</span>
+<span class="sd">        context: AuthMetadataContext</span>
+<span class="sd">            Context of the RPC communication between the client and the server</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        request: federated_pb2.ServerAggregatedTensorReques</span>
+<span class="sd">            Request with the common vocabulary and the initialized NN</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Record clients waiting for the consensed request</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">record_client_waiting_or_consensus</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+
+        <span class="c1"># Wait until all the clients in the federation have sent its local vocab</span>
+        <span class="n">wait</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">can_send_aggragated_vocab</span><span class="p">(),</span> <span class="n">timeout_seconds</span><span class="o">=</span><span class="mi">120</span><span class="p">,</span>
+             <span class="n">waiting_for</span><span class="o">=</span><span class="s2">&quot;Aggregated vocab can be sent&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Serialize model_params</span>
+        <span class="n">model_params_dic</span> <span class="o">=</span> <span class="n">federated_pb2</span><span class="o">.</span><span class="n">Dictionary</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">key_</span><span class="p">,</span> <span class="n">value_</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model_parameters</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value_</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                <span class="nb">print</span><span class="p">(</span><span class="n">key_</span><span class="p">)</span>
+                <span class="n">el</span> <span class="o">=</span> <span class="n">federated_pb2</span><span class="o">.</span><span class="n">Dictionary</span><span class="o">.</span><span class="n">Pair</span><span class="p">(</span>
+                    <span class="n">key</span><span class="o">=</span><span class="n">key_</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">federated_pb2</span><span class="o">.</span><span class="n">Dictionary</span><span class="o">.</span><span class="n">Pair</span><span class="o">.</span><span class="n">Value</span><span class="p">(</span><span class="n">svalue</span><span class="o">=</span><span class="n">value_</span><span class="p">))</span>
+            <span class="k">elif</span> <span class="n">value_</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">el</span> <span class="o">=</span> <span class="n">federated_pb2</span><span class="o">.</span><span class="n">Dictionary</span><span class="o">.</span><span class="n">Pair</span><span class="p">(</span>
+                    <span class="n">key</span><span class="o">=</span><span class="n">key_</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">federated_pb2</span><span class="o">.</span><span class="n">Dictionary</span><span class="o">.</span><span class="n">Pair</span><span class="o">.</span><span class="n">Value</span><span class="p">(</span><span class="n">svalue</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">value_</span><span class="p">)))</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value_</span><span class="p">,</span> <span class="nb">float</span><span class="p">):</span>
+                <span class="n">el</span> <span class="o">=</span> <span class="n">federated_pb2</span><span class="o">.</span><span class="n">Dictionary</span><span class="o">.</span><span class="n">Pair</span><span class="p">(</span>
+                    <span class="n">key</span><span class="o">=</span><span class="n">key_</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">federated_pb2</span><span class="o">.</span><span class="n">Dictionary</span><span class="o">.</span><span class="n">Pair</span><span class="o">.</span><span class="n">Value</span><span class="p">(</span><span class="n">fvalue</span><span class="o">=</span><span class="n">value_</span><span class="p">))</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value_</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
+                <span class="n">el</span> <span class="o">=</span> <span class="n">federated_pb2</span><span class="o">.</span><span class="n">Dictionary</span><span class="o">.</span><span class="n">Pair</span><span class="p">(</span>
+                    <span class="n">key</span><span class="o">=</span><span class="n">key_</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">federated_pb2</span><span class="o">.</span><span class="n">Dictionary</span><span class="o">.</span><span class="n">Pair</span><span class="o">.</span><span class="n">Value</span><span class="p">(</span><span class="n">bvalue</span><span class="o">=</span><span class="n">value_</span><span class="p">))</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value_</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+                <span class="n">tuple_</span> <span class="o">=</span> <span class="n">federated_pb2</span><span class="o">.</span><span class="n">Tuple</span><span class="p">()</span>
+                <span class="k">for</span> <span class="n">el</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">value_</span><span class="p">):</span>
+                    <span class="n">tuple_</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
+                        <span class="p">[</span><span class="n">federated_pb2</span><span class="o">.</span><span class="n">Tuple</span><span class="o">.</span><span class="n">Valuet</span><span class="p">(</span><span class="n">ivalue</span><span class="o">=</span><span class="n">el</span><span class="p">)])</span>
+                <span class="n">el</span> <span class="o">=</span> <span class="n">federated_pb2</span><span class="o">.</span><span class="n">Dictionary</span><span class="o">.</span><span class="n">Pair</span><span class="p">(</span>
+                    <span class="n">key</span><span class="o">=</span><span class="n">key_</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">federated_pb2</span><span class="o">.</span><span class="n">Dictionary</span><span class="o">.</span><span class="n">Pair</span><span class="o">.</span><span class="n">Value</span><span class="p">(</span><span class="n">tvalue</span><span class="o">=</span><span class="n">tuple_</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">el</span> <span class="o">=</span> <span class="n">federated_pb2</span><span class="o">.</span><span class="n">Dictionary</span><span class="o">.</span><span class="n">Pair</span><span class="p">(</span>
+                    <span class="n">key</span><span class="o">=</span><span class="n">key_</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">federated_pb2</span><span class="o">.</span><span class="n">Dictionary</span><span class="o">.</span><span class="n">Pair</span><span class="o">.</span><span class="n">Value</span><span class="p">(</span><span class="n">ivalue</span><span class="o">=</span><span class="n">value_</span><span class="p">))</span>
+            <span class="n">model_params_dic</span><span class="o">.</span><span class="n">pairs</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="n">el</span><span class="p">])</span>
+
+        <span class="c1"># Get init_size</span>
+        <span class="n">vocabs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">dic_i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dicts</span><span class="p">:</span>
+            <span class="n">cv_i</span> <span class="o">=</span> <span class="n">CountVectorizer</span><span class="p">(</span><span class="n">vocabulary</span><span class="o">=</span><span class="n">dic_i</span><span class="p">)</span>
+            <span class="n">name_i</span> <span class="o">=</span> <span class="s2">&quot;CV&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">dic_i</span><span class="p">)</span>
+            <span class="n">vocabs</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">name_i</span><span class="p">,</span> <span class="n">cv_i</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_global_vocab</span> <span class="o">=</span> <span class="n">FeatureUnion</span><span class="p">(</span><span class="n">vocabs</span><span class="p">)</span>
+        <span class="n">idx2token</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_global_vocab</span><span class="o">.</span><span class="n">get_feature_names_out</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_model_parameters</span><span class="p">[</span><span class="s2">&quot;input_size&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">idx2token</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_model_parameters</span><span class="p">[</span><span class="s2">&quot;id2token&quot;</span><span class="p">]</span> <span class="o">=</span> \
+            <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">idx2token</span><span class="p">)),</span> <span class="n">idx2token</span><span class="p">)}</span>
+
+        <span class="c1"># Create initial NN</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Server initializing global model&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model_type</span> <span class="o">==</span> <span class="s2">&quot;prod&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_global_model</span> <span class="o">=</span> \
+                <span class="n">FederatedAVITM</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_model_parameters</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model_type</span> <span class="o">==</span> <span class="s2">&quot;ctm&quot;</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;To be implemented&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Provided underlying model not supported&quot;</span><span class="p">)</span>
+
+        <span class="n">modelUpdate_</span> <span class="o">=</span> \
+            <span class="n">modelStateDict_to_proto</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_global_model</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">state_dict</span><span class="p">(),</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">optUpdate_</span> <span class="o">=</span> \
+            <span class="n">optStateDict_to_proto</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_global_model</span><span class="o">.</span><span class="n">optimizer</span><span class="o">.</span><span class="n">state_dict</span><span class="p">())</span>
+        <span class="n">nNUpdate</span> <span class="o">=</span> <span class="n">federated_pb2</span><span class="o">.</span><span class="n">NNUpdate</span><span class="p">(</span>
+            <span class="n">modelUpdate</span><span class="o">=</span><span class="n">modelUpdate_</span><span class="p">,</span>
+            <span class="n">optUpdate</span><span class="o">=</span><span class="n">optUpdate_</span>
+        <span class="p">)</span>
+
+        <span class="n">feature_union</span> <span class="o">=</span> <span class="n">federated_pb2</span><span class="o">.</span><span class="n">FeatureUnion</span><span class="p">(</span>
+            <span class="n">initialNN</span><span class="o">=</span><span class="n">nNUpdate</span><span class="p">,</span>
+            <span class="n">model_params</span><span class="o">=</span><span class="n">model_params_dic</span><span class="p">,</span>
+            <span class="n">model_type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_model_type</span><span class="p">)</span>
+
+        <span class="c1"># Serialize clients vocab</span>
+        <span class="k">for</span> <span class="n">vocab_dict</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dicts</span><span class="p">:</span>
+            <span class="n">dic</span> <span class="o">=</span> <span class="n">federated_pb2</span><span class="o">.</span><span class="n">Dictionary</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">key_</span><span class="p">,</span> <span class="n">value_</span> <span class="ow">in</span> <span class="n">vocab_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">dic</span><span class="o">.</span><span class="n">pairs</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
+                    <span class="p">[</span><span class="n">federated_pb2</span><span class="o">.</span><span class="n">Dictionary</span><span class="o">.</span><span class="n">Pair</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="n">key_</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">federated_pb2</span><span class="o">.</span><span class="n">Dictionary</span><span class="o">.</span><span class="n">Pair</span><span class="o">.</span><span class="n">Value</span><span class="p">(</span><span class="n">ivalue</span><span class="o">=</span><span class="n">value_</span><span class="p">))])</span>
+            <span class="n">feature_union</span><span class="o">.</span><span class="n">dic</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="n">dic</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="n">feature_union</span></div>
+
+<div class="viewcode-block" id="FederatedServer.can_send_aggragated_vocab"><a class="viewcode-back" href="../../../src.federation.server.html#src.federation.server.FederatedServer.can_send_aggragated_vocab">[docs]</a>    <span class="k">def</span> <span class="nf">can_send_aggragated_vocab</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Checks whether all the clients meet the necessary condition for the sending of the consensed vocabulary.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_federation</span><span class="o">.</span><span class="n">federation_clients</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_min_num_clients</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">for</span> <span class="n">client</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_federation</span><span class="o">.</span><span class="n">federation_clients</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">client</span><span class="o">.</span><span class="n">vocab_sent</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+<div class="viewcode-block" id="FederatedServer.sendLocalTensor"><a class="viewcode-back" href="../../../src.federation.server.html#src.federation.server.FederatedServer.sendLocalTensor">[docs]</a>    <span class="k">def</span> <span class="nf">sendLocalTensor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Sends an ACK response to the client after receiving his local tensor update.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        request: ClientTensorRequest</span>
+<span class="sd">            Request of the client for sending an iteration&#39;s gradient</span>
+<span class="sd">        context: AuthMetadataContext</span>
+<span class="sd">            Context of the RPC communication between the client and the server</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        response : ServerReceivedResponse</span>
+<span class="sd">            Server&#39;s response to confirm a client that its sent gradient was received</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">header</span> <span class="o">=</span> \
+            <span class="n">federated_pb2</span><span class="o">.</span><span class="n">MessageHeader</span><span class="p">(</span><span class="n">id_response</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_id_server</span><span class="p">,</span>
+                                        <span class="n">id_to_request</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">id_request</span><span class="p">,</span>
+                                        <span class="n">message_type</span><span class="o">=</span><span class="n">federated_pb2</span><span class="o">.</span><span class="n">MessageType</span><span class="o">.</span><span class="n">SERVER_CONFIRM_RECEIVED</span><span class="p">)</span>
+
+        <span class="c1"># Deserialize gradient updates from the client and save then in the corresponding Client object as numpy array</span>
+        <span class="n">gradients</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">update</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">updates</span><span class="p">:</span>
+            <span class="n">deserialized_numpy</span> <span class="o">=</span> <span class="n">deserializeNumpy</span><span class="p">(</span><span class="n">update</span><span class="o">.</span><span class="n">tensor</span><span class="p">)</span>
+            <span class="n">gradients</span><span class="p">[</span><span class="n">update</span><span class="o">.</span><span class="n">tensor_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">deserialized_numpy</span>
+
+        <span class="c1"># Record client in the federation</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">record_client</span><span class="p">(</span><span class="n">context</span><span class="p">,</span>
+                           <span class="n">gradients</span><span class="p">,</span>
+                           <span class="n">request</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">current_mb</span><span class="p">,</span>
+                           <span class="n">request</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">current_epoch</span><span class="p">,</span>
+                           <span class="n">request</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">id_request</span><span class="p">,</span>
+                           <span class="n">request</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">num_max_epochs</span><span class="p">)</span>
+
+        <span class="n">id_client</span> <span class="o">=</span> \
+            <span class="n">federation_client</span><span class="o">.</span><span class="n">FederationClient</span><span class="o">.</span><span class="n">get_pos_by_key</span><span class="p">(</span>
+                <span class="n">context</span><span class="o">.</span><span class="n">peer</span><span class="p">(),</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_federation</span><span class="o">.</span><span class="n">federation_clients</span><span class="p">)</span>
+
+        <span class="c1"># Update minibatch and epoch in the server</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_current_minibatch</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">current_mb</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_current_epoch</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">current_epoch</span>
+
+        <span class="c1"># TODO</span>
+        <span class="n">federation_client</span><span class="o">.</span><span class="n">FederationClient</span><span class="o">.</span><span class="n">set_can_get_update_by_key</span><span class="p">(</span>
+            <span class="n">context</span><span class="o">.</span><span class="n">peer</span><span class="p">(),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_federation</span><span class="o">.</span><span class="n">federation_clients</span><span class="p">,</span>
+            <span class="kc">False</span><span class="p">)</span>
+
+        <span class="n">response</span> <span class="o">=</span> <span class="n">federated_pb2</span><span class="o">.</span><span class="n">ServerReceivedResponse</span><span class="p">(</span><span class="n">header</span><span class="o">=</span><span class="n">header</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">response</span></div>
+
+<div class="viewcode-block" id="FederatedServer.can_send_update"><a class="viewcode-back" href="../../../src.federation.server.html#src.federation.server.FederatedServer.can_send_update">[docs]</a>    <span class="k">def</span> <span class="nf">can_send_update</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Checks the conditions that need to be fullfilled in order to send the average tensor update to the clients.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">        --------</span>
+<span class="sd">            * boolean: True if the aggragate update can be sent.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_federation</span><span class="o">.</span><span class="n">federation_clients</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_min_num_clients</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">for</span> <span class="n">client</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_federation</span><span class="o">.</span><span class="n">federation_clients</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">client</span><span class="o">.</span><span class="n">current_mb</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_current_minibatch</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;DIFERENT&quot;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="n">client</span><span class="o">.</span><span class="n">current_mb</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_current_minibatch</span><span class="p">)</span>
+                <span class="c1"># return False</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">client</span><span class="o">.</span><span class="n">can_get_update</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+<div class="viewcode-block" id="FederatedServer.sendAggregatedTensor"><a class="viewcode-back" href="../../../src.federation.server.html#src.federation.server.FederatedServer.sendAggregatedTensor">[docs]</a>    <span class="k">def</span> <span class="nf">sendAggregatedTensor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Sends the average update to the correspinding client based on the context of the gRPC channel.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        request: federated_pb2.Empty</span>
+<span class="sd">            Empty protocol buffer coming from the client</span>
+<span class="sd">        context: AuthMetadataContext</span>
+<span class="sd">            Context of the RPC communication between the client and the server</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        request: federated_pb2.ServerAggregatedTensorRequest</span>
+<span class="sd">            Request with the aggregated tensor</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Record clients waiting</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">record_client_waiting_or_consensus</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+
+        <span class="n">federation_client</span><span class="o">.</span><span class="n">FederationClient</span><span class="o">.</span><span class="n">set_can_get_update_by_key</span><span class="p">(</span>
+            <span class="n">context</span><span class="o">.</span><span class="n">peer</span><span class="p">(),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_federation</span><span class="o">.</span><span class="n">federation_clients</span><span class="p">,</span>
+            <span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1"># Wait until all the clients in the federation have sent its current iteration gradient</span>
+        <span class="n">wait</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">can_send_update</span><span class="p">(),</span> <span class="n">timeout_seconds</span><span class="o">=</span><span class="mi">120</span><span class="p">,</span>
+             <span class="n">waiting_for</span><span class="o">=</span><span class="s2">&quot;Update can be sent&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Calculate average for each tensor</span>
+        <span class="c1"># Get dict of tensor, of entry per update</span>
+        <span class="n">keys</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_federation</span><span class="o">.</span><span class="n">federation_clients</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">tensors</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+        <span class="n">averages</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+            <span class="n">clients_tensors</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">client</span><span class="o">.</span><span class="n">tensors</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">*</span><span class="n">client</span><span class="o">.</span><span class="n">nr_samples</span> <span class="k">for</span> <span class="n">client</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_federation</span><span class="o">.</span><span class="n">federation_clients</span><span class="p">]</span>
+            <span class="n">average_tensor</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">clients_tensors</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">averages</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">average_tensor</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;The average tensor &quot;</span> <span class="o">+</span> <span class="n">key</span> <span class="o">+</span> <span class="s2">&quot; is: &quot;</span><span class="p">,</span> <span class="n">average_tensor</span><span class="p">)</span>
+
+        <span class="c1"># Peform updates</span>
+        <span class="c1"># TODO: Update for different models</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_global_model</span><span class="o">.</span><span class="n">optimize_on_minibatch_from_server</span><span class="p">(</span><span class="n">averages</span><span class="p">)</span>
+
+        <span class="n">modelUpdate_</span> <span class="o">=</span> \
+            <span class="n">modelStateDict_to_proto</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_global_model</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">state_dict</span><span class="p">(),</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">optUpdate_</span> <span class="o">=</span> \
+            <span class="n">optStateDict_to_proto</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_global_model</span><span class="o">.</span><span class="n">optimizer</span><span class="o">.</span><span class="n">state_dict</span><span class="p">())</span>
+        <span class="n">nNUpdate</span> <span class="o">=</span> <span class="n">federated_pb2</span><span class="o">.</span><span class="n">NNUpdate</span><span class="p">(</span>
+            <span class="n">modelUpdate</span><span class="o">=</span><span class="n">modelUpdate_</span><span class="p">,</span>
+            <span class="n">optUpdate</span><span class="o">=</span><span class="n">optUpdate_</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Get the client to sent the update to based on the context of the gRPC channel</span>
+        <span class="n">client_to_repond</span> <span class="o">=</span> \
+            <span class="n">federation_client</span><span class="o">.</span><span class="n">FederationClient</span><span class="o">.</span><span class="n">get_pos_by_key</span><span class="p">(</span>
+                <span class="n">context</span><span class="o">.</span><span class="n">peer</span><span class="p">(),</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_federation</span><span class="o">.</span><span class="n">federation_clients</span><span class="p">)</span>
+
+        <span class="c1"># Create request</span>
+        <span class="n">update_name</span> <span class="o">=</span> <span class="s2">&quot;Update for client with key &quot;</span> <span class="o">+</span> \
+            <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_federation</span><span class="o">.</span><span class="n">federation_clients</span><span class="p">[</span><span class="n">client_to_repond</span><span class="p">]</span><span class="o">.</span><span class="n">federation_key</span><span class="p">)</span> <span class="o">+</span> \
+            <span class="s2">&quot; for the iteration &quot;</span> <span class="o">+</span> \
+            <span class="nb">str</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_federation</span><span class="o">.</span><span class="n">federation_clients</span><span class="p">[</span><span class="n">client_to_repond</span><span class="p">]</span><span class="o">.</span><span class="n">current_epoch</span><span class="p">)</span>
+
+        <span class="c1"># Send update</span>
+        <span class="n">header</span> <span class="o">=</span> <span class="n">federated_pb2</span><span class="o">.</span><span class="n">MessageHeader</span><span class="p">(</span><span class="n">id_response</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_id_server</span><span class="p">,</span>
+                                             <span class="n">message_type</span><span class="o">=</span><span class="n">federated_pb2</span><span class="o">.</span><span class="n">MessageType</span><span class="o">.</span><span class="n">SERVER_AGGREGATED_TENSOR_SEND</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">update_name</span><span class="p">)</span>
+
+        <span class="n">id_client</span> <span class="o">=</span> <span class="n">federation_client</span><span class="o">.</span><span class="n">FederationClient</span><span class="o">.</span><span class="n">get_pos_by_key</span><span class="p">(</span>
+            <span class="n">context</span><span class="o">.</span><span class="n">peer</span><span class="p">(),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_federation</span><span class="o">.</span><span class="n">federation_clients</span><span class="p">)</span>
+
+        <span class="n">request</span> <span class="o">=</span> <span class="n">federated_pb2</span><span class="o">.</span><span class="n">ServerAggregatedTensorRequest</span><span class="p">(</span>
+            <span class="n">header</span><span class="o">=</span><span class="n">header</span><span class="p">,</span> <span class="n">nndata</span><span class="o">=</span><span class="n">nNUpdate</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">request</span></div></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, L. Calvo-Bartolomé,  J. Arenas-García,.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

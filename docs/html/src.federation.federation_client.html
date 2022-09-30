@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>src.federation.federation_client module &mdash; Topic Modeler documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> gFedNTM
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <!-- Local TOC -->
+              <div class="local-toc"><ul>
+<li><a class="reference internal" href="#">src.federation.federation_client module</a><ul>
+<li><a class="reference internal" href="#author-lcalv">&#64;author: lcalv</a></li>
+<li><a class="reference internal" href="#class-federation-client"><strong>*                       CLASS FEDERATION CLIENT                          *</strong></a></li>
+<li><a class="reference internal" href="#src.federation.federation_client.FederationClient"><code class="docutils literal notranslate"><span class="pre">FederationClient</span></code></a><ul>
+<li><a class="reference internal" href="#src.federation.federation_client.FederationClient.__init__"><code class="docutils literal notranslate"><span class="pre">FederationClient.__init__()</span></code></a></li>
+<li><a class="reference internal" href="#src.federation.federation_client.FederationClient.set_num_max_iter"><code class="docutils literal notranslate"><span class="pre">FederationClient.set_num_max_iter()</span></code></a></li>
+<li><a class="reference internal" href="#src.federation.federation_client.FederationClient.update_client_state"><code class="docutils literal notranslate"><span class="pre">FederationClient.update_client_state()</span></code></a></li>
+<li><a class="reference internal" href="#src.federation.federation_client.FederationClient.get_pos_by_key"><code class="docutils literal notranslate"><span class="pre">FederationClient.get_pos_by_key()</span></code></a></li>
+<li><a class="reference internal" href="#src.federation.federation_client.FederationClient.set_can_get_update_by_key"><code class="docutils literal notranslate"><span class="pre">FederationClient.set_can_get_update_by_key()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">gFedNTM</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>src.federation.federation_client module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/src.federation.federation_client.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-src.federation.federation_client">
+<span id="src-federation-federation-client-module"></span><h1>src.federation.federation_client module<a class="headerlink" href="#module-src.federation.federation_client" title="Permalink to this heading"></a></h1>
+<section id="author-lcalv">
+<h2>&#64;author: lcalv<a class="headerlink" href="#author-lcalv" title="Permalink to this heading"></a></h2>
+</section>
+<section id="class-federation-client">
+<h2><strong>*                       CLASS FEDERATION CLIENT                          *</strong><a class="headerlink" href="#class-federation-client" title="Permalink to this heading"></a></h2>
+</section>
+<dl class="py class">
+<dt class="sig sig-object py" id="src.federation.federation_client.FederationClient">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">src.federation.federation_client.</span></span><span class="sig-name descname"><span class="pre">FederationClient</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">federation_key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path_tmp_local_corpus</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/federation/federation_client.html#FederationClient"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.federation.federation_client.FederationClient" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Class for representing a client that has connected to the server for the federated learning of a topic model.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="src.federation.federation_client.FederationClient.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">federation_key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path_tmp_local_corpus</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/federation/federation_client.html#FederationClient.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.federation.federation_client.FederationClient.__init__" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.federation.federation_client.FederationClient.set_num_max_iter">
+<span class="sig-name descname"><span class="pre">set_num_max_iter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_max_iter</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/federation/federation_client.html#FederationClient.set_num_max_iter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.federation.federation_client.FederationClient.set_num_max_iter" title="Permalink to this definition"></a></dt>
+<dd><p>Sets the maximum number of iterations of the training process associated with an specific client.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.federation.federation_client.FederationClient.update_client_state">
+<span class="sig-name descname"><span class="pre">update_client_state</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tensors</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">current_mb</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">current_epoch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">current_id_msg</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/federation/federation_client.html#FederationClient.update_client_state"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.federation.federation_client.FederationClient.update_client_state" title="Permalink to this definition"></a></dt>
+<dd><p>Sets the state of the client, that is:
+- current tensor that is being sent to the server
+- curent minibatch to which the sent tensor belongs to
+- current epoch to which the minibatch belongs to
+- id of the message in which the current tensor is being sent</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.federation.federation_client.FederationClient.get_pos_by_key">
+<span class="sig-name descname"><span class="pre">get_pos_by_key</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">federation_clients</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/federation/federation_client.html#FederationClient.get_pos_by_key"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.federation.federation_client.FederationClient.get_pos_by_key" title="Permalink to this definition"></a></dt>
+<dd><p>It searchs a client with the specified key over the given list of FederationClient objects and when found, it returns its position in the list.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>key</strong> (<em>int</em>) – Dictionary id of the client</p></li>
+<li><p><strong>federation_clients</strong> (<a class="reference internal" href="#src.federation.federation_client.FederationClient" title="src.federation.federation_client.FederationClient"><em>FederationClient</em></a>) – List of FederationClient objects representing the clients that are connected to the client.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>client_pos</strong> – Position on the list of the searched client or -1 when no client with the specified key was found</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.federation.federation_client.FederationClient.set_can_get_update_by_key">
+<span class="sig-name descname"><span class="pre">set_can_get_update_by_key</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">federation_clients</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">update</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/federation/federation_client.html#FederationClient.set_can_get_update_by_key"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.federation.federation_client.FederationClient.set_can_get_update_by_key" title="Permalink to this definition"></a></dt>
+<dd><p>It searches for the client described by the given key in the list of federation_clients, and when found, the boolean update specifies whether such client can receive an update or not.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, L. Calvo-Bartolomé,  J. Arenas-García,.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

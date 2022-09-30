@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>src.federation.federation module &mdash; Topic Modeler documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> gFedNTM
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <!-- Local TOC -->
+              <div class="local-toc"><ul>
+<li><a class="reference internal" href="#">src.federation.federation module</a><ul>
+<li><a class="reference internal" href="#author-lcalv">&#64;author: lcalv</a></li>
+<li><a class="reference internal" href="#class-federation"><strong>*                         CLASS FEDERATION                               *</strong></a></li>
+<li><a class="reference internal" href="#src.federation.federation.Federation"><code class="docutils literal notranslate"><span class="pre">Federation</span></code></a><ul>
+<li><a class="reference internal" href="#src.federation.federation.Federation.__init__"><code class="docutils literal notranslate"><span class="pre">Federation.__init__()</span></code></a></li>
+<li><a class="reference internal" href="#src.federation.federation.Federation.connect_consensus"><code class="docutils literal notranslate"><span class="pre">Federation.connect_consensus()</span></code></a></li>
+<li><a class="reference internal" href="#src.federation.federation.Federation.connect_update"><code class="docutils literal notranslate"><span class="pre">Federation.connect_update()</span></code></a></li>
+<li><a class="reference internal" href="#src.federation.federation.Federation.connect_waiting_or_consensus"><code class="docutils literal notranslate"><span class="pre">Federation.connect_waiting_or_consensus()</span></code></a></li>
+<li><a class="reference internal" href="#src.federation.federation.Federation.disconnect"><code class="docutils literal notranslate"><span class="pre">Federation.disconnect()</span></code></a></li>
+<li><a class="reference internal" href="#src.federation.federation.Federation.getClients"><code class="docutils literal notranslate"><span class="pre">Federation.getClients()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">gFedNTM</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>src.federation.federation module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/src.federation.federation.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-src.federation.federation">
+<span id="src-federation-federation-module"></span><h1>src.federation.federation module<a class="headerlink" href="#module-src.federation.federation" title="Permalink to this heading"></a></h1>
+<section id="author-lcalv">
+<h2>&#64;author: lcalv<a class="headerlink" href="#author-lcalv" title="Permalink to this heading"></a></h2>
+</section>
+<section id="class-federation">
+<h2><strong>*                         CLASS FEDERATION                               *</strong><a class="headerlink" href="#class-federation" title="Permalink to this heading"></a></h2>
+</section>
+<dl class="py class">
+<dt class="sig sig-object py" id="src.federation.federation.Federation">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">src.federation.federation.</span></span><span class="sig-name descname"><span class="pre">Federation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">logger</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/federation/federation.html#Federation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.federation.federation.Federation" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Class to describe the set of clients that compose a federation.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="src.federation.federation.Federation.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">logger</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/federation/federation.html#Federation.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.federation.federation.Federation.__init__" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.federation.federation.Federation.connect_consensus">
+<span class="sig-name descname"><span class="pre">connect_consensus</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path_tmp_local_corpus</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/federation/federation.html#Federation.connect_consensus"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.federation.federation.Federation.connect_consensus" title="Permalink to this definition"></a></dt>
+<dd><p>Class to register the connection of a client in the federation for the first time, i.e. for the agreement of a common vocabulary.</p>
+<p>As the client gets registered into the federation when it sends a GRPC message to the server, a counter is kept in order to account for the number times a client has tried to communicate with it. To do so, we save each client identification obtained from the context as the key of a dictionary, incrementing by one its corresponding value at each time the client connects with the server. Additionally, an object the class FederationClient is added to the list clients in the federation at each time a new client connects to it.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>client</strong> (<em>str</em>) – Client idenfication obtained from the context that provides information on the RPC</p></li>
+<li><p><strong>path_tmp_local_corpus</strong> (<em>pathlib.Path</em>) – Path to the temporary local corpus</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.federation.federation.Federation.connect_update">
+<span class="sig-name descname"><span class="pre">connect_update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gradients</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">current_mb</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">current_epoch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">current_id_msg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/federation/federation.html#Federation.connect_update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.federation.federation.Federation.connect_update" title="Permalink to this definition"></a></dt>
+<dd><p>Class to register the connection of a client in the federation for an update.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>client</strong> (<em>str</em>) – Client idenfication obtained from the context that provides information on the RPC</p></li>
+<li><p><strong>gradients</strong> (<em>List</em><em>[</em><em>List</em><em>[</em><em>str</em><em>,</em><em>Pytorch.Tensor</em><em>]</em><em>]</em>) – Gradient that the client is sending to the server at “current_iter” on “current_id_msg”</p></li>
+<li><p><strong>current_mb</strong> (<em>int</em>) – Epoch that corresponds with the gradient that is being sent by the client</p></li>
+<li><p><strong>current_id_msg</strong> (<em>int</em>) – Id of the message with which the gradient is being sent</p></li>
+<li><p><strong>max_iter</strong> (<em>int</em>) – Number of epochs with which the model is being trained</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.federation.federation.Federation.connect_waiting_or_consensus">
+<span class="sig-name descname"><span class="pre">connect_waiting_or_consensus</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">waiting</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/federation/federation.html#Federation.connect_waiting_or_consensus"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.federation.federation.Federation.connect_waiting_or_consensus" title="Permalink to this definition"></a></dt>
+<dd><p>Class to register the connection of a client in the federation when it is waiting until all the clients in the federation have sent their local corpus so the server can send the consensed vocabulary, or when the server is sending the consensed vocabulary</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>client</strong> (<em>str</em>) – Client idenfication obtained from the context that provides information on the RPC</p></li>
+<li><p><strong>waiting</strong> (<em>bool</em>) – Whether the client is waiting for the vocabulary consensus sending or the vocabulary consensus is already happening</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.federation.federation.Federation.disconnect">
+<span class="sig-name descname"><span class="pre">disconnect</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/federation/federation.html#Federation.disconnect"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.federation.federation.Federation.disconnect" title="Permalink to this definition"></a></dt>
+<dd><p>Method to unregister a client from the federation.</p>
+<p>As the registration of the user in the federation is described by a counter that relates to the number of times the user has sent a GRPC message to the server, the client is not completely unregister from the federation until this counter is set to 0. At this time, the client is also removed from the list FederationClient objects that describe the set clients that are connected in the federationl.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>client</strong> (<em>str</em>) – Client idenfication obtained from the context that provides information on the RPC</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>RuntimeError</strong> – A runtime error is raised when it is attempted to remove a client that has not previously connected to the federation.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.federation.federation.Federation.getClients">
+<span class="sig-name descname"><span class="pre">getClients</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/federation/federation.html#Federation.getClients"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.federation.federation.Federation.getClients" title="Permalink to this definition"></a></dt>
+<dd><p>Get keys of the clients that are connected to the federation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Client idenfications from all the clients connected to the federation obtained from the context that provides information on the RPC</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>clients_info</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, L. Calvo-Bartolomé,  J. Arenas-García,.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

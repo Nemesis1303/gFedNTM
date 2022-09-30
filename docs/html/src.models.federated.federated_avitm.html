@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>src.models.federated.federated_avitm module &mdash; Topic Modeler documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> gFedNTM
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <!-- Local TOC -->
+              <div class="local-toc"><ul>
+<li><a class="reference internal" href="#">src.models.federated.federated_avitm module</a><ul>
+<li><a class="reference internal" href="#src.models.federated.federated_avitm.FederatedAVITM"><code class="docutils literal notranslate"><span class="pre">FederatedAVITM</span></code></a><ul>
+<li><a class="reference internal" href="#src.models.federated.federated_avitm.FederatedAVITM.__init__"><code class="docutils literal notranslate"><span class="pre">FederatedAVITM.__init__()</span></code></a></li>
+<li><a class="reference internal" href="#src.models.federated.federated_avitm.FederatedAVITM.optimize_on_minibatch_from_server"><code class="docutils literal notranslate"><span class="pre">FederatedAVITM.optimize_on_minibatch_from_server()</span></code></a></li>
+<li><a class="reference internal" href="#src.models.federated.federated_avitm.FederatedAVITM.fit"><code class="docutils literal notranslate"><span class="pre">FederatedAVITM.fit()</span></code></a></li>
+<li><a class="reference internal" href="#src.models.federated.federated_avitm.FederatedAVITM.get_results_model"><code class="docutils literal notranslate"><span class="pre">FederatedAVITM.get_results_model()</span></code></a></li>
+<li><a class="reference internal" href="#src.models.federated.federated_avitm.FederatedAVITM.evaluate_synthetic_model"><code class="docutils literal notranslate"><span class="pre">FederatedAVITM.evaluate_synthetic_model()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">gFedNTM</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>src.models.federated.federated_avitm module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/src.models.federated.federated_avitm.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-src.models.federated.federated_avitm">
+<span id="src-models-federated-federated-avitm-module"></span><h1>src.models.federated.federated_avitm module<a class="headerlink" href="#module-src.models.federated.federated_avitm" title="Permalink to this heading"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="src.models.federated.federated_avitm.FederatedAVITM">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">src.models.federated.federated_avitm.</span></span><span class="sig-name descname"><span class="pre">FederatedAVITM</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tm_params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/models/federated/federated_avitm.html#FederatedAVITM"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.models.federated.federated_avitm.FederatedAVITM" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="src.models.base.pytorchavitm.avitm_network.avitm.html#src.models.base.pytorchavitm.avitm_network.avitm.AVITM" title="src.models.base.pytorchavitm.avitm_network.avitm.AVITM"><code class="xref py py-class docutils literal notranslate"><span class="pre">AVITM</span></code></a>, <a class="reference internal" href="src.models.federated.federated_model.html#src.models.federated.federated_model.FederatedModel" title="src.models.federated.federated_model.FederatedModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">FederatedModel</span></code></a></p>
+<p>Sets the main attributes to create a specific AVITM.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input_size</strong> (<em>int</em>) – Dimension of the input</p></li>
+<li><p><strong>n_components</strong> (<em>int</em><em> (</em><em>default=10</em><em>)</em>) – Number of topic components</p></li>
+<li><p><strong>model_type</strong> (<em>string</em><em> (</em><em>default='prodLDA'</em><em>)</em>) – Type of the model that is going to be trained, ‘prodLDA’ or ‘LDA’</p></li>
+<li><p><strong>hidden_sizes</strong> (<em>tuple</em><em>, </em><em>length = n_layers</em><em> (</em><em>default=</em><em>(</em><em>100</em><em>,</em><em>100</em><em>)</em><em>)</em>) – Size of the hidden layer</p></li>
+<li><p><strong>activation</strong> (<em>string</em><em> (</em><em>default='softplus'</em><em>)</em>) – Activation function to be used, chosen from ‘softplus’, ‘relu’, ‘sigmoid’, ‘leakyrelu’, ‘rrelu’, ‘elu’,
+‘selu’ or ‘tanh’</p></li>
+<li><p><strong>dropout</strong> (<em>float</em><em> (</em><em>default=0.2</em><em>)</em>) – Percent of neurons to drop out.</p></li>
+<li><p><strong>learn_priors</strong> (<em>bool</em><em>, </em><em>(</em><em>default=True</em><em>)</em>) – If true, priors are made learnable parameters</p></li>
+<li><p><strong>batch_size</strong> (<em>int</em><em> (</em><em>default=64</em><em>)</em>) – Size of the batch to use for training</p></li>
+<li><p><strong>lr</strong> (<em>float</em><em> (</em><em>defualt=2e-3</em><em>)</em>) – Learning rate to be used for training</p></li>
+<li><p><strong>momentum</strong> (<em>folat</em><em> (</em><em>default=0.99</em><em>)</em>) – Momemtum to be used for training</p></li>
+<li><p><strong>solver</strong> (<em>string</em><em> (</em><em>default='adam'</em><em>)</em>) – NN optimizer to be used, chosen from ‘adagrad’, ‘adam’, ‘sgd’, ‘adadelta’ or ‘rmsprop’</p></li>
+<li><p><strong>num_epochs</strong> (<em>int</em><em> (</em><em>default=100</em><em>)</em>) – Number of epochs to train for</p></li>
+<li><p><strong>reduce_on_plateau</strong> (<em>bool</em><em> (</em><em>default=False</em><em>)</em>) – If true, reduce learning rate by 10x on plateau of 10 epochs</p></li>
+<li><p><strong>topic_prior_mean</strong> (<em>double</em><em> (</em><em>default=0.0</em><em>)</em>) – Mean parameter of the prior</p></li>
+<li><p><strong>topic_prior_variance</strong> (<em>double</em><em> (</em><em>default=None</em><em>)</em>) – Variance parameter of the prior</p></li>
+<li><p><strong>num_samples</strong> (<em>int</em><em> (</em><em>default=10</em><em>)</em>) – Number of times the theta needs to be sampled</p></li>
+<li><p><strong>num_data_loader_workers</strong> (<em>int</em><em> (</em><em>default=0</em><em>)</em>) – Number of subprocesses to use for data loading</p></li>
+<li><p><strong>verbose</strong> (<em>bool</em>) – If True, additional logs are displayed</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="src.models.federated.federated_avitm.FederatedAVITM.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tm_params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/models/federated/federated_avitm.html#FederatedAVITM.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.models.federated.federated_avitm.FederatedAVITM.__init__" title="Permalink to this definition"></a></dt>
+<dd><p>Sets the main attributes to create a specific AVITM.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input_size</strong> (<em>int</em>) – Dimension of the input</p></li>
+<li><p><strong>n_components</strong> (<em>int</em><em> (</em><em>default=10</em><em>)</em>) – Number of topic components</p></li>
+<li><p><strong>model_type</strong> (<em>string</em><em> (</em><em>default='prodLDA'</em><em>)</em>) – Type of the model that is going to be trained, ‘prodLDA’ or ‘LDA’</p></li>
+<li><p><strong>hidden_sizes</strong> (<em>tuple</em><em>, </em><em>length = n_layers</em><em> (</em><em>default=</em><em>(</em><em>100</em><em>,</em><em>100</em><em>)</em><em>)</em>) – Size of the hidden layer</p></li>
+<li><p><strong>activation</strong> (<em>string</em><em> (</em><em>default='softplus'</em><em>)</em>) – Activation function to be used, chosen from ‘softplus’, ‘relu’, ‘sigmoid’, ‘leakyrelu’, ‘rrelu’, ‘elu’,
+‘selu’ or ‘tanh’</p></li>
+<li><p><strong>dropout</strong> (<em>float</em><em> (</em><em>default=0.2</em><em>)</em>) – Percent of neurons to drop out.</p></li>
+<li><p><strong>learn_priors</strong> (<em>bool</em><em>, </em><em>(</em><em>default=True</em><em>)</em>) – If true, priors are made learnable parameters</p></li>
+<li><p><strong>batch_size</strong> (<em>int</em><em> (</em><em>default=64</em><em>)</em>) – Size of the batch to use for training</p></li>
+<li><p><strong>lr</strong> (<em>float</em><em> (</em><em>defualt=2e-3</em><em>)</em>) – Learning rate to be used for training</p></li>
+<li><p><strong>momentum</strong> (<em>folat</em><em> (</em><em>default=0.99</em><em>)</em>) – Momemtum to be used for training</p></li>
+<li><p><strong>solver</strong> (<em>string</em><em> (</em><em>default='adam'</em><em>)</em>) – NN optimizer to be used, chosen from ‘adagrad’, ‘adam’, ‘sgd’, ‘adadelta’ or ‘rmsprop’</p></li>
+<li><p><strong>num_epochs</strong> (<em>int</em><em> (</em><em>default=100</em><em>)</em>) – Number of epochs to train for</p></li>
+<li><p><strong>reduce_on_plateau</strong> (<em>bool</em><em> (</em><em>default=False</em><em>)</em>) – If true, reduce learning rate by 10x on plateau of 10 epochs</p></li>
+<li><p><strong>topic_prior_mean</strong> (<em>double</em><em> (</em><em>default=0.0</em><em>)</em>) – Mean parameter of the prior</p></li>
+<li><p><strong>topic_prior_variance</strong> (<em>double</em><em> (</em><em>default=None</em><em>)</em>) – Variance parameter of the prior</p></li>
+<li><p><strong>num_samples</strong> (<em>int</em><em> (</em><em>default=10</em><em>)</em>) – Number of times the theta needs to be sampled</p></li>
+<li><p><strong>num_data_loader_workers</strong> (<em>int</em><em> (</em><em>default=0</em><em>)</em>) – Number of subprocesses to use for data loading</p></li>
+<li><p><strong>verbose</strong> (<em>bool</em>) – If True, additional logs are displayed</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.models.federated.federated_avitm.FederatedAVITM.optimize_on_minibatch_from_server">
+<span class="sig-name descname"><span class="pre">optimize_on_minibatch_from_server</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">updates</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/models/federated/federated_avitm.html#FederatedAVITM.optimize_on_minibatch_from_server"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.models.federated.federated_avitm.FederatedAVITM.optimize_on_minibatch_from_server" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.models.federated.federated_avitm.FederatedAVITM.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/models/federated/federated_avitm.html#FederatedAVITM.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.models.federated.federated_avitm.FederatedAVITM.fit" title="Permalink to this definition"></a></dt>
+<dd><p>Trains a federated AVITM model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>save_dir</strong> (<em>pathlib.Path</em><em>, </em><em>optional</em>) – Directory to save checkpoint models to, defaults to None.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.models.federated.federated_avitm.FederatedAVITM.get_results_model">
+<span class="sig-name descname"><span class="pre">get_results_model</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/models/federated/federated_avitm.html#FederatedAVITM.get_results_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.models.federated.federated_avitm.FederatedAVITM.get_results_model" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.models.federated.federated_avitm.FederatedAVITM.evaluate_synthetic_model">
+<span class="sig-name descname"><span class="pre">evaluate_synthetic_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vocab_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gt_thetas</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gt_betas</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/models/federated/federated_avitm.html#FederatedAVITM.evaluate_synthetic_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.models.federated.federated_avitm.FederatedAVITM.evaluate_synthetic_model" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, L. Calvo-Bartolomé,  J. Arenas-García,.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>src.federation.client module &mdash; Topic Modeler documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> gFedNTM
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <!-- Local TOC -->
+              <div class="local-toc"><ul>
+<li><a class="reference internal" href="#">src.federation.client module</a><ul>
+<li><a class="reference internal" href="#src.federation.client.Client"><code class="docutils literal notranslate"><span class="pre">Client</span></code></a><ul>
+<li><a class="reference internal" href="#src.federation.client.Client.__init__"><code class="docutils literal notranslate"><span class="pre">Client.__init__()</span></code></a></li>
+<li><a class="reference internal" href="#src.federation.client.Client.send_per_minibatch_gradient"><code class="docutils literal notranslate"><span class="pre">Client.send_per_minibatch_gradient()</span></code></a></li>
+<li><a class="reference internal" href="#src.federation.client.Client.listen_for_updates"><code class="docutils literal notranslate"><span class="pre">Client.listen_for_updates()</span></code></a></li>
+<li><a class="reference internal" href="#src.federation.client.Client.train_local_model"><code class="docutils literal notranslate"><span class="pre">Client.train_local_model()</span></code></a></li>
+<li><a class="reference internal" href="#src.federation.client.Client.eval_local_model"><code class="docutils literal notranslate"><span class="pre">Client.eval_local_model()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">gFedNTM</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>src.federation.client module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/src.federation.client.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-src.federation.client">
+<span id="src-federation-client-module"></span><h1>src.federation.client module<a class="headerlink" href="#module-src.federation.client" title="Permalink to this heading"></a></h1>
+<p>Created on Feb 1, 2022</p>
+<p><em>Code author: L. Calvo-Bartolomé (<a class="reference external" href="mailto:lcalvo&#37;&#52;&#48;pa&#46;uc3m&#46;es">lcalvo<span>&#64;</span>pa<span>&#46;</span>uc3m<span>&#46;</span>es</a>)</em></p>
+<dl class="py class">
+<dt class="sig sig-object py" id="src.federation.client.Client">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">src.federation.client.</span></span><span class="sig-name descname"><span class="pre">Client</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stub</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="src.protos.federated_pb2_grpc.html#src.protos.federated_pb2_grpc.FederationStub" title="src.protos.federated_pb2_grpc.FederationStub"><span class="pre">FederationStub</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">local_corpus</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/federation/client.html#Client"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.federation.client.Client" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Class containing the stubs to interact with the server-side part via a gRPC channel.</p>
+<p>Object’s initializer</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>id</strong> (<em>int</em>) – Client’s ide</p></li>
+<li><p><strong>stub</strong> (<a class="reference internal" href="src.protos.federated_pb2_grpc.html#src.protos.federated_pb2_grpc.FederationStub" title="src.protos.federated_pb2_grpc.FederationStub"><em>federated_pb2_grpc.FederationStub</em></a>) – Module acting as the interface for gRPC client</p></li>
+<li><p><strong>local_corpus</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>) – List of documents that constitute the node’s local corpus</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="src.federation.client.Client.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stub</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="src.protos.federated_pb2_grpc.html#src.protos.federated_pb2_grpc.FederationStub" title="src.protos.federated_pb2_grpc.FederationStub"><span class="pre">FederationStub</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">local_corpus</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/federation/client.html#Client.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.federation.client.Client.__init__" title="Permalink to this definition"></a></dt>
+<dd><p>Object’s initializer</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>id</strong> (<em>int</em>) – Client’s ide</p></li>
+<li><p><strong>stub</strong> (<a class="reference internal" href="src.protos.federated_pb2_grpc.html#src.protos.federated_pb2_grpc.FederationStub" title="src.protos.federated_pb2_grpc.FederationStub"><em>federated_pb2_grpc.FederationStub</em></a>) – Module acting as the interface for gRPC client</p></li>
+<li><p><strong>local_corpus</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>) – List of documents that constitute the node’s local corpus</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.federation.client.Client.send_per_minibatch_gradient">
+<span class="sig-name descname"><span class="pre">send_per_minibatch_gradient</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gradients</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">current_mb</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">current_epoch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_epochs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/federation/client.html#Client.send_per_minibatch_gradient"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.federation.client.Client.send_per_minibatch_gradient" title="Permalink to this definition"></a></dt>
+<dd><p>Sends a minibatch’s gradient update to the server.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>gradients</strong> (<em>List</em><em>[</em><em>List</em><em>[</em><em>gradient_name</em><em>,</em><em>gradient_value</em><em>]</em><em>]</em>) – Gradients to be sent to the server in the current minibatch</p></li>
+<li><p><strong>current_mb</strong> (<em>int</em>) – Current minibatch, i.e. minibatch to which the gradient that is going to be sent corresponds</p></li>
+<li><p><strong>current_epoch</strong> (<em>int</em>) – Current epoch, i.e. epoch to which the minibatch corresponds</p></li>
+<li><p><strong>num_epochs</strong> (<em>int</em>) – Number of epochs that is going to be used for training the model.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>data</strong> – Prototocol buffer that is going to be send through the gRPC channel</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>federated_pb2.Update</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.federation.client.Client.listen_for_updates">
+<span class="sig-name descname"><span class="pre">listen_for_updates</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/federation/client.html#Client.listen_for_updates"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.federation.client.Client.listen_for_updates" title="Permalink to this definition"></a></dt>
+<dd><p>Waits for an update from the server.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>update</strong> – Update from the server with the average tensor generated from all federation clients’ updates.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>federated_pb2.ServerAggregatedTensorRequest</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.federation.client.Client.train_local_model">
+<span class="sig-name descname"><span class="pre">train_local_model</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/federation/client.html#Client.train_local_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.federation.client.Client.train_local_model" title="Permalink to this definition"></a></dt>
+<dd><p>Trains a the local model.</p>
+<p>To do so, we send the server the gradients corresponding with the parameter beta of the model, and the server returns an update of such a parameter, which is calculated by averaging the per minibatch beta parameters that he gets from the set of clients that are connected to the federation. After obtaining the beta updates from the server, the client keeps with the training of its own local model. This process is repeated for each minibatch of each epoch.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.federation.client.Client.eval_local_model">
+<span class="sig-name descname"><span class="pre">eval_local_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">eval_params</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/federation/client.html#Client.eval_local_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.federation.client.Client.eval_local_model" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, L. Calvo-Bartolomé,  J. Arenas-García,.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
