@@ -3,9 +3,10 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Index &mdash; Topic Modeler documentation</title>
+  <title>Index &mdash; gFedNTM documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
@@ -114,6 +115,8 @@
 </li>
         <li><a href="src.models.base.contextualized_topic_models.datasets.dataset.html#src.models.base.contextualized_topic_models.datasets.dataset.CTMDataset.__init__">(src.models.base.contextualized_topic_models.datasets.dataset.CTMDataset method)</a>
 </li>
+        <li><a href="src.models.base.contextualized_topic_models.utils.data_preparation.html#src.models.base.contextualized_topic_models.utils.data_preparation.TopicModelDataPreparation.__init__">(src.models.base.contextualized_topic_models.utils.data_preparation.TopicModelDataPreparation method)</a>
+</li>
         <li><a href="src.models.base.contextualized_topic_models.utils.preprocessing.html#src.models.base.contextualized_topic_models.utils.preprocessing.SimplePreprocessing.__init__">(src.models.base.contextualized_topic_models.utils.preprocessing.SimplePreprocessing method)</a>
 </li>
         <li><a href="src.models.base.contextualized_topic_models.utils.preprocessing.html#src.models.base.contextualized_topic_models.utils.preprocessing.WhiteSpacePreprocessing.__init__">(src.models.base.contextualized_topic_models.utils.preprocessing.WhiteSpacePreprocessing method)</a>
@@ -129,6 +132,8 @@
         <li><a href="src.models.base.utils.early_stopping.pytorchtools.html#src.models.base.utils.early_stopping.pytorchtools.EarlyStopping.__init__">(src.models.base.utils.early_stopping.pytorchtools.EarlyStopping method)</a>
 </li>
         <li><a href="src.models.federated.federated_avitm.html#src.models.federated.federated_avitm.FederatedAVITM.__init__">(src.models.federated.federated_avitm.FederatedAVITM method)</a>
+</li>
+        <li><a href="src.models.federated.federated_ctm.html#src.models.federated.federated_ctm.FederatedCTM.__init__">(src.models.federated.federated_ctm.FederatedCTM method)</a>
 </li>
         <li><a href="src.models.federated.federated_model.html#src.models.federated.federated_model.FederatedModel.__init__">(src.models.federated.federated_model.FederatedModel method)</a>
 </li>
@@ -155,6 +160,12 @@
 <h2 id="B">B</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="src.models.base.contextualized_topic_models.utils.data_preparation.html#src.models.base.contextualized_topic_models.utils.data_preparation.bert_embeddings_from_file">bert_embeddings_from_file() (in module src.models.base.contextualized_topic_models.utils.data_preparation)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="src.models.base.contextualized_topic_models.utils.data_preparation.html#src.models.base.contextualized_topic_models.utils.data_preparation.bert_embeddings_from_list">bert_embeddings_from_list() (in module src.models.base.contextualized_topic_models.utils.data_preparation)</a>
+</li>
       <li><a href="src.models.base.pytorchavitm.datasets.bow_dataset.html#src.models.base.pytorchavitm.datasets.bow_dataset.BOWDataset">BOWDataset (class in src.models.base.pytorchavitm.datasets.bow_dataset)</a>
 </li>
   </ul></td>
@@ -167,16 +178,18 @@
 </li>
       <li><a href="src.federation.server.html#src.federation.server.FederatedServer.can_send_update">can_send_update() (src.federation.server.FederatedServer method)</a>
 </li>
+      <li><a href="src.models.base.contextualized_topic_models.utils.data_preparation.html#src.models.base.contextualized_topic_models.utils.data_preparation.check_max_local_length">check_max_local_length() (in module src.models.base.contextualized_topic_models.utils.data_preparation)</a>
+</li>
       <li><a href="src.federation.client.html#src.federation.client.Client">Client (class in src.federation.client)</a>
 </li>
       <li><a href="src.models.base.contextualized_topic_models.ctm_network.inference_network.html#src.models.base.contextualized_topic_models.ctm_network.inference_network.CombinedInferenceNetwork">CombinedInferenceNetwork (class in src.models.base.contextualized_topic_models.ctm_network.inference_network)</a>
 </li>
       <li><a href="src.models.base.contextualized_topic_models.ctm_network.ctm.html#src.models.base.contextualized_topic_models.ctm_network.ctm.CombinedTM">CombinedTM (class in src.models.base.contextualized_topic_models.ctm_network.ctm)</a>
 </li>
-      <li><a href="src.federation.federation.html#src.federation.federation.Federation.connect_consensus">connect_consensus() (src.federation.federation.Federation method)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="src.federation.federation.html#src.federation.federation.Federation.connect_consensus">connect_consensus() (src.federation.federation.Federation method)</a>
+</li>
       <li><a href="src.federation.federation.html#src.federation.federation.Federation.connect_update">connect_update() (src.federation.federation.Federation method)</a>
 </li>
       <li><a href="src.federation.federation.html#src.federation.federation.Federation.connect_waiting_or_consensus">connect_waiting_or_consensus() (src.federation.federation.Federation method)</a>
@@ -241,6 +254,8 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="src.models.federated.federated_avitm.html#src.models.federated.federated_avitm.FederatedAVITM">FederatedAVITM (class in src.models.federated.federated_avitm)</a>
 </li>
+      <li><a href="src.models.federated.federated_ctm.html#src.models.federated.federated_ctm.FederatedCTM">FederatedCTM (class in src.models.federated.federated_ctm)</a>
+</li>
       <li><a href="src.models.federated.federated_model.html#src.models.federated.federated_model.FederatedModel">FederatedModel (class in src.models.federated.federated_model)</a>
 </li>
       <li><a href="src.federation.server.html#src.federation.server.FederatedServer">FederatedServer (class in src.federation.server)</a>
@@ -257,16 +272,20 @@
 </li>
       <li><a href="src.protos.federated_pb2_grpc.html#src.protos.federated_pb2_grpc.FederationServicer">FederationServicer (class in src.protos.federated_pb2_grpc)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="src.protos.federated_pb2_grpc.html#src.protos.federated_pb2_grpc.FederationStub">FederationStub (class in src.protos.federated_pb2_grpc)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="src.models.base.contextualized_topic_models.ctm_network.ctm.html#src.models.base.contextualized_topic_models.ctm_network.ctm.CTM.fit">fit() (src.models.base.contextualized_topic_models.ctm_network.ctm.CTM method)</a>
 
       <ul>
+        <li><a href="src.models.base.contextualized_topic_models.utils.data_preparation.html#src.models.base.contextualized_topic_models.utils.data_preparation.TopicModelDataPreparation.fit">(src.models.base.contextualized_topic_models.utils.data_preparation.TopicModelDataPreparation method)</a>
+</li>
         <li><a href="src.models.base.pytorchavitm.avitm_network.avitm.html#src.models.base.pytorchavitm.avitm_network.avitm.AVITM.fit">(src.models.base.pytorchavitm.avitm_network.avitm.AVITM method)</a>
 </li>
         <li><a href="src.models.federated.federated_avitm.html#src.models.federated.federated_avitm.FederatedAVITM.fit">(src.models.federated.federated_avitm.FederatedAVITM method)</a>
+</li>
+        <li><a href="src.models.federated.federated_ctm.html#src.models.federated.federated_ctm.FederatedCTM.fit">(src.models.federated.federated_ctm.FederatedCTM method)</a>
 </li>
       </ul></li>
       <li><a href="src.models.base.contextualized_topic_models.ctm_network.decoding_network.html#src.models.base.contextualized_topic_models.ctm_network.decoding_network.DecoderNetwork.forward">forward() (src.models.base.contextualized_topic_models.ctm_network.decoding_network.DecoderNetwork method)</a>
@@ -287,6 +306,8 @@
 <h2 id="G">G</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="src.models.base.contextualized_topic_models.utils.data_preparation.html#src.models.base.contextualized_topic_models.utils.data_preparation.get_bag_of_words">get_bag_of_words() (in module src.models.base.contextualized_topic_models.utils.data_preparation)</a>
+</li>
       <li><a href="src.models.base.contextualized_topic_models.ctm_network.ctm.html#src.models.base.contextualized_topic_models.ctm_network.ctm.CTM.get_doc_topic_distribution">get_doc_topic_distribution() (src.models.base.contextualized_topic_models.ctm_network.ctm.CTM method)</a>
 
       <ul>
@@ -310,17 +331,19 @@
       <li><a href="src.models.federated.federated_avitm.html#src.models.federated.federated_avitm.FederatedAVITM.get_results_model">get_results_model() (src.models.federated.federated_avitm.FederatedAVITM method)</a>
 
       <ul>
+        <li><a href="src.models.federated.federated_ctm.html#src.models.federated.federated_ctm.FederatedCTM.get_results_model">(src.models.federated.federated_ctm.FederatedCTM method)</a>
+</li>
         <li><a href="src.models.federated.federated_model.html#src.models.federated.federated_model.FederatedModel.get_results_model">(src.models.federated.federated_model.FederatedModel method)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="src.models.base.contextualized_topic_models.ctm_network.decoding_network.html#src.models.base.contextualized_topic_models.ctm_network.decoding_network.DecoderNetwork.get_theta">get_theta() (src.models.base.contextualized_topic_models.ctm_network.decoding_network.DecoderNetwork method)</a>
 
       <ul>
         <li><a href="src.models.base.pytorchavitm.avitm_network.decoder_network.html#src.models.base.pytorchavitm.avitm_network.decoder_network.DecoderNetwork.get_theta">(src.models.base.pytorchavitm.avitm_network.decoder_network.DecoderNetwork method)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="src.models.base.contextualized_topic_models.ctm_network.ctm.html#src.models.base.contextualized_topic_models.ctm_network.ctm.CTM.get_top_documents_per_topic_id">get_top_documents_per_topic_id() (src.models.base.contextualized_topic_models.ctm_network.ctm.CTM method)</a>
 </li>
       <li><a href="src.models.base.contextualized_topic_models.ctm_network.ctm.html#src.models.base.contextualized_topic_models.ctm_network.ctm.CTM.get_topic_word_distribution">get_topic_word_distribution() (src.models.base.contextualized_topic_models.ctm_network.ctm.CTM method)</a>
@@ -365,11 +388,11 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="src.federation.client.html#src.federation.client.Client.listen_for_updates">listen_for_updates() (src.federation.client.Client method)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="src.models.base.contextualized_topic_models.ctm_network.ctm.html#src.models.base.contextualized_topic_models.ctm_network.ctm.CTM.load">load() (src.models.base.contextualized_topic_models.ctm_network.ctm.CTM method)</a>
 
       <ul>
+        <li><a href="src.models.base.contextualized_topic_models.utils.data_preparation.html#src.models.base.contextualized_topic_models.utils.data_preparation.TopicModelDataPreparation.load">(src.models.base.contextualized_topic_models.utils.data_preparation.TopicModelDataPreparation method)</a>
+</li>
         <li><a href="src.models.base.pytorchavitm.avitm_network.avitm.html#src.models.base.pytorchavitm.avitm_network.avitm.AVITM.load">(src.models.base.pytorchavitm.avitm_network.avitm.AVITM method)</a>
 </li>
       </ul></li>
@@ -419,6 +442,8 @@
 </li>
         <li><a href="src.models.base.contextualized_topic_models.utils.html#module-src.models.base.contextualized_topic_models.utils">src.models.base.contextualized_topic_models.utils</a>
 </li>
+        <li><a href="src.models.base.contextualized_topic_models.utils.data_preparation.html#module-src.models.base.contextualized_topic_models.utils.data_preparation">src.models.base.contextualized_topic_models.utils.data_preparation</a>
+</li>
         <li><a href="src.models.base.contextualized_topic_models.utils.preprocessing.html#module-src.models.base.contextualized_topic_models.utils.preprocessing">src.models.base.contextualized_topic_models.utils.preprocessing</a>
 </li>
         <li><a href="src.models.base.pytorchavitm.html#module-src.models.base.pytorchavitm">src.models.base.pytorchavitm</a>
@@ -449,6 +474,8 @@
 </li>
         <li><a href="src.models.federated.federated_avitm.html#module-src.models.federated.federated_avitm">src.models.federated.federated_avitm</a>
 </li>
+        <li><a href="src.models.federated.federated_ctm.html#module-src.models.federated.federated_ctm">src.models.federated.federated_ctm</a>
+</li>
         <li><a href="src.models.federated.federated_model.html#module-src.models.federated.federated_model">src.models.federated.federated_model</a>
 </li>
         <li><a href="src.models.utils.html#module-src.models.utils">src.models.utils</a>
@@ -467,8 +494,6 @@
 </li>
         <li><a href="src.utils.auxiliary_functions.html#module-src.utils.auxiliary_functions">src.utils.auxiliary_functions</a>
 </li>
-        <li><a href="src.utils.generate_synthetic.html#module-src.utils.generate_synthetic">src.utils.generate_synthetic</a>
-</li>
         <li><a href="src.utils.utils_postprocessing.html#module-src.utils.utils_postprocessing">src.utils.utils_postprocessing</a>
 </li>
         <li><a href="src.utils.utils_preprocessing.html#module-src.utils.utils_preprocessing">src.utils.utils_preprocessing</a>
@@ -481,7 +506,11 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="src.models.federated.federated_avitm.html#src.models.federated.federated_avitm.FederatedAVITM.optimize_on_minibatch_from_server">optimize_on_minibatch_from_server() (src.models.federated.federated_avitm.FederatedAVITM method)</a>
+
+      <ul>
+        <li><a href="src.models.federated.federated_ctm.html#src.models.federated.federated_ctm.FederatedCTM.optimize_on_minibatch_from_server">(src.models.federated.federated_ctm.FederatedCTM method)</a>
 </li>
+      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="src.utils.auxiliary_functions.html#src.utils.auxiliary_functions.optStateDict_to_proto">optStateDict_to_proto() (in module src.utils.auxiliary_functions)</a>
@@ -494,12 +523,16 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="src.utils.auxiliary_functions.html#src.utils.auxiliary_functions.pickler">pickler() (in module src.utils.auxiliary_functions)</a>
 </li>
+      <li><a href="src.models.base.contextualized_topic_models.utils.data_preparation.html#src.models.base.contextualized_topic_models.utils.data_preparation.prepare_ctm_dataset">prepare_ctm_dataset() (in module src.models.base.contextualized_topic_models.utils.data_preparation)</a>
+</li>
       <li><a href="src.utils.utils_preprocessing.html#src.utils.utils_preprocessing.prepare_data_avitm_federated">prepare_data_avitm_federated() (in module src.utils.utils_preprocessing)</a>
 </li>
       <li><a href="src.models.base.pytorchavitm.utils.data_preparation.html#src.models.base.pytorchavitm.utils.data_preparation.prepare_dataset">prepare_dataset() (in module src.models.base.pytorchavitm.utils.data_preparation)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="src.models.base.contextualized_topic_models.utils.data_preparation.html#src.models.base.contextualized_topic_models.utils.data_preparation.prepare_hold_out_dataset">prepare_hold_out_dataset() (in module src.models.base.contextualized_topic_models.utils.data_preparation)</a>
+</li>
       <li><a href="src.models.base.contextualized_topic_models.utils.preprocessing.html#src.models.base.contextualized_topic_models.utils.preprocessing.WhiteSpacePreprocessing.preprocess">preprocess() (src.models.base.contextualized_topic_models.utils.preprocessing.WhiteSpacePreprocessing method)</a>
 </li>
       <li><a href="src.utils.auxiliary_functions.html#src.utils.auxiliary_functions.proto_to_modelStateDict">proto_to_modelStateDict() (in module src.utils.auxiliary_functions)</a>
@@ -516,18 +549,16 @@
 </li>
       <li><a href="src.federation.server.html#src.federation.server.FederatedServer.record_client_consensus">record_client_consensus() (src.federation.server.FederatedServer method)</a>
 </li>
-      <li><a href="src.federation.server.html#src.federation.server.FederatedServer.record_client_waiting_or_consensus">record_client_waiting_or_consensus() (src.federation.server.FederatedServer method)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="src.federation.server.html#src.federation.server.FederatedServer.record_client_waiting_or_consensus">record_client_waiting_or_consensus() (src.federation.server.FederatedServer method)</a>
+</li>
       <li><a href="src.models.base.contextualized_topic_models.ctm_network.decoding_network.html#src.models.base.contextualized_topic_models.ctm_network.decoding_network.DecoderNetwork.reparameterize">reparameterize() (src.models.base.contextualized_topic_models.ctm_network.decoding_network.DecoderNetwork static method)</a>
 
       <ul>
         <li><a href="src.models.base.pytorchavitm.avitm_network.decoder_network.html#src.models.base.pytorchavitm.avitm_network.decoder_network.DecoderNetwork.reparameterize">(src.models.base.pytorchavitm.avitm_network.decoder_network.DecoderNetwork static method)</a>
 </li>
       </ul></li>
-      <li><a href="src.utils.generate_synthetic.html#src.utils.generate_synthetic.rotateArray">rotateArray() (in module src.utils.generate_synthetic)</a>
-</li>
   </ul></td>
 </tr></table>
 
@@ -706,13 +737,20 @@
         <li><a href="src.models.base.contextualized_topic_models.datasets.dataset.html#module-src.models.base.contextualized_topic_models.datasets.dataset">module</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     src.models.base.contextualized_topic_models.utils
 
       <ul>
         <li><a href="src.models.base.contextualized_topic_models.utils.html#module-src.models.base.contextualized_topic_models.utils">module</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li>
+    src.models.base.contextualized_topic_models.utils.data_preparation
+
+      <ul>
+        <li><a href="src.models.base.contextualized_topic_models.utils.data_preparation.html#module-src.models.base.contextualized_topic_models.utils.data_preparation">module</a>
 </li>
       </ul></li>
       <li>
@@ -821,6 +859,13 @@
 </li>
       </ul></li>
       <li>
+    src.models.federated.federated_ctm
+
+      <ul>
+        <li><a href="src.models.federated.federated_ctm.html#module-src.models.federated.federated_ctm">module</a>
+</li>
+      </ul></li>
+      <li>
     src.models.federated.federated_model
 
       <ul>
@@ -884,13 +929,6 @@
 </li>
       </ul></li>
       <li>
-    src.utils.generate_synthetic
-
-      <ul>
-        <li><a href="src.utils.generate_synthetic.html#module-src.utils.generate_synthetic">module</a>
-</li>
-      </ul></li>
-      <li>
     src.utils.utils_postprocessing
 
       <ul>
@@ -912,6 +950,8 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="src.utils.utils_postprocessing.html#src.utils.utils_postprocessing.thetas2sparse">thetas2sparse() (in module src.utils.utils_postprocessing)</a>
 </li>
+      <li><a href="src.models.base.contextualized_topic_models.utils.data_preparation.html#src.models.base.contextualized_topic_models.utils.data_preparation.TopicModelDataPreparation">TopicModelDataPreparation (class in src.models.base.contextualized_topic_models.utils.data_preparation)</a>
+</li>
       <li><a href="src.federation.client.html#src.federation.client.Client.train_local_model">train_local_model() (src.federation.client.Client method)</a>
 </li>
       <li><a href="src.models.base.contextualized_topic_models.ctm_network.decoding_network.html#src.models.base.contextualized_topic_models.ctm_network.decoding_network.DecoderNetwork.training">training (src.models.base.contextualized_topic_models.ctm_network.decoding_network.DecoderNetwork attribute)</a>
@@ -926,6 +966,10 @@
         <li><a href="src.models.base.pytorchavitm.avitm_network.inference_network.html#src.models.base.pytorchavitm.avitm_network.inference_network.InferenceNetwork.training">(src.models.base.pytorchavitm.avitm_network.inference_network.InferenceNetwork attribute)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="src.models.base.contextualized_topic_models.utils.data_preparation.html#src.models.base.contextualized_topic_models.utils.data_preparation.TopicModelDataPreparation.transform">transform() (src.models.base.contextualized_topic_models.utils.data_preparation.TopicModelDataPreparation method)</a>
+</li>
   </ul></td>
 </tr></table>
 

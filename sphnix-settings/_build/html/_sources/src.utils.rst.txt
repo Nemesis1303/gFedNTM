@@ -8,7 +8,6 @@ Submodules
    :maxdepth: 4
 
    src.utils.auxiliary_functions
-   src.utils.generate_synthetic
    src.utils.utils_postprocessing
    src.utils.utils_preprocessing
 

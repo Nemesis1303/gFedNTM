@@ -4,9 +4,10 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>src.federation.federation module &mdash; Topic Modeler documentation</title>
+  <title>src.federation.federation module &mdash; gFedNTM documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
@@ -89,17 +90,17 @@
 </section>
 <dl class="py class">
 <dt class="sig sig-object py" id="src.federation.federation.Federation">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">src.federation.federation.</span></span><span class="sig-name descname"><span class="pre">Federation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">logger</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/federation/federation.html#Federation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.federation.federation.Federation" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">src.federation.federation.</span></span><span class="sig-name descname"><span class="pre">Federation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">logger</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.federation.federation.Federation" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Class to describe the set of clients that compose a federation.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="src.federation.federation.Federation.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">logger</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/federation/federation.html#Federation.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.federation.federation.Federation.__init__" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">logger</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.federation.federation.Federation.__init__" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="src.federation.federation.Federation.connect_consensus">
-<span class="sig-name descname"><span class="pre">connect_consensus</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path_tmp_local_corpus</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/federation/federation.html#Federation.connect_consensus"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.federation.federation.Federation.connect_consensus" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">connect_consensus</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path_tmp_local_corpus</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.federation.federation.Federation.connect_consensus" title="Permalink to this definition"></a></dt>
 <dd><p>Class to register the connection of a client in the federation for the first time, i.e. for the agreement of a common vocabulary.</p>
 <p>As the client gets registered into the federation when it sends a GRPC message to the server, a counter is kept in order to account for the number times a client has tried to communicate with it. To do so, we save each client identification obtained from the context as the key of a dictionary, incrementing by one its corresponding value at each time the client connects with the server. Additionally, an object the class FederationClient is added to the list clients in the federation at each time a new client connects to it.</p>
 <dl class="field-list simple">
@@ -114,7 +115,7 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="src.federation.federation.Federation.connect_update">
-<span class="sig-name descname"><span class="pre">connect_update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gradients</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">current_mb</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">current_epoch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">current_id_msg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/federation/federation.html#Federation.connect_update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.federation.federation.Federation.connect_update" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">connect_update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gradients</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">current_mb</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">current_epoch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">current_id_msg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.federation.federation.Federation.connect_update" title="Permalink to this definition"></a></dt>
 <dd><p>Class to register the connection of a client in the federation for an update.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -131,7 +132,7 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="src.federation.federation.Federation.connect_waiting_or_consensus">
-<span class="sig-name descname"><span class="pre">connect_waiting_or_consensus</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">waiting</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/federation/federation.html#Federation.connect_waiting_or_consensus"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.federation.federation.Federation.connect_waiting_or_consensus" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">connect_waiting_or_consensus</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">waiting</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.federation.federation.Federation.connect_waiting_or_consensus" title="Permalink to this definition"></a></dt>
 <dd><p>Class to register the connection of a client in the federation when it is waiting until all the clients in the federation have sent their local corpus so the server can send the consensed vocabulary, or when the server is sending the consensed vocabulary</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -145,7 +146,7 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="src.federation.federation.Federation.disconnect">
-<span class="sig-name descname"><span class="pre">disconnect</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/federation/federation.html#Federation.disconnect"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.federation.federation.Federation.disconnect" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">disconnect</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.federation.federation.Federation.disconnect" title="Permalink to this definition"></a></dt>
 <dd><p>Method to unregister a client from the federation.</p>
 <p>As the registration of the user in the federation is described by a counter that relates to the number of times the user has sent a GRPC message to the server, the client is not completely unregister from the federation until this counter is set to 0. At this time, the client is also removed from the list FederationClient objects that describe the set clients that are connected in the federationl.</p>
 <dl class="field-list simple">
@@ -160,7 +161,7 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="src.federation.federation.Federation.getClients">
-<span class="sig-name descname"><span class="pre">getClients</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/federation/federation.html#Federation.getClients"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.federation.federation.Federation.getClients" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">getClients</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#src.federation.federation.Federation.getClients" title="Permalink to this definition"></a></dt>
 <dd><p>Get keys of the clients that are connected to the federation.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>

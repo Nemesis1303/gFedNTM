@@ -4,9 +4,10 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>src.models.base.contextualized_topic_models.utils.data_preparation module &mdash; Topic Modeler documentation</title>
+  <title>src.models.base.contextualized_topic_models.utils.data_preparation module &mdash; gFedNTM documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
@@ -39,7 +40,22 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <!-- Local TOC -->
               <div class="local-toc"><ul>
-<li><a class="reference internal" href="#">src.models.base.contextualized_topic_models.utils.data_preparation module</a></li>
+<li><a class="reference internal" href="#">src.models.base.contextualized_topic_models.utils.data_preparation module</a><ul>
+<li><a class="reference internal" href="#src.models.base.contextualized_topic_models.utils.data_preparation.get_bag_of_words"><code class="docutils literal notranslate"><span class="pre">get_bag_of_words()</span></code></a></li>
+<li><a class="reference internal" href="#src.models.base.contextualized_topic_models.utils.data_preparation.bert_embeddings_from_file"><code class="docutils literal notranslate"><span class="pre">bert_embeddings_from_file()</span></code></a></li>
+<li><a class="reference internal" href="#src.models.base.contextualized_topic_models.utils.data_preparation.bert_embeddings_from_list"><code class="docutils literal notranslate"><span class="pre">bert_embeddings_from_list()</span></code></a></li>
+<li><a class="reference internal" href="#src.models.base.contextualized_topic_models.utils.data_preparation.check_max_local_length"><code class="docutils literal notranslate"><span class="pre">check_max_local_length()</span></code></a></li>
+<li><a class="reference internal" href="#src.models.base.contextualized_topic_models.utils.data_preparation.prepare_ctm_dataset"><code class="docutils literal notranslate"><span class="pre">prepare_ctm_dataset()</span></code></a></li>
+<li><a class="reference internal" href="#src.models.base.contextualized_topic_models.utils.data_preparation.prepare_hold_out_dataset"><code class="docutils literal notranslate"><span class="pre">prepare_hold_out_dataset()</span></code></a></li>
+<li><a class="reference internal" href="#src.models.base.contextualized_topic_models.utils.data_preparation.TopicModelDataPreparation"><code class="docutils literal notranslate"><span class="pre">TopicModelDataPreparation</span></code></a><ul>
+<li><a class="reference internal" href="#src.models.base.contextualized_topic_models.utils.data_preparation.TopicModelDataPreparation.__init__"><code class="docutils literal notranslate"><span class="pre">TopicModelDataPreparation.__init__()</span></code></a></li>
+<li><a class="reference internal" href="#src.models.base.contextualized_topic_models.utils.data_preparation.TopicModelDataPreparation.load"><code class="docutils literal notranslate"><span class="pre">TopicModelDataPreparation.load()</span></code></a></li>
+<li><a class="reference internal" href="#src.models.base.contextualized_topic_models.utils.data_preparation.TopicModelDataPreparation.fit"><code class="docutils literal notranslate"><span class="pre">TopicModelDataPreparation.fit()</span></code></a></li>
+<li><a class="reference internal" href="#src.models.base.contextualized_topic_models.utils.data_preparation.TopicModelDataPreparation.transform"><code class="docutils literal notranslate"><span class="pre">TopicModelDataPreparation.transform()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </div>
         </div>
@@ -66,8 +82,137 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="src-models-base-contextualized-topic-models-utils-data-preparation-module">
-<h1>src.models.base.contextualized_topic_models.utils.data_preparation module<a class="headerlink" href="#src-models-base-contextualized-topic-models-utils-data-preparation-module" title="Permalink to this heading"></a></h1>
+  <section id="module-src.models.base.contextualized_topic_models.utils.data_preparation">
+<span id="src-models-base-contextualized-topic-models-utils-data-preparation-module"></span><h1>src.models.base.contextualized_topic_models.utils.data_preparation module<a class="headerlink" href="#module-src.models.base.contextualized_topic_models.utils.data_preparation" title="Permalink to this heading"></a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="src.models.base.contextualized_topic_models.utils.data_preparation.get_bag_of_words">
+<span class="sig-prename descclassname"><span class="pre">src.models.base.contextualized_topic_models.utils.data_preparation.</span></span><span class="sig-name descname"><span class="pre">get_bag_of_words</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_length</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.models.base.contextualized_topic_models.utils.data_preparation.get_bag_of_words" title="Permalink to this definition"></a></dt>
+<dd><p>Creates the bag of words</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.models.base.contextualized_topic_models.utils.data_preparation.bert_embeddings_from_file">
+<span class="sig-prename descclassname"><span class="pre">src.models.base.contextualized_topic_models.utils.data_preparation.</span></span><span class="sig-name descname"><span class="pre">bert_embeddings_from_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sbert_model_to_load</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">32</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_seq_length</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.models.base.contextualized_topic_models.utils.data_preparation.bert_embeddings_from_file" title="Permalink to this definition"></a></dt>
+<dd><p>Creates SBERT Embeddings from an input file, assumes one document per line</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.models.base.contextualized_topic_models.utils.data_preparation.bert_embeddings_from_list">
+<span class="sig-prename descclassname"><span class="pre">src.models.base.contextualized_topic_models.utils.data_preparation.</span></span><span class="sig-name descname"><span class="pre">bert_embeddings_from_list</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">texts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sbert_model_to_load</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">32</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_seq_length</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.models.base.contextualized_topic_models.utils.data_preparation.bert_embeddings_from_list" title="Permalink to this definition"></a></dt>
+<dd><p>Creates SBERT Embeddings from a list</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.models.base.contextualized_topic_models.utils.data_preparation.check_max_local_length">
+<span class="sig-prename descclassname"><span class="pre">src.models.base.contextualized_topic_models.utils.data_preparation.</span></span><span class="sig-name descname"><span class="pre">check_max_local_length</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">max_seq_length</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">texts</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.models.base.contextualized_topic_models.utils.data_preparation.check_max_local_length" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.models.base.contextualized_topic_models.utils.data_preparation.prepare_ctm_dataset">
+<span class="sig-prename descclassname"><span class="pre">src.models.base.contextualized_topic_models.utils.data_preparation.</span></span><span class="sig-name descname"><span class="pre">prepare_ctm_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">corpus</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unpreprocessed_corpus</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">custom_embeddings</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sbert_model_to_load</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'paraphrase-distilroberta-base-v1'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">val_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.25</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_seq_length</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">512</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.models.base.contextualized_topic_models.utils.data_preparation.prepare_ctm_dataset" title="Permalink to this definition"></a></dt>
+<dd><p>It prepares the training data in the format that is asked as input in a CTM model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>corpus</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>) – List of (processed) documents to be used for training of the model</p></li>
+<li><p><strong>unpreprocessed_corpus</strong> – List of (unpreprocessed) documents to be used for training the model.
+Only required if custom_embeddings are not provided</p></li>
+<li><p><strong>custom_embeddings</strong> (<em>np.ndarray</em>) – Custom embeddings</p></li>
+<li><p><strong>sbert_model_to_load</strong> (<em>str</em><em> (</em><em>default='paraphrase-distilroberta-base-v1'</em><em>)</em>) – Model (e.g. paraphrase-distilroberta-base-v1) to be used for generating the embeddings</p></li>
+<li><p><strong>val_size</strong> (<em>float</em><em> (</em><em>default=0.25</em><em>)</em>) – Percentage of the documents to be used for validation</p></li>
+<li><p><strong>max_seq_length</strong> (<em>int</em><em> (</em><em>default=512</em><em>)</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>training_dataset</strong> (<em>CTMDataset</em>) – Training dataset in the required format for AVITM</p></li>
+<li><p><strong>validation_dataset</strong> (<em>CTMDataset</em>) – Validation dataset in the required format for AVITM</p></li>
+<li><p><strong>input_size</strong> (<em>int</em>) – Size of the input dimensions of the AVITM model to be trained</p></li>
+<li><p><strong>id2token</strong> (<em>tuple</em>) – Mappings with the content of each training dataset’s document-term matrix.</p></li>
+<li><p><strong>qt</strong> (<em>TopicModelDataPreparation</em>) – Object with all the information for training the CTM model</p></li>
+<li><p><strong>embeddings_train</strong> (<em>np.ndarray</em>) – Train embeddings associated with the datasets</p></li>
+<li><p><em>custom_embeddings</em> – All (train and validation) embeddings associated with the dataset</p></li>
+<li><p><strong>docs_train</strong> (<em>list</em>) – Train documents</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.models.base.contextualized_topic_models.utils.data_preparation.prepare_hold_out_dataset">
+<span class="sig-prename descclassname"><span class="pre">src.models.base.contextualized_topic_models.utils.data_preparation.</span></span><span class="sig-name descname"><span class="pre">prepare_hold_out_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hold_out_corpus</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unpreprocessed_ho_corpus</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">embeddings_ho</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sbert_model_to_load</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'paraphrase-distilroberta-base-v1'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_seq_length</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">512</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.models.base.contextualized_topic_models.utils.data_preparation.prepare_hold_out_dataset" title="Permalink to this definition"></a></dt>
+<dd><p>It prepares the holdout data in the format that is asked as input in CTM, based on the TopicModelDataPreparation object generated for the training dataset</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>hold_out_corpus</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>) – List of hold-out lemmatized documents</p></li>
+<li><p><strong>qt</strong> (<a class="reference internal" href="#src.models.base.contextualized_topic_models.utils.data_preparation.TopicModelDataPreparation" title="src.models.base.contextualized_topic_models.utils.data_preparation.TopicModelDataPreparation"><em>TopicModelDataPreparation</em></a>) – Object that contains the necessary information for the construction of a CTMDataset</p></li>
+<li><p><strong>unpreprocessed_ho_corpus</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>) – List of hold-out raw documents</p></li>
+<li><p><strong>embeddings_ho</strong> – Embeddings associated with the hold-out documents</p></li>
+<li><p><strong>sbert_model_to_load</strong> (<em>str</em><em> (</em><em>default='paraphrase-distilroberta-base-v1'</em><em>)</em>) – Model (e.g. paraphrase-distilroberta-base-v1) to be used for generating the embeddings</p></li>
+<li><p><strong>max_seq_length</strong> (<em>int</em><em> (</em><em>default=512</em><em>)</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>ho_data</strong> – Holdout dataset in the required format for CTM</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="src.models.base.contextualized_topic_models.datasets.dataset.html#src.models.base.contextualized_topic_models.datasets.dataset.CTMDataset" title="src.models.base.contextualized_topic_models.datasets.dataset.CTMDataset">CTMDataset</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="src.models.base.contextualized_topic_models.utils.data_preparation.TopicModelDataPreparation">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">src.models.base.contextualized_topic_models.utils.data_preparation.</span></span><span class="sig-name descname"><span class="pre">TopicModelDataPreparation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">contextualized_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_warning</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_seq_length</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">128</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.models.base.contextualized_topic_models.utils.data_preparation.TopicModelDataPreparation" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="src.models.base.contextualized_topic_models.utils.data_preparation.TopicModelDataPreparation.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">contextualized_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_warning</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_seq_length</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">128</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.models.base.contextualized_topic_models.utils.data_preparation.TopicModelDataPreparation.__init__" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.models.base.contextualized_topic_models.utils.data_preparation.TopicModelDataPreparation.load">
+<span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">contextualized_embeddings</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bow_embeddings</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">id2token</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.models.base.contextualized_topic_models.utils.data_preparation.TopicModelDataPreparation.load" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.models.base.contextualized_topic_models.utils.data_preparation.TopicModelDataPreparation.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text_for_contextual</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">text_for_bow</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">custom_embeddings</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.models.base.contextualized_topic_models.utils.data_preparation.TopicModelDataPreparation.fit" title="Permalink to this definition"></a></dt>
+<dd><p>This method fits the vectorizer and gets the embeddings from the contextual model</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>text_for_contextual</strong> – list of unpreprocessed documents to generate the contextualized embeddings</p></li>
+<li><p><strong>text_for_bow</strong> – list of preprocessed documents for creating the bag-of-words</p></li>
+<li><p><strong>custom_embeddings</strong> – np.ndarray type object to use custom embeddings (optional).</p></li>
+<li><p><strong>labels</strong> – list of labels associated with each document (optional).</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.models.base.contextualized_topic_models.utils.data_preparation.TopicModelDataPreparation.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text_for_contextual</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">text_for_bow</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">custom_embeddings</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.models.base.contextualized_topic_models.utils.data_preparation.TopicModelDataPreparation.transform" title="Permalink to this definition"></a></dt>
+<dd><p>This method create the input for the prediction. Essentially, it creates the embeddings with the contextualized
+model of choice and with trained vectorizer.</p>
+<p>If text_for_bow is missing, it should be because we are using ZeroShotTM</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>text_for_contextual</strong> – list of unpreprocessed documents to generate the contextualized embeddings</p></li>
+<li><p><strong>text_for_bow</strong> – list of preprocessed documents for creating the bag-of-words</p></li>
+<li><p><strong>custom_embeddings</strong> – np.ndarray type object to use custom embeddings (optional).</p></li>
+<li><p><strong>labels</strong> – list of labels associated with each document (optional).</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
 </section>
 
 

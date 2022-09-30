@@ -2,7 +2,7 @@ import warnings
 
 import numpy as np
 import scipy.sparse
-from sentence_transformers import SentenceTransformer
+#from sentence_transformers import SentenceTransformer
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import OneHotEncoder

@@ -4,9 +4,10 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>src.models.federated.federated_avitm module &mdash; Topic Modeler documentation</title>
+  <title>src.models.federated.federated_avitm module &mdash; gFedNTM documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
@@ -80,7 +81,7 @@
 <span id="src-models-federated-federated-avitm-module"></span><h1>src.models.federated.federated_avitm module<a class="headerlink" href="#module-src.models.federated.federated_avitm" title="Permalink to this heading"></a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="src.models.federated.federated_avitm.FederatedAVITM">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">src.models.federated.federated_avitm.</span></span><span class="sig-name descname"><span class="pre">FederatedAVITM</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tm_params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/models/federated/federated_avitm.html#FederatedAVITM"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.models.federated.federated_avitm.FederatedAVITM" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">src.models.federated.federated_avitm.</span></span><span class="sig-name descname"><span class="pre">FederatedAVITM</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tm_params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.models.federated.federated_avitm.FederatedAVITM" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="src.models.base.pytorchavitm.avitm_network.avitm.html#src.models.base.pytorchavitm.avitm_network.avitm.AVITM" title="src.models.base.pytorchavitm.avitm_network.avitm.AVITM"><code class="xref py py-class docutils literal notranslate"><span class="pre">AVITM</span></code></a>, <a class="reference internal" href="src.models.federated.federated_model.html#src.models.federated.federated_model.FederatedModel" title="src.models.federated.federated_model.FederatedModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">FederatedModel</span></code></a></p>
 <p>Sets the main attributes to create a specific AVITM.</p>
 <dl class="field-list simple">
@@ -110,7 +111,7 @@
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="src.models.federated.federated_avitm.FederatedAVITM.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tm_params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/models/federated/federated_avitm.html#FederatedAVITM.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.models.federated.federated_avitm.FederatedAVITM.__init__" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tm_params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.models.federated.federated_avitm.FederatedAVITM.__init__" title="Permalink to this definition"></a></dt>
 <dd><p>Sets the main attributes to create a specific AVITM.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -141,12 +142,12 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="src.models.federated.federated_avitm.FederatedAVITM.optimize_on_minibatch_from_server">
-<span class="sig-name descname"><span class="pre">optimize_on_minibatch_from_server</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">updates</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/models/federated/federated_avitm.html#FederatedAVITM.optimize_on_minibatch_from_server"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.models.federated.federated_avitm.FederatedAVITM.optimize_on_minibatch_from_server" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">optimize_on_minibatch_from_server</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">updates</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.models.federated.federated_avitm.FederatedAVITM.optimize_on_minibatch_from_server" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="src.models.federated.federated_avitm.FederatedAVITM.fit">
-<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/models/federated/federated_avitm.html#FederatedAVITM.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.models.federated.federated_avitm.FederatedAVITM.fit" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.models.federated.federated_avitm.FederatedAVITM.fit" title="Permalink to this definition"></a></dt>
 <dd><p>Trains a federated AVITM model.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -157,12 +158,12 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="src.models.federated.federated_avitm.FederatedAVITM.get_results_model">
-<span class="sig-name descname"><span class="pre">get_results_model</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/models/federated/federated_avitm.html#FederatedAVITM.get_results_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.models.federated.federated_avitm.FederatedAVITM.get_results_model" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">get_results_model</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#src.models.federated.federated_avitm.FederatedAVITM.get_results_model" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="src.models.federated.federated_avitm.FederatedAVITM.evaluate_synthetic_model">
-<span class="sig-name descname"><span class="pre">evaluate_synthetic_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vocab_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gt_thetas</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gt_betas</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/models/federated/federated_avitm.html#FederatedAVITM.evaluate_synthetic_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.models.federated.federated_avitm.FederatedAVITM.evaluate_synthetic_model" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">evaluate_synthetic_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vocab_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gt_thetas</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gt_betas</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.models.federated.federated_avitm.FederatedAVITM.evaluate_synthetic_model" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 </dd></dl>

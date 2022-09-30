@@ -4,9 +4,10 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>src.utils.utils_preprocessing module &mdash; Topic Modeler documentation</title>
+  <title>src.utils.utils_preprocessing module &mdash; gFedNTM documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
@@ -40,8 +41,6 @@
               <!-- Local TOC -->
               <div class="local-toc"><ul>
 <li><a class="reference internal" href="#">src.utils.utils_preprocessing module</a><ul>
-<li><a class="reference internal" href="#author-lcalv">&#64;author: lcalv</a></li>
-<li><a class="reference internal" href="#utils-preprocessing"><strong>*                         UTILS PREPROCESSING                            *</strong></a></li>
 <li><a class="reference internal" href="#src.utils.utils_preprocessing.prepare_data_avitm_federated"><code class="docutils literal notranslate"><span class="pre">prepare_data_avitm_federated()</span></code></a></li>
 </ul>
 </li>
@@ -73,47 +72,12 @@
              
   <section id="module-src.utils.utils_preprocessing">
 <span id="src-utils-utils-preprocessing-module"></span><h1>src.utils.utils_preprocessing module<a class="headerlink" href="#module-src.utils.utils_preprocessing" title="Permalink to this heading"></a></h1>
-<section id="author-lcalv">
-<h2>&#64;author: lcalv<a class="headerlink" href="#author-lcalv" title="Permalink to this heading"></a></h2>
-</section>
-<section id="utils-preprocessing">
-<h2><strong>*                         UTILS PREPROCESSING                            *</strong><a class="headerlink" href="#utils-preprocessing" title="Permalink to this heading"></a></h2>
-</section>
+<p>Created on Feb 1, 2022</p>
+<p><em>Code author: L. Calvo-Bartolomé (<a class="reference external" href="mailto:lcalvo&#37;&#52;&#48;pa&#46;uc3m&#46;es">lcalvo<span>&#64;</span>pa<span>&#46;</span>uc3m<span>&#46;</span>es</a>)</em></p>
 <dl class="py function">
 <dt class="sig sig-object py" id="src.utils.utils_preprocessing.prepare_data_avitm_federated">
-<span class="sig-prename descclassname"><span class="pre">src.utils.utils_preprocessing.</span></span><span class="sig-name descname"><span class="pre">prepare_data_avitm_federated</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">corpus</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_df</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/utils/utils_preprocessing.html#prepare_data_avitm_federated"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.utils.utils_preprocessing.prepare_data_avitm_federated" title="Permalink to this definition"></a></dt>
-<dd><p>It prepares the training data for each of the federated nodes in the format that is asked as input in AVITM.</p>
-<blockquote>
-<div><ul class="simple">
-<li><p>corpus (List[str]):   List of documents</p></li>
-<li><dl class="simple">
-<dt>max_df (float / int): When building the vocabulary ignore terms that have a document</dt><dd><p>frequency strictly higher than the given threshold (corpus-specific stop words).</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt>min_df (float / int): When building the vocabulary ignore terms that have a document</dt><dd><p>frequency strictly lower than the given threshold</p>
-</dd>
-</dl>
-</li>
-</ul>
-</div></blockquote>
-<blockquote>
-<div><ul class="simple">
-<li><p>List[BowDataset]: List containing the training corpus for each node.</p></li>
-<li><dl class="simple">
-<dt>List[tuple]:      List of mappings with the content of each training dataset’s</dt><dd><p>document-term matrix.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt>List[tuple]:      List of the sizes of the input dimensions on the AVTIM models that</dt><dd><p>are going to be trained at each node.</p>
-</dd>
-</dl>
-</li>
-</ul>
-</div></blockquote>
-</dd></dl>
+<span class="sig-prename descclassname"><span class="pre">src.utils.utils_preprocessing.</span></span><span class="sig-name descname"><span class="pre">prepare_data_avitm_federated</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">corpus</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_df</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.utils.utils_preprocessing.prepare_data_avitm_federated" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
 
 </section>
 

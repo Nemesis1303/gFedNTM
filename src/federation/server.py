@@ -324,9 +324,10 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
     def can_send_update(self):
         """Checks the conditions that need to be fullfilled in order to send the average tensor update to the clients.
 
-        Returns:
-        --------
-            * boolean: True if the aggragate update can be sent.
+        Returns
+        -------
+        boolean : bool
+            True if the aggragate update can be sent.
         """
 
         if len(self._federation.federation_clients) < self._min_num_clients:

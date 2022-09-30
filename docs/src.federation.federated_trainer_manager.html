@@ -4,9 +4,10 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>src.federation.federated_trainer_manager module &mdash; Topic Modeler documentation</title>
+  <title>src.federation.federated_trainer_manager module &mdash; gFedNTM documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
@@ -78,7 +79,7 @@
 <span id="src-federation-federated-trainer-manager-module"></span><h1>src.federation.federated_trainer_manager module<a class="headerlink" href="#module-src.federation.federated_trainer_manager" title="Permalink to this heading"></a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="src.federation.federated_trainer_manager.FederatedTrainerManager">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">src.federation.federated_trainer_manager.</span></span><span class="sig-name descname"><span class="pre">FederatedTrainerManager</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/federation/federated_trainer_manager.html#FederatedTrainerManager"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.federation.federated_trainer_manager.FederatedTrainerManager" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">src.federation.federated_trainer_manager.</span></span><span class="sig-name descname"><span class="pre">FederatedTrainerManager</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.federation.federated_trainer_manager.FederatedTrainerManager" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Initilization Method</p>
 <dl class="field-list simple">
@@ -88,7 +89,7 @@
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="src.federation.federated_trainer_manager.FederatedTrainerManager.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/federation/federated_trainer_manager.html#FederatedTrainerManager.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.federation.federated_trainer_manager.FederatedTrainerManager.__init__" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.federation.federated_trainer_manager.FederatedTrainerManager.__init__" title="Permalink to this definition"></a></dt>
 <dd><p>Initilization Method</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -99,12 +100,12 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="src.federation.federated_trainer_manager.FederatedTrainerManager.send_gradient_minibatch">
-<span class="sig-name descname"><span class="pre">send_gradient_minibatch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/federation/federated_trainer_manager.html#FederatedTrainerManager.send_gradient_minibatch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.federation.federated_trainer_manager.FederatedTrainerManager.send_gradient_minibatch" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">send_gradient_minibatch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.federation.federated_trainer_manager.FederatedTrainerManager.send_gradient_minibatch" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="src.federation.federated_trainer_manager.FederatedTrainerManager.get_update_minibatch">
-<span class="sig-name descname"><span class="pre">get_update_minibatch</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/src/federation/federated_trainer_manager.html#FederatedTrainerManager.get_update_minibatch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.federation.federated_trainer_manager.FederatedTrainerManager.get_update_minibatch" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">get_update_minibatch</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#src.federation.federated_trainer_manager.FederatedTrainerManager.get_update_minibatch" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 </dd></dl>

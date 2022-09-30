@@ -6,7 +6,7 @@ from src.models.base.contextualized_topic_models.ctm_network.ctm import CTM
 from src.models.federated.federated_model import FederatedModel
 from sklearn.preprocessing import normalize
 from torch.utils.data import DataLoader
-from src.utils import save_model_as_npz
+from src.utils.auxiliary_functions import save_model_as_npz
 
 
 class FederatedCTM(CTM, FederatedModel):

@@ -1,12 +1,9 @@
 # -*- coding: utf-8 -*-
 """
-@author: lcalv
-******************************************************************************
-***                         UTILS PREPROCESSING                            ***
-******************************************************************************
+Created on Feb 1, 2022
+
+.. codeauthor:: L. Calvo-Bartolomé (lcalvo@pa.uc3m.es)
 """
-##############################################################################
-#                                IMPORTS                                     #
 ##############################################################################
 import numpy as np
 from sklearn.feature_extraction.text import CountVectorizer
@@ -15,24 +12,7 @@ from src.models.base.pytorchavitm.datasets.bow_dataset import BOWDataset
 
 
 def prepare_data_avitm_federated(corpus, max_df, min_df):
-    """It prepares the training data for each of the federated nodes in the format that is asked as input in AVITM.
 
-    Args:
-    -----
-        * corpus (List[str]):   List of documents
-        * max_df (float / int): When building the vocabulary ignore terms that have a document 
-                                frequency strictly higher than the given threshold (corpus-specific stop words).
-        * min_df (float / int): When building the vocabulary ignore terms that have a document 
-                                frequency strictly lower than the given threshold
-
-    Returns:
-    --------
-        * List[BowDataset]: List containing the training corpus for each node.
-        * List[tuple]:      List of mappings with the content of each training dataset's 
-                            document-term matrix.
-        * List[tuple]:      List of the sizes of the input dimensions on the AVTIM models that 
-                            are going to be trained at each node.
-    """
     # Object that converts a collection of text documents into a matrix of token counts
     cv = CountVectorizer(input='content', lowercase=True, stop_words='english',
                          max_df=max_df, min_df=min_df, binary=False)
