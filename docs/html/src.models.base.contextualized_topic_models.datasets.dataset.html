@@ -20,7 +20,9 @@
         <script src="_static/sphinx_highlight.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" /> 
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="src.models.base.contextualized_topic_models.datasets package" href="src.models.base.contextualized_topic_models.datasets.html" />
+    <link rel="prev" title="src.models.base.contextualized_topic_models.ctm_network package" href="src.models.base.contextualized_topic_models.ctm_network.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -38,17 +40,124 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <!-- Local TOC -->
-              <div class="local-toc"><ul>
-<li><a class="reference internal" href="#">src.models.base.contextualized_topic_models.datasets.dataset module</a><ul>
-<li><a class="reference internal" href="#src.models.base.contextualized_topic_models.datasets.dataset.CTMDataset"><code class="docutils literal notranslate"><span class="pre">CTMDataset</span></code></a><ul>
-<li><a class="reference internal" href="#src.models.base.contextualized_topic_models.datasets.dataset.CTMDataset.__init__"><code class="docutils literal notranslate"><span class="pre">CTMDataset.__init__()</span></code></a></li>
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="src.federation.client.html">src.federation.client module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="src.federation.federated_trainer_manager.html">src.federation.federated_trainer_manager module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="src.federation.federation.html">src.federation.federation module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="src.federation.federation_client.html">src.federation.federation_client module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="src.federation.html">src.federation package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="src.federation.server.html">src.federation.server module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="src.models.base.contextualized_topic_models.ctm_network.ctm.html">src.models.base.contextualized_topic_models.ctm_network.ctm module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="src.models.base.contextualized_topic_models.ctm_network.decoding_network.html">src.models.base.contextualized_topic_models.ctm_network.decoding_network module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="src.models.base.contextualized_topic_models.ctm_network.inference_network.html">src.models.base.contextualized_topic_models.ctm_network.inference_network module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="src.models.base.contextualized_topic_models.ctm_network.html">src.models.base.contextualized_topic_models.ctm_network package</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">src.models.base.contextualized_topic_models.datasets.dataset module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#src.models.base.contextualized_topic_models.datasets.dataset.CTMDataset"><code class="docutils literal notranslate"><span class="pre">CTMDataset</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#src.models.base.contextualized_topic_models.datasets.dataset.CTMDataset.__init__"><code class="docutils literal notranslate"><span class="pre">CTMDataset.__init__()</span></code></a></li>
 </ul>
 </li>
 </ul>
 </li>
+<li class="toctree-l1 current"><a class="reference internal" href="src.models.base.contextualized_topic_models.datasets.html">src.models.base.contextualized_topic_models.datasets package</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="src.models.base.contextualized_topic_models.datasets.html#submodules">Submodules</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#">src.models.base.contextualized_topic_models.datasets.dataset module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#src.models.base.contextualized_topic_models.datasets.dataset.CTMDataset"><code class="docutils literal notranslate"><span class="pre">CTMDataset</span></code></a></li>
 </ul>
-</div>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="src.models.base.contextualized_topic_models.datasets.html#module-src.models.base.contextualized_topic_models.datasets">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="src.models.base.contextualized_topic_models.html">src.models.base.contextualized_topic_models package</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="src.models.base.contextualized_topic_models.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="src.models.base.contextualized_topic_models.ctm_network.html">src.models.base.contextualized_topic_models.ctm_network package</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="src.models.base.contextualized_topic_models.datasets.html">src.models.base.contextualized_topic_models.datasets package</a><ul class="current">
+<li class="toctree-l4 current"><a class="reference internal" href="src.models.base.contextualized_topic_models.datasets.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="src.models.base.contextualized_topic_models.datasets.html#module-src.models.base.contextualized_topic_models.datasets">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="src.models.base.contextualized_topic_models.utils.html">src.models.base.contextualized_topic_models.utils package</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="src.models.base.contextualized_topic_models.html#module-src.models.base.contextualized_topic_models">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="src.models.base.contextualized_topic_models.utils.data_preparation.html">src.models.base.contextualized_topic_models.utils.data_preparation module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="src.models.base.contextualized_topic_models.utils.preprocessing.html">src.models.base.contextualized_topic_models.utils.preprocessing module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="src.models.base.contextualized_topic_models.utils.html">src.models.base.contextualized_topic_models.utils package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="src.models.base.pytorchavitm.avitm_network.avitm.html">src.models.base.pytorchavitm.avitm_network.avitm module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="src.models.base.pytorchavitm.avitm_network.decoder_network.html">src.models.base.pytorchavitm.avitm_network.decoder_network module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="src.models.base.pytorchavitm.avitm_network.inference_network.html">src.models.base.pytorchavitm.avitm_network.inference_network module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="src.models.base.pytorchavitm.avitm_network.html">src.models.base.pytorchavitm.avitm_network package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="src.models.base.pytorchavitm.datasets.bow_dataset.html">src.models.base.pytorchavitm.datasets.bow_dataset module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="src.models.base.pytorchavitm.datasets.html">src.models.base.pytorchavitm.datasets package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="src.models.base.pytorchavitm.html">src.models.base.pytorchavitm package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="src.models.base.pytorchavitm.utils.data_preparation.html">src.models.base.pytorchavitm.utils.data_preparation module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="src.models.base.pytorchavitm.utils.html">src.models.base.pytorchavitm.utils package</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="src.models.base.html">src.models.base package</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="src.models.base.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="src.models.base.contextualized_topic_models.html">src.models.base.contextualized_topic_models package</a><ul class="current">
+<li class="toctree-l4 current"><a class="reference internal" href="src.models.base.contextualized_topic_models.html#subpackages">Subpackages</a></li>
+<li class="toctree-l4"><a class="reference internal" href="src.models.base.contextualized_topic_models.html#module-src.models.base.contextualized_topic_models">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="src.models.base.pytorchavitm.html">src.models.base.pytorchavitm package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="src.models.base.utils.html">src.models.base.utils package</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="src.models.base.html#module-src.models.base">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="src.models.base.utils.early_stopping.pytorchtools.html">src.models.base.utils.early_stopping.pytorchtools module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="src.models.base.utils.early_stopping.html">src.models.base.utils.early_stopping package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="src.models.base.utils.html">src.models.base.utils package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="src.models.federated.federated_avitm.html">src.models.federated.federated_avitm module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="src.models.federated.federated_ctm.html">src.models.federated.federated_ctm module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="src.models.federated.federated_model.html">src.models.federated.federated_model module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="src.models.federated.html">src.models.federated package</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="src.models.html">src.models package</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="src.models.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="src.models.base.html">src.models.base package</a><ul class="current">
+<li class="toctree-l4 current"><a class="reference internal" href="src.models.base.html#subpackages">Subpackages</a></li>
+<li class="toctree-l4"><a class="reference internal" href="src.models.base.html#module-src.models.base">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="src.models.federated.html">src.models.federated package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="src.models.utils.html">src.models.utils package</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="src.models.html#module-src.models">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="src.models.utils.early_stopping.pytorchtools.html">src.models.utils.early_stopping.pytorchtools module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="src.models.utils.early_stopping.html">src.models.utils.early_stopping package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="src.models.utils.html">src.models.utils package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="src.protos.federated_pb2.html">src.protos.federated_pb2 module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="src.protos.federated_pb2_grpc.html">src.protos.federated_pb2_grpc module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="src.protos.html">src.protos package</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="src.html">src package</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="src.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="src.federation.html">src.federation package</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="src.models.html">src.models package</a><ul class="current">
+<li class="toctree-l4 current"><a class="reference internal" href="src.models.html#subpackages">Subpackages</a></li>
+<li class="toctree-l4"><a class="reference internal" href="src.models.html#module-src.models">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="src.protos.html">src.protos package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="src.utils.html">src.utils package</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="src.html#module-src">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="src.utils.auxiliary_functions.html">src.utils.auxiliary_functions module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="src.utils.html">src.utils package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="src.utils.utils_postprocessing.html">src.utils.utils_postprocessing module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="src.utils.utils_preprocessing.html">src.utils.utils_preprocessing module</a></li>
+</ul>
+
         </div>
       </div>
     </nav>
@@ -92,7 +201,10 @@
 
            </div>
           </div>
-          <footer>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="src.models.base.contextualized_topic_models.ctm_network.html" class="btn btn-neutral float-left" title="src.models.base.contextualized_topic_models.ctm_network package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="src.models.base.contextualized_topic_models.datasets.html" class="btn btn-neutral float-right" title="src.models.base.contextualized_topic_models.datasets package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
 
   <hr/>
 
