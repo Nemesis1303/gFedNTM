@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-@author: lcalv
-******************************************************************************
-***                       CLASS FEDERATION CLIENT                          ***
-******************************************************************************
+Created on Feb 1, 2022
+
+.. codeauthor:: L. Calvo-Bartolomé (lcalvo@pa.uc3m.es)
 """
 
 
@@ -64,7 +63,7 @@ class FederationClient:
         for client_pos in range(len(federation_clients)):
             if key == federation_clients[client_pos].federation_key:
                 return client_pos
-            #else:
+            # else:
             #    print("No client with specified key was found")
         return -1
 

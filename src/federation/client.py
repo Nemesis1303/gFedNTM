@@ -9,13 +9,15 @@ Created on Feb 1, 2022
 import time
 
 import numpy as np
+from src.models.base.contextualized_topic_models.utils.data_preparation import TopicModelDataPreparation
 from src.models.base.pytorchavitm.datasets.bow_dataset import BOWDataset
 from src.models.federated.federated_avitm import FederatedAVITM
+from src.models.federated.federated_ctm import FederatedCTM
 from src.protos import federated_pb2, federated_pb2_grpc
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.pipeline import FeatureUnion
 from src.utils.auxiliary_functions import (proto_to_modelStateDict,
-                       proto_to_optStateDict, serializeTensor)
+                                           proto_to_optStateDict, serializeTensor)
 
 
 class Client:
@@ -26,6 +28,7 @@ class Client:
                  id: int,
                  stub: federated_pb2_grpc.FederationStub,
                  local_corpus: list,
+                 data_type: str,
                  logger=None):
         """
         Object's initializer
@@ -42,8 +45,8 @@ class Client:
 
         self.id = id
         self._stub = stub
-        self._local_corpus = \
-            [" ".join(local_corpus[i]) for i in np.arange(len(local_corpus))]
+        self._local_corpus, self._local_embeddings = \
+            self.__get_local_corpus(data_type, local_corpus)
 
         # Other attributes
         self._local_model_type = None
@@ -65,6 +68,24 @@ class Client:
 
         # Wait for the consensed vocabulary and initial NN
         self.__wait_for_agreed_vocab_NN()
+
+    def __get_local_corpus(data_type, corpus):
+        """
+        Gets the the local training corpus based on whether the input provided is synthetic or real
+        """
+
+        local_embeddings = None
+        if data_type == "synthetic":
+            local_corpus = \
+                [" ".join(corpus[i]) for i in np.arange(len(corpus))]
+        else:
+            df_lemas = corpus[["bow_text"]].values.tolist()
+            df_lemas = [doc[0].split() for doc in df_lemas]
+            local_corpus = [el for el in df_lemas]
+            if "embeddings" in list(corpus.columns.values):
+                local_embeddings = corpus.embeddings.values
+
+        return local_corpus, local_embeddings
 
     def __prepare_vocab_to_send(self):
         """
@@ -98,7 +119,6 @@ class Client:
             response = self._stub.sendLocalDic(dic)
             self._logger.info(
                 'Client %s vocab is being sent to server.', str(self.id))
-            # Remove local file when finished the sending to the server
             if response.length == len(vocab_dict):
                 self._logger.info(
                     'Server received correctly vocab from client %s.', str(self.id))
@@ -146,36 +166,51 @@ class Client:
             name_i = "CV" + str(dic_i)
             vocabs.append((name_i, cv_i))
 
-        self.global_vocab = FeatureUnion(vocabs)
+        # Create V with by merging all vocabularies
+        self._global_vocab = FeatureUnion(vocabs)
+
+        # Local document-term matrix as function of the global vocabulary
+        train_bow = self._global_vocab.transform(
+            self._local_corpus).toarray()
+
+        # Array mapping from feature integer indices to feature name
+        idx2token = self._global_vocab.get_feature_names_out()
+        self._model_parameters["input_size"] = len(idx2token)
+        id2token = {k: v for k, v in zip(range(0, len(idx2token)), idx2token)}
+        self._model_parameters["id2token"] = id2token
+
+        if self._local_model_type == "prod":
+
+            # The train dataset is an object from the class BOWDataset
+            self._train_data = BOWDataset(train_bow, idx2token)
+
+            # Initialize FederatedAVITM
+            self._local_model = \
+                FederatedAVITM(self._model_parameters, self, self._logger)
+
+        elif self._local_model_type == "ctm":
+
+            # The train dataset is an object from the class CTMDataset
+            qt = TopicModelDataPreparation()
+            qt.vectorizer = self._global_vocab
+            qt.id2token = id2token
+            qt.vocab = idx2token
+            self._train_data = qt.load(
+                contextualized_embeddings=self._local_embeddings,
+                bow_embeddings=train_bow,
+                id2token=id2token)
+
+            # Initialize FederatedCTM
+            self._local_model = \
+                FederatedCTM(self._model_parameters, self, self._logger)
+
+        else:
+            self._logger.error("Provided underlying model not supported")
 
         # Initialize local_model with initial NN
         modelStateDict = proto_to_modelStateDict(
             response.initialNN.modelUpdate)
         optStateDict = proto_to_optStateDict(response.initialNN.optUpdate)
-
-        if self._local_model_type == "prod":
-
-            # Local document-term matrix as function of the global vocabulary
-            train_bow = self.global_vocab.transform(
-                self._local_corpus).toarray()
-
-            # Array mapping from feature integer indices to feature name
-            idx2token = self.global_vocab.get_feature_names_out()
-            self._model_parameters["input_size"] = len(idx2token)
-            self._model_parameters["id2token"] = \
-                {k: v for k, v in zip(range(0, len(idx2token)), idx2token)}
-
-            # The train dataset is an object from the class BOWDataset
-            self._train_data = BOWDataset(train_bow, idx2token)
-
-            self._local_model = \
-                FederatedAVITM(self._model_parameters, self, self._logger)
-
-        elif self._local_model_type == "ctm":
-            print("To be implemented")
-        else:
-            self._logger.error("Provided underlying model not supported")
-
         self._local_model.model.load_state_dict(modelStateDict)
         self._local_model.optimizer.load_state_dict(optStateDict)
 
@@ -262,12 +297,13 @@ class Client:
 
         self._local_model.fit(self._train_data)
 
-        print("TRAINED")
-
         return
 
     def eval_local_model(self, eval_params):
+        """
+        Evaluates the local model if synthetic data is being used.
+        """
+
         self._local_model.get_results_model()
         self._local_model.evaluate_synthetic_model(
             eval_params[0], eval_params[1], eval_params[2])
-        print("EVALUATED")

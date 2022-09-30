@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-@author: lcalv
-******************************************************************************
-***                         CLASS FEDERATION                               ***
-******************************************************************************
+Created on Feb 1, 2022
+
+.. codeauthor:: L. Calvo-Bartolomé (lcalvo@pa.uc3m.es)
 """
+
 
 import threading
 

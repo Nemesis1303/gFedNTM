@@ -1,0 +1,15 @@
+{
+    "TrDtSet": "/Users/lbartolome/Documents/ai_model/project_folder/datasets/ai_scholar.json",
+    "Preproc": {
+      "min_lemas": 15,
+      "no_below": 10,
+      "no_above": 0.6,
+      "keep_n": 500000,
+      "stopwords": [
+        "aux/wordlists/S2_equivalences.json"
+      ],
+      "equivalences": [
+        "aux/wordlists/S2_stopwords.json"
+      ]
+    }
+  }

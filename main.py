@@ -6,15 +6,21 @@ Created on Feb 4, 2022
 """
 
 import argparse
+import json
 import multiprocessing as mp
+import pathlib
+import sys
 from concurrent import futures
 
+import dask.dataframe as dd
 import grpc
 import numpy as np
+import pandas as pd
 
-from src.protos import federated_pb2_grpc
 from src.federation.client import Client
 from src.federation.server import FederatedServer
+from src.preprocessing.text_preproc import textPreproc
+from src.protos import federated_pb2_grpc
 
 ####################################################
 ################### TRAINING PARAMS ################
@@ -51,8 +57,12 @@ tuned_parameters = {
 }
 
 # Training data
-file = "data/training_data/synthetic2.npz"#workspace/
+file_synthetic = "data/training_data/synthetic2.npz"  # workspace/
+file_preproc_real = ""
+path_real = "data/training_data"
 ####################################################
+
+nw = 0
 
 
 def start_server(min_num_clients, model_type):
@@ -84,19 +94,19 @@ def start_server(min_num_clients, model_type):
     server.wait_for_termination()
 
 
-def start_client(id_client, data_type):
+def start_client(id_client, data_type, fos):
     """Initialize a client that is going to contribute to the training of a federated topic model.
 
     Parameters
     ----------
     id_client : int
         Client's identifier
-    mode : str
+    data_type : str
         Type of the data that is going to be used by the client for the training (synthetic|real)
     """
 
     if data_type == "synthetic":
-        data = np.load(file, allow_pickle=True)
+        data = np.load(file_synthetic, allow_pickle=True)
         corpus = data['documents'][id_client-1]
         vocab_size = data['vocab_size']
         word_topic_distrib_gt = data['topic_vectors']
@@ -106,8 +116,15 @@ def start_client(id_client, data_type):
             doc_topic_distrib_gt_together.extend(doc_topic_distrib_gt_all[i])
 
     elif data_type == "real":
-        # Preprocess data
-        print("To be implemented")
+        # TODO: Revise if this works like that
+        corpusFile = pathlib.Path(path_real).joinpath('corpus.parquet')
+        if not corpusFile.is_dir():
+            sys.exit(
+                "The corpus file 'corpus.parquet' does not exist.")
+        df = pd.read_parquet(corpusFile)
+        df = df[df['fos'] == fos]
+        corpus = df
+
     else:
         print("Specified data type not supported")
 
@@ -119,14 +136,15 @@ def start_client(id_client, data_type):
         ('grpc.max_send_message_length', MAX_MESSAGE_LENGTH),
         ('grpc.max_receive_message_length', MAX_MESSAGE_LENGTH),
     ]
-    #gfedntm-server
+    # gfedntm-server
     with grpc.insecure_channel('localhost:50051', options=options) as channel:
         stub = federated_pb2_grpc.FederationStub(channel)
 
         # Create client
         client = Client(id=id_client,
                         stub=stub,
-                        local_corpus=corpus)
+                        local_corpus=corpus,
+                        data_type=data_type)
 
         # Start training of local model
         client.train_local_model()
@@ -136,6 +154,72 @@ def start_client(id_client, data_type):
             eval_parameters = [
                 vocab_size, doc_topic_distrib_gt_all[id_client-1], word_topic_distrib_gt]
             client.eval_local_model(eval_params=eval_parameters)
+
+
+def preproc():
+    """Carries out simple preprocessing tasks and prepare a training file in the format required by the federation.
+    """
+
+    # Loads configuration file
+    configFile = pathlib.Path("aux/config.json")
+    if configFile.is_file():
+        with configFile.open('r', encoding='utf8') as fin:
+            train_config = json.load(fin)
+
+    tPreproc = textPreproc(stw_files=train_config['Preproc']['stopwords'],
+                           eq_files=train_config['Preproc']['equivalences'],
+                           min_lemas=train_config['Preproc']['min_lemas'],
+                           no_below=train_config['Preproc']['no_below'],
+                           no_above=train_config['Preproc']['no_above'],
+                           keep_n=train_config['Preproc']['keep_n'])
+
+    # Create a Dataframe with all training data
+    trDtFile = pathlib.Path(train_config['TrDtSet'])
+    with trDtFile.open() as fin:
+        trDtSet = json.load(fin)
+
+    # Read all training data and configure them as a dask dataframe
+    for idx, DtSet in enumerate(trDtSet['Dtsets']):
+
+        df = dd.read_parquet(DtSet['parquet']).fillna("")
+
+        # Concatenate text fields
+        for idx2, col in enumerate(DtSet['lemmasfld']):
+            if idx2 == 0:
+                df["all_lemmas"] = df[col]
+            else:
+                df["all_lemmas"] += " " + df[col]
+        df["source"] = DtSet["source"]
+        df = df[["id", "source", "all_lemmas"]]
+
+        # Concatenate dataframes
+        if idx == 0:
+            trDF = df
+        else:
+            trDF = dd.concat([trDF, df])
+
+    trDF = tPreproc.preprocBOW(trDF, nw)
+    tPreproc.saveGensimDict(pathlib.Path(path_real))
+
+    # We get full df containing the embeddings
+    for idx, DtSet in enumerate(trDtSet['Dtsets']):
+        df = dd.read_parquet(DtSet['parquet']).fillna("")
+        df = df[["id", "embeddings", "fos"]]
+
+        # Concatenate dataframes
+        if idx == 0:
+            eDF = df
+        else:
+            eDF = dd.concat([trDF, df])
+
+    # We perform a left join to keep the embeddings of only those documents kept after preprocessing
+    trDF = trDF.merge(eDF, how="left", on=["id"])
+
+    trDataFile = tPreproc.exportTrData(trDF=trDF,
+                                       dirpath=pathlib.Path(path_real),
+                                       tmTrainer="ctm",
+                                       nw=nw)
+    print("Preprocessed file save: ", trDataFile.as_posix())
 
 
 def main():
@@ -150,9 +234,17 @@ def main():
                         help="Minimum number of client that are necessary for starting a federation. This parameter only affects the server.")
     parser.add_argument('--data_type', type=str, default="synthetic",
                         help="synthetic or real")
+    parser.add_argument('--preproc', action='store_true', default=False,
+                        help="Preprocess training data according to config file")
+    # TODO: Add this in the calling to the server
+    parser.add_argument("--fos", type=str, default="s2cs",
+                        help="Category")
     args = parser.parse_args()
 
-    if args.id == 0:
+    if args.preproc:
+        print("Carrying out preprocessing of ", file_preproc_real)
+        preproc()
+    elif args.id == 0:
         print("Starting server with", args.min_clients_federation,
               "as minimum number of clients to start the federation.")
         start_server(args.min_clients_federation, args.model_type)

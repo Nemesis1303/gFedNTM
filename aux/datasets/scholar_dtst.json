@@ -1,0 +1,19 @@
+{
+    "name": "Scholar",
+    "description": "Topic modeling training dataset of a combination of Scholar and S2CS documents.",
+    "valid_for": "TM",
+    "visibility": "private",
+    "Dtsets": [
+      {
+        "parquet": "/Users/lbartolome/Documents/ai_model/source/CORDIS.parquet",
+        "source": "CORDIS",
+        "idfld": "id",
+        "lemmasfld": [
+          "title",
+          "lemmas"
+        ],
+        "filter": ""
+      }
+    ],
+    "creation_date": "2022-09-17 17:31:13.601336"
+  }

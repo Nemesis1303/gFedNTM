@@ -1,4 +1,13 @@
-from src.utils.auxiliary_functions import proto_to_modelStateDict, proto_to_optStateDict
+# -*- coding: utf-8 -*-
+"""
+Created on Feb 1, 2022
+
+.. codeauthor:: L. Calvo-Bartolomé (lcalvo@pa.uc3m.es)
+"""
+
+
+from src.utils.auxiliary_functions import (proto_to_modelStateDict,
+                                           proto_to_optStateDict)
 
 
 class FederatedTrainerManager(object):
