@@ -1,5 +1,5 @@
 {
-    "TrDtSet": "/Users/lbartolome/Documents/ai_model/project_folder/datasets/ai_scholar.json",
+    "TrDtSet": "aux/datasets/scholar_dtst.json",
     "Preproc": {
       "min_lemas": 15,
       "no_below": 10,

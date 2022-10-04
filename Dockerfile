@@ -18,6 +18,13 @@ RUN pip3 install --upgrade pip
 
 RUN apt install python3-dev -y
 
-COPY . /workspace
-RUN python3 -m pip install -r /workspace/requirements.txt 
+VOLUME /data
+
+#COPY . /workspace
+
+COPY main.py .
+COPY requirements.txt .
+#RUN python3 -m pip install -r /workspace/requirements.txt 
+RUN python3 -m pip install -r requirements.txt 
+
 

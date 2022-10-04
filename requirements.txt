@@ -21,3 +21,5 @@ ipython ~= 8.0.1
 #sentence-transformers ~= 2.1.0
 nltk ~= 3.7
 sphinx-rtd-theme==1.0.0
+dask==2022.7.0
+pyarrow==8.0.0

@@ -124,6 +124,7 @@ def start_client(id_client, data_type, fos):
         df = pd.read_parquet(corpusFile)
         df = df[df['fos'] == fos]
         corpus = df
+        print(df.columns)
 
     else:
         print("Specified data type not supported")
@@ -174,7 +175,9 @@ def preproc():
                            keep_n=train_config['Preproc']['keep_n'])
 
     # Create a Dataframe with all training data
+    print("EYY")
     trDtFile = pathlib.Path(train_config['TrDtSet'])
+    print(trDtFile)
     with trDtFile.open() as fin:
         trDtSet = json.load(fin)
 
@@ -182,6 +185,10 @@ def preproc():
     for idx, DtSet in enumerate(trDtSet['Dtsets']):
 
         df = dd.read_parquet(DtSet['parquet']).fillna("")
+        print("LLEGO")
+        print(len(df))
+        rows_select = np.arange(10)
+        df = df.loc[rows_select].compute()
 
         # Concatenate text fields
         for idx2, col in enumerate(DtSet['lemmasfld']):
@@ -250,7 +257,7 @@ def main():
         start_server(args.min_clients_federation, args.model_type)
     else:
         print("Starting client with id ", args.id)
-        start_client(args.id, args.data_type)
+        start_client(args.id, args.data_type, args.fos)
 
 
 if __name__ == "__main__":
