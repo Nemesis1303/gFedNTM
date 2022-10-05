@@ -566,21 +566,18 @@ if __name__ == "__main__":
             tPreproc.saveCntVecModel(configFile.parent.resolve())
 
             # If the trainer is CTM, we also need the embeddings
-            print("EUSSSSS")
-            if train_config['trainer'] == "ctm":
-                print("LLEGA")
-                # We get full df containing the embeddings
-                for idx, DtSet in enumerate(trDtSet['Dtsets']):
-                    df = spark.read.parquet(f"file://{DtSet['parquet']}")
-                    df = df.select("id", "embeddings", "fieldsOfStudy")
-                    if idx == 0:
-                        eDF = df
-                    else:
-                        eDF = eDF.union(df).distinct()
-                # We perform a left join to keep the embeddings of only those documents kept after preprocessing
-                # TODO: Check that this is done properly in Spark
-                trDF = (trDF.join(eDF, trDF.id == eDF.id, "left")
-                        .drop(df.id))
+            # We get full df containing the embeddings
+            for idx, DtSet in enumerate(trDtSet['Dtsets']):
+                df = spark.read.parquet(f"file://{DtSet['parquet']}")
+                df = df.select("id", "embeddings", "fieldsOfStudy")
+                if idx == 0:
+                    eDF = df
+                else:
+                    eDF = eDF.union(df).distinct()
+            # We perform a left join to keep the embeddings of only those documents kept after preprocessing
+            # TODO: Check that this is done properly in Spark
+            trDF = (trDF.join(eDF, trDF.id == eDF.id, "left")
+                    .drop(df.id))
 
             trDataFile = tPreproc.exportTrData(trDF=trDF,
                                                 dirpath=pathlib.Path(path_real),
