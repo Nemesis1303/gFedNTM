@@ -10,7 +10,7 @@ import pyarrow as pa
 from dask.diagnostics import ProgressBar
 from gensim import corpora
 
-path_real = "data/training_data"
+path_real = "/export/usuarios_ml4ds/lbartolome/data/training_data"
 nw = 0
 
 class textPreproc(object):

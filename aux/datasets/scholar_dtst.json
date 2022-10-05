@@ -5,7 +5,7 @@
     "visibility": "private",
     "Dtsets": [
       {
-        "parquet": "data/training_data/scholar_federated",
+        "parquet": "/export/usuarios_ml4ds/lbartolome/data/scholar_federated_small",
         "source": "Scholar",
         "idfld": "id",
         "lemmasfld": [
