@@ -169,8 +169,8 @@ def preproc():
     script_spark = "/export/usuarios_ml4ds/lbartolome/spark/script-spark"
     token_spark = "/export/usuarios_ml4ds/lbartolome/spark/tokencluster.json"
     script_path = './src/preprocessing/text_preproc.py'
-    machines = 10
-    cores = 4
+    machines = str(10)
+    cores = str(4)
     options = '"--spark --preproc --config ' + configFile.resolve().as_posix() + '"'
     cmd = script_spark + ' -C ' + token_spark + \
         ' -c ' + cores + ' -N ' + machines + ' -S ' + script_path + ' -P ' + options
