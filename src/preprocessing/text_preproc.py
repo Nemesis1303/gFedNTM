@@ -565,21 +565,21 @@ if __name__ == "__main__":
             trDF = tPreproc.preprocBOW(trDF)
             tPreproc.saveCntVecModel(configFile.parent.resolve())
 
-            # print("LLEGA 1")
-            # # If the trainer is CTM, we also need the embeddings
-            # # We get full df containing the embeddings
-            # for idx, DtSet in enumerate(trDtSet['Dtsets']):
-            #     df = spark.read.parquet(f"file://{DtSet['parquet']}")
-            #     df = df.select("id", "embeddings", "fieldsOfStudy")
-            #     if idx == 0:
-            #         eDF = df
-            #     else:
-            #         eDF = eDF.union(df).distinct()
-            # print("LLEGA 2")
-            # # We perform a left join to keep the embeddings of only those documents kept after preprocessing
-            # # TODO: Check that this is done properly in Spark
-            # trDF = (trDF.join(eDF, trDF.id == eDF.id, "left")
-            #         .drop(df.id))
+            sys.stdout.writ("LLEGA 1")
+            # If the trainer is CTM, we also need the embeddings
+            # We get full df containing the embeddings
+            for idx, DtSet in enumerate(trDtSet['Dtsets']):
+                df = spark.read.parquet(f"file://{DtSet['parquet']}")
+                df = df.select("id", "embeddings", "fieldsOfStudy")
+                if idx == 0:
+                    eDF = df
+                else:
+                    eDF = eDF.union(df).distinct()
+            sys.stdout.writ("LLEGA 2")
+            # We perform a left join to keep the embeddings of only those documents kept after preprocessing
+            # TODO: Check that this is done properly in Spark
+            trDF = (trDF.join(eDF, trDF.id == eDF.id, "left")
+                    .drop(df.id))
 
             trDataFile = tPreproc.exportTrData(trDF=trDF,
                                                 dirpath=configFile.parent.resolve(),
