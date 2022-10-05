@@ -559,13 +559,16 @@ if __name__ == "__main__":
                     trDF = df
                 else:
                     trDF = trDF.union(df).distinct()
+            
 
             # We preprocess the data and save the CountVectorizer Model used to obtain the BoW
             trDF = tPreproc.preprocBOW(trDF)
             tPreproc.saveCntVecModel(configFile.parent.resolve())
 
             # If the trainer is CTM, we also need the embeddings
+            print("EUSSSSS")
             if train_config['trainer'] == "ctm":
+                print("LLEGA")
                 # We get full df containing the embeddings
                 for idx, DtSet in enumerate(trDtSet['Dtsets']):
                     df = spark.read.parquet(f"file://{DtSet['parquet']}")
