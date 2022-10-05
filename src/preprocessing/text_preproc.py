@@ -582,7 +582,7 @@ if __name__ == "__main__":
             #         .drop(df.id))
 
             trDataFile = tPreproc.exportTrData(trDF=trDF,
-                                                dirpath=pathlib.Path(path_real),
+                                                dirpath=configFile.parent.resolve(),
                                                 tmTrainer='ctm')
             sys.stdout.write(trDataFile.as_posix())
         
