@@ -565,6 +565,7 @@ if __name__ == "__main__":
             trDF = tPreproc.preprocBOW(trDF)
             tPreproc.saveCntVecModel(configFile.parent.resolve())
 
+            print("LLEGA 1")
             # If the trainer is CTM, we also need the embeddings
             # We get full df containing the embeddings
             for idx, DtSet in enumerate(trDtSet['Dtsets']):
@@ -574,6 +575,7 @@ if __name__ == "__main__":
                     eDF = df
                 else:
                     eDF = eDF.union(df).distinct()
+            print("LLEGA 2")
             # We perform a left join to keep the embeddings of only those documents kept after preprocessing
             # TODO: Check that this is done properly in Spark
             trDF = (trDF.join(eDF, trDF.id == eDF.id, "left")
