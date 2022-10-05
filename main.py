@@ -6,23 +6,19 @@ Created on Feb 4, 2022
 """
 
 import argparse
-import json
 import multiprocessing as mp
 import pathlib
-from subprocess import check_output
 import sys
 from concurrent import futures
+from subprocess import check_output
 
-import dask.dataframe as dd
 import grpc
 import numpy as np
 import pandas as pd
 
 from src.federation.client import Client
 from src.federation.server import FederatedServer
-from src.preprocessing.text_preproc import textPreproc
 from src.protos import federated_pb2_grpc
-
 
 do_spark = True
 
@@ -180,116 +176,6 @@ def preproc():
         output = check_output(args=cmd, shell=True)
     except:
         print('-- -- Execution of script failed')
-
-
-    # # Loads configuration file
-    # configFile = pathlib.Path("aux/config.json")
-    # if configFile.is_file():
-    #     with configFile.open('r', encoding='utf8') as fin:
-    #         train_config = json.load(fin)
-
-    # tPreproc = textPreproc(stw_files=train_config['Preproc']['stopwords'],
-    #                        eq_files=train_config['Preproc']['equivalences'],
-    #                        min_lemas=train_config['Preproc']['min_lemas'],
-    #                        no_below=train_config['Preproc']['no_below'],
-    #                        no_above=train_config['Preproc']['no_above'],
-    #                        keep_n=train_config['Preproc']['keep_n'])
-
-    # # Create a Dataframe with all training data
-   
-    # trDtFile = pathlib.Path(train_config['TrDtSet'])
-   
-    # with trDtFile.open() as fin:
-    #     trDtSet = json.load(fin)
-
-    # if do_spark:
-      
-    #     # Read all training data and configure them as a spark dataframe
-    #     for idx, DtSet in enumerate(trDtSet['Dtsets']):
-    #         df = spark.read.parquet(f"file://{DtSet['parquet']}")
-    #         if len(DtSet['filter']):
-    #             # To be implemented
-    #             # Needs a spark command to carry out the filtering
-    #             # df = df.filter ...
-    #             pass
-    #         df = (
-    #             df.withColumn("all_lemmas", F.concat_ws(
-    #                 ' ', *DtSet['lemmasfld']))
-    #                 .withColumn("source", F.lit(DtSet["source"]))
-    #                 .select("id", "source", "all_lemmas")
-    #         )
-    #         if idx == 0:
-    #             trDF = df
-    #         else:
-    #             trDF = trDF.union(df).distinct()
-
-    #     # We preprocess the data and save the CountVectorizer Model used to obtain the BoW
-    #     trDF = tPreproc.preprocBOW(trDF)
-    #     tPreproc.saveCntVecModel(configFile.parent.resolve())
-
-    #     # If the trainer is CTM, we also need the embeddings
-    #     if train_config['trainer'] == "ctm":
-    #         # We get full df containing the embeddings
-    #         for idx, DtSet in enumerate(trDtSet['Dtsets']):
-    #             df = spark.read.parquet(f"file://{DtSet['parquet']}")
-    #             df = df.select("id", "embeddings", "fieldsOfStudy")
-    #             if idx == 0:
-    #                 eDF = df
-    #             else:
-    #                 eDF = eDF.union(df).distinct()
-    #         # We perform a left join to keep the embeddings of only those documents kept after preprocessing
-    #         # TODO: Check that this is done properly in Spark
-    #         trDF = (trDF.join(eDF, trDF.id == eDF.id, "left")
-    #                 .drop(df.id))
-
-    #     trDataFile = tPreproc.exportTrData(trDF=trDF,
-    #                                         dirpath=configFile.parent.resolve(),
-    #                                         tmTrainer=train_config['trainer'])
-    #     sys.stdout.write(trDataFile.as_posix())
-    # else:
-
-    #     # Read all training data and configure them as a dask dataframe
-    #     for idx, DtSet in enumerate(trDtSet['Dtsets']):
-
-    #         df = dd.read_parquet(DtSet['parquet']).fillna("")
-
-    #         # Concatenate text fields
-    #         for idx2, col in enumerate(DtSet['lemmasfld']):
-    #             if idx2 == 0:
-    #                 df["all_lemmas"] = df[col]
-    #             else:
-    #                 df["all_lemmas"] += " " + df[col]
-    #         df["source"] = DtSet["source"]
-    #         df = df[["id", "source", "all_lemmas"]]
-
-    #         # Concatenate dataframes
-    #         if idx == 0:
-    #             trDF = df
-    #         else:
-    #             trDF = dd.concat([trDF, df])
-
-    #     trDF = tPreproc.preprocBOW(trDF, nw)
-    #     tPreproc.saveGensimDict(pathlib.Path(path_real))
-
-    #     # We get full df containing the embeddings
-    #     for idx, DtSet in enumerate(trDtSet['Dtsets']):
-    #         df = dd.read_parquet(DtSet['parquet']).fillna("")
-    #         df = df[["id", "embeddings", "fieldsOfStudy"]]
-
-    #         # Concatenate dataframes
-    #         if idx == 0:
-    #             eDF = df
-    #         else:
-    #             eDF = dd.concat([trDF, df])
-
-    #     # We perform a left join to keep the embeddings of only those documents kept after preprocessing
-    #     trDF = trDF.merge(eDF, how="left", on=["id"])
-
-    #     trDataFile = tPreproc.exportTrData(trDF=trDF,
-    #                                     dirpath=pathlib.Path(path_real),
-    #                                     tmTrainer="ctm",
-    #                                     nw=nw)
-    # print("Preprocessed file save: ", trDataFile.as_posix())
 
 
 def main():

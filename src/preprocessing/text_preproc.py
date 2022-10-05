@@ -2,8 +2,8 @@ import argparse
 import json
 import pathlib
 import shutil
-from pathlib import Path
 import sys
+from pathlib import Path
 
 import dask.dataframe as dd
 import pyarrow as pa
@@ -12,6 +12,7 @@ from gensim import corpora
 
 path_real = "/export/usuarios_ml4ds/lbartolome/data/training_data"
 nw = 0
+
 
 class textPreproc(object):
     """
@@ -185,10 +186,11 @@ class textPreproc(object):
 
             with ProgressBar():
                 DFtokens = trDF[['final_tokens']]
-                if nw>0:
-                    DFtokens = DFtokens.compute(scheduler='processes', num_workers=nw)
+                if nw > 0:
+                    DFtokens = DFtokens.compute(
+                        scheduler='processes', num_workers=nw)
                 else:
-                    #Use Dask default (i.e., number of available cores)
+                    # Use Dask default (i.e., number of available cores)
                     DFtokens = DFtokens.compute(scheduler='processes')
             self._GensimDict = corpora.Dictionary(
                 DFtokens['final_tokens'].values.tolist())
@@ -376,13 +378,13 @@ class textPreproc(object):
                 with ProgressBar():
                     #trDF = trDF.persist(scheduler='processes')
                     DFmallet = trDF[['2mallet']]
-                    if nw>0:
+                    if nw > 0:
                         DFmallet.to_csv(outFile, index=False, header=False, single_file=True,
-                                    compute_kwargs={'scheduler': 'processes', 'num_workers': nw})
+                                        compute_kwargs={'scheduler': 'processes', 'num_workers': nw})
                     else:
-                        #Use Dask default number of workers (i.e., number of cores)
+                        # Use Dask default number of workers (i.e., number of cores)
                         DFmallet.to_csv(outFile, index=False, header=False, single_file=True,
-                                    compute_kwargs={'scheduler': 'processes'})
+                                        compute_kwargs={'scheduler': 'processes'})
 
             elif tmTrainer == 'sparkLDA':
                 self._logger.error(
@@ -398,13 +400,13 @@ class textPreproc(object):
                 with ProgressBar():
                     DFparquet = trDF[['id', 'cleantext']].rename(
                         columns={"cleantext": "bow_text"})
-                    if nw>0:
+                    if nw > 0:
                         DFparquet.to_parquet(outFile, write_index=False, compute_kwargs={
-                                         'scheduler': 'processes', 'num_workers': nw})
+                            'scheduler': 'processes', 'num_workers': nw})
                     else:
-                        #Use Dask default number of workers (i.e., number of cores)
+                        # Use Dask default number of workers (i.e., number of cores)
                         DFparquet.to_parquet(outFile, write_index=False, compute_kwargs={
-                                         'scheduler': 'processes'})
+                            'scheduler': 'processes'})
 
             elif tmTrainer == "ctm":
                 outFile = dirpath.joinpath('corpus.parquet')
@@ -421,15 +423,23 @@ class textPreproc(object):
                         ('bow_text', pa.string()),
                         ('embeddings', pa.list_(pa.float64()))
                     ])
-                    if nw>0:
+                    if nw > 0:
                         DFparquet.to_parquet(outFile, write_index=False, schema=schema, compute_kwargs={
-                                         'scheduler': 'processes', 'num_workers': nw})
+                            'scheduler': 'processes', 'num_workers': nw})
                     else:
-                        #Use Dask default number of workers (i.e., number of cores)
+                        # Use Dask default number of workers (i.e., number of cores)
                         DFparquet.to_parquet(outFile, write_index=False, schema=schema, compute_kwargs={
-                                         'scheduler': 'processes'})
+                            'scheduler': 'processes'})
 
         else:
+            # User defined function to recover the text corresponding to BOW
+            def back2text(bow):
+                text = ""
+                for idx, tf in zip(bow.indices, bow.values):
+                    text += int(tf) * (vocabulary[idx] + ' ')
+                return text.strip()
+            back2textUDF = F.udf(lambda z: back2text(z))
+
             # Spark dataframe
             if tmTrainer == "mallet":
                 # We need to convert the bow back to text, and save text file
@@ -437,14 +447,6 @@ class textPreproc(object):
                 outFile = dirpath.joinpath('corpus.txt')
                 vocabulary = self._cntVecModel.vocabulary
                 spark.sparkContext.broadcast(vocabulary)
-
-                # User defined function to recover the text corresponding to BOW
-                def back2text(bow):
-                    text = ""
-                    for idx, tf in zip(bow.indices, bow.values):
-                        text += int(tf) * (vocabulary[idx] + ' ')
-                    return text.strip()
-                back2textUDF = F.udf(lambda z: back2text(z))
 
                 malletDF = (trDF.withColumn("bow_text", back2textUDF(F.col("bow")))
                             .withColumn("2mallet", F.concat_ws(" 0 ", "id", "bow_text"))
@@ -478,9 +480,10 @@ class textPreproc(object):
             elif tmTrainer == "ctm":
                 outFile = dirpath.joinpath('corpus.parquet')
                 lemas_raw_df = (trDF.withColumn("bow_text", back2textUDF(
-                    F.col("bow"))).select("id", "bow_text", "embeddings"))
+                    F.col("bow"))).select("id", "bow_text", "embeddings", "fieldsOfStudy"))
                 lemas_raw_df.write.parquet(
                     f"file://{outFile.as_posix()}", mode="overwrite")
+
 
 ##############################################################################
 #                                  MAIN                                      #
@@ -494,7 +497,7 @@ if __name__ == "__main__":
     parser.add_argument('--preproc', action='store_true', default=False,
                         help="Preprocess training data according to config file")
     parser.add_argument('--config', type=str, default=None,
-                    help="path to configuration file")
+                        help="path to configuration file")
     args = parser.parse_args()
 
     if args.spark:
@@ -529,17 +532,17 @@ if __name__ == "__main__":
             """
 
             tPreproc = textPreproc(stw_files=train_config['Preproc']['stopwords'],
-                                    eq_files=train_config['Preproc']['equivalences'],
-                                    min_lemas=train_config['Preproc']['min_lemas'],
-                                    no_below=train_config['Preproc']['no_below'],
-                                    no_above=train_config['Preproc']['no_above'],
-                                    keep_n=train_config['Preproc']['keep_n'])
+                                   eq_files=train_config['Preproc']['equivalences'],
+                                   min_lemas=train_config['Preproc']['min_lemas'],
+                                   no_below=train_config['Preproc']['no_below'],
+                                   no_above=train_config['Preproc']['no_above'],
+                                   keep_n=train_config['Preproc']['keep_n'])
 
             # Create a Dataframe with all training data
             trDtFile = Path(train_config['TrDtSet'])
             with trDtFile.open() as fin:
                 trDtSet = json.load(fin)
-        
+
         if args.spark:
             # Read all training data and configure them as a spark dataframe
             for idx, DtSet in enumerate(trDtSet['Dtsets']):
@@ -552,20 +555,18 @@ if __name__ == "__main__":
                 df = (
                     df.withColumn("all_lemmas", F.concat_ws(
                         ' ', *DtSet['lemmasfld']))
-                        .withColumn("source", F.lit(DtSet["source"]))
-                        .select("id", "source", "all_lemmas")
+                    .withColumn("source", F.lit(DtSet["source"]))
+                    .select("id", "source", "all_lemmas")
                 )
                 if idx == 0:
                     trDF = df
                 else:
                     trDF = trDF.union(df).distinct()
-            
 
             # We preprocess the data and save the CountVectorizer Model used to obtain the BoW
             trDF = tPreproc.preprocBOW(trDF)
             tPreproc.saveCntVecModel(configFile.parent.resolve())
 
-            sys.stdout.writ("LLEGA 1")
             # If the trainer is CTM, we also need the embeddings
             # We get full df containing the embeddings
             for idx, DtSet in enumerate(trDtSet['Dtsets']):
@@ -575,17 +576,16 @@ if __name__ == "__main__":
                     eDF = df
                 else:
                     eDF = eDF.union(df).distinct()
-            sys.stdout.writ("LLEGA 2")
             # We perform a left join to keep the embeddings of only those documents kept after preprocessing
             # TODO: Check that this is done properly in Spark
             trDF = (trDF.join(eDF, trDF.id == eDF.id, "left")
                     .drop(df.id))
 
             trDataFile = tPreproc.exportTrData(trDF=trDF,
-                                                dirpath=configFile.parent.resolve(),
-                                                tmTrainer='ctm')
+                                               dirpath=configFile.parent.resolve(),
+                                               tmTrainer='ctm')
             sys.stdout.write(trDataFile.as_posix())
-        
+
         else:
             # Read all training data and configure them as a dask dataframe
             for idx, DtSet in enumerate(trDtSet['Dtsets']):
@@ -625,7 +625,7 @@ if __name__ == "__main__":
             trDF = trDF.merge(eDF, how="left", on=["id"])
 
             trDataFile = tPreproc.exportTrData(trDF=trDF,
-                                            dirpath=pathlib.Path(path_real),
-                                            tmTrainer="ctm",
-                                            nw=nw)
+                                               dirpath=pathlib.Path(path_real),
+                                               tmTrainer="ctm",
+                                               nw=nw)
     print("Preprocessed file save: ", trDataFile.as_posix())
