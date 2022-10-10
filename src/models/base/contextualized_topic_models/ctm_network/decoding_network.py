@@ -126,6 +126,7 @@ class DecoderNetwork(nn.Module):
     def forward(self, x, x_bert, labels=None):
         """Forward pass."""
         # batch_size x n_components
+
         posterior_mu, posterior_log_sigma = self.inf_net(x, x_bert, labels)
         posterior_sigma = torch.exp(posterior_log_sigma)
 

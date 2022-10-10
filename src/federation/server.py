@@ -10,6 +10,7 @@ import time
 import numpy as np
 from gensim.test.utils import get_tmpfile
 from src.models.federated.federated_avitm import FederatedAVITM
+from src.models.federated.federated_ctm import FederatedCTM
 from src.protos import federated_pb2, federated_pb2_grpc
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.pipeline import FeatureUnion
@@ -228,21 +229,26 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
             self._global_model = \
                 FederatedAVITM(self._model_parameters, self, self._logger)
         elif self._model_type == "ctm":
-            print("To be implemented")
+            self._global_model = \
+                FederatedCTM(self._model_parameters, self, self._logger)
         else:
             self._logger.error("Provided underlying model not supported")
 
-        modelUpdate_ = \
-            modelStateDict_to_proto(self._global_model.model.state_dict(), -1)
-        optUpdate_ = \
-            optStateDict_to_proto(self._global_model.optimizer.state_dict())
-        nNUpdate = federated_pb2.NNUpdate(
-            modelUpdate=modelUpdate_,
-            optUpdate=optUpdate_
-        )
+        # modelUpdate_ = \
+        #     modelStateDict_to_proto(self._global_model.model.state_dict(), -1)
+        # optUpdate_ = \
+        #     optStateDict_to_proto(self._global_model.optimizer.state_dict())
+        # nNUpdate = federated_pb2.NNUpdate(
+        #     modelUpdate=modelUpdate_,
+        #     optUpdate=optUpdate_
+        # )
+
+        # feature_union = federated_pb2.FeatureUnion(
+        #     initialNN=nNUpdate,
+        #     model_params=model_params_dic,
+        #     model_type=self._model_type)
 
         feature_union = federated_pb2.FeatureUnion(
-            initialNN=nNUpdate,
             model_params=model_params_dic,
             model_type=self._model_type)
 

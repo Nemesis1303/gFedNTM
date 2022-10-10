@@ -69,7 +69,7 @@ class Client:
         # Wait for the consensed vocabulary and initial NN
         self.__wait_for_agreed_vocab_NN()
 
-    def __get_local_corpus(data_type, corpus):
+    def __get_local_corpus(self, data_type, corpus):
         """
         Gets the the local training corpus based on whether the input provided is synthetic or real
         """
@@ -80,11 +80,14 @@ class Client:
                 [" ".join(corpus[i]) for i in np.arange(len(corpus))]
         else:
             df_lemas = corpus[["bow_text"]].values.tolist()
-            df_lemas = [doc[0].split() for doc in df_lemas]
-            local_corpus = [el for el in df_lemas]
+            local_corpus = [' '.join(doc) for doc in df_lemas]
             if "embeddings" in list(corpus.columns.values):
-                local_embeddings = corpus.embeddings.values
-
+                local_embeddings = corpus.embeddings.values     
+            # aux = [np.fromstring(emb, dtype=np.float64, sep='. ') for emb in local_embeddings]
+            # local_embeddings = np.array(aux)
+            # for i in range(len(local_embeddings)):
+            #     if len(local_embeddings[i]) != 192:
+            #         print(len(local_embeddings[i]))
         return local_corpus, local_embeddings
 
     def __prepare_vocab_to_send(self):
@@ -208,11 +211,11 @@ class Client:
             self._logger.error("Provided underlying model not supported")
 
         # Initialize local_model with initial NN
-        modelStateDict = proto_to_modelStateDict(
-            response.initialNN.modelUpdate)
-        optStateDict = proto_to_optStateDict(response.initialNN.optUpdate)
-        self._local_model.model.load_state_dict(modelStateDict)
-        self._local_model.optimizer.load_state_dict(optStateDict)
+        # modelStateDict = proto_to_modelStateDict(
+        #     response.initialNN.modelUpdate)
+        # optStateDict = proto_to_optStateDict(response.initialNN.optUpdate)
+        # self._local_model.model.load_state_dict(modelStateDict)
+        # self._local_model.optimizer.load_state_dict(optStateDict)
 
         self._logger.info(
             'Client %s initialized local model appropiately.', str(self.id))

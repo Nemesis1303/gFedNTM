@@ -169,8 +169,11 @@ def optStateDict_to_proto(optStateDict) -> federated_pb2.OptUpdate:
                         amsgrad_ = dic[key]
                     elif key == "params":
                         params_ = dic[key]
+                    elif key == "maximize":
+                        params_ = dic[key]
                     else:
                         print("Wrong key found when protofying param_groups")
+                        print(key)
 
             if None in [lr_, betas_, eps_, weight_decay_, amsgrad_, params_]:
                 print("Something went wrong protofying param_groups")
@@ -227,7 +230,7 @@ def proto_to_optStateDict(modelUpdate: federated_pb2.OptUpdate) -> dict:
 def modelStateDict_to_proto(modelStateDict, current_epoch) -> federated_pb2.ModelUpdate:
 
     # topic_word_matrix=serializeTensor(modelStateDict['topic_word_matrix']),
-
+    
     modelUpdate = federated_pb2.ModelUpdate(
         prior_mean=serializeTensor(modelStateDict['prior_mean']),
         prior_variance=serializeTensor(modelStateDict['prior_variance']),
@@ -265,9 +268,14 @@ def modelStateDict_to_proto(modelStateDict, current_epoch) -> federated_pb2.Mode
             modelStateDict['beta_batchnorm.running_var']),
         beta_batchnorm_num_batches_tracked=serializeTensor(
             modelStateDict['beta_batchnorm.num_batches_tracked']),
-        current_epoch=current_epoch
+        current_epoch=current_epoch,
+        inf_net_adapt_bert_weight=serializeTensor(
+                modelStateDict['inf_net.adapt_bert.weight']),
+        inf_net_adapt_bert_bias= serializeTensor(
+                modelStateDict['inf_net.adapt_bert.bias'])
     )
 
+    # TODO: inf_net_adapt_bert_weight and inf_net_adapt_bert_bias should not be general, they are not the same for ctm and prod; check if it is necessary to send the total modelState
     return modelUpdate
 
 
@@ -318,5 +326,15 @@ def proto_to_modelStateDict(modelUpdate: federated_pb2.ModelUpdate) -> dict:
     if modelUpdate.HasField("topic_word_matrix"):
         modelStateDict["topic_word_matrix"] = deserializeTensor(
             modelUpdate.topic_word_matrix)
+    
+    if modelUpdate.HasField("inf_net_adapt_bert_weight"):
+        modelStateDict["inf_net.adapt_bert.weight"] =\
+        deserializeTensor(
+            modelUpdate.inf_net_adapt_bert_weight)
+    
+    if modelUpdate.HasField("inf_net_adapt_bert_bias"):
+        modelStateDict["inf_net.adapt_bert.bias"] =\
+        deserializeTensor(
+            modelUpdate.inf_net_adapt_bert_bias)
 
     return modelStateDict

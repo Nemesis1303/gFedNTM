@@ -27,7 +27,7 @@ do_spark = True
 ####################################################
 # Training params
 fixed_parameters = {
-    "contextual_size": 10,
+    "contextual_size": 768,
     "inference_type": 'combined',
     "n_components": 10,
     "model_type": 'prodLDA',
@@ -122,20 +122,26 @@ def start_client(id_client, data_type, fos):
             sys.exit(
                 "The corpus file 'corpus.parquet' does not exist.")
         df = pd.read_parquet(corpusFile)
+        print(df.columns)
+        print(df['fieldsOfStudy'].values)
         df = df[df['fieldsOfStudy'] == fos]
         corpus = df
-        print(df.columns)
 
     else:
         print("Specified data type not supported")
 
     # START CLIENT
     # Open channel for communication with the server
-    MAX_MESSAGE_LENGTH = 20 * 1024 * 1024
+    MAX_MESSAGE_LENGTH = 80 * 1024 * 1024
+    MAX_INBOUND_MESSAGE_SIZE =  8 * 1024 * 1024
+    MAX_INBOUND_METADATA_SIZE =  80 * 1024 * 1024
     options = [
         ('grpc.max_message_length', MAX_MESSAGE_LENGTH),
         ('grpc.max_send_message_length', MAX_MESSAGE_LENGTH),
         ('grpc.max_receive_message_length', MAX_MESSAGE_LENGTH),
+        ('grpc.max_inbound_message_size', MAX_INBOUND_MESSAGE_SIZE),
+        ('grpc.max_inbound_metadata_size', MAX_INBOUND_METADATA_SIZE),
+        ('grpc.max_metadata_size', MAX_INBOUND_METADATA_SIZE)
     ]
     # gfedntm-server
     with grpc.insecure_channel('localhost:50051', options=options) as channel:
@@ -193,7 +199,7 @@ def main():
     parser.add_argument('--preproc', action='store_true', default=False,
                         help="Preprocess training data according to config file")
     # TODO: Add this in the calling to the server
-    parser.add_argument("--fos", type=str, default="s2cs",
+    parser.add_argument("--fos", type=str, default="computer_science",
                         help="Category")
     args = parser.parse_args()
 

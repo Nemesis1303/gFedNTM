@@ -155,7 +155,8 @@ class CombinedInferenceNetwork(nn.Module):
         elif activation == 'selu':
             self.activation = nn.SELU()
 
-
+        print(bert_size)
+        print(input_size)
         self.adapt_bert = nn.Linear(bert_size, input_size)
         #self.bert_layer = nn.Linear(hidden_sizes[0], hidden_sizes[0])
         self.input_layer = nn.Linear(input_size + input_size + label_size, hidden_sizes[0])

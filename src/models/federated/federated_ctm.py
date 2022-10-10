@@ -18,6 +18,7 @@ class FederatedCTM(CTM, FederatedModel):
             self,
             logger=self.logger,
             input_size=tm_params["input_size"],
+            contextual_size=tm_params["contextual_size"],
             n_components=tm_params["n_components"],
             model_type=tm_params["model_type"],
             hidden_sizes=tm_params["hidden_sizes"],

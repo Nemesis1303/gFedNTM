@@ -156,7 +156,9 @@ message ModelUpdate {
   Tensor beta_batchnorm_running_var = 20;
   Tensor beta_batchnorm_num_batches_tracked = 21;
   Tensor best_components = 22;
-  int32 current_epoch = 24;
+  Tensor inf_net_adapt_bert_weight = 23;
+  Tensor inf_net_adapt_bert_bias = 24;
+  int32 current_epoch = 25;
 }
 
 message AdamUpdate {

@@ -20,7 +20,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   syntax='proto3',
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_pb=b'\n\x0f\x66\x65\x64\x65rated.proto\x12\tfederated\"\x07\n\x05\x45mpty\"g\n\x0bTensorShape\x12\'\n\x03\x64im\x18\x02 \x03(\x0b\x32\x1a.federated.TensorShape.Dim\x1a/\n\x03\x44im\x12\x0c\n\x04size\x18\x01 \x01(\x03\x12\x11\n\x04name\x18\x02 \x01(\tH\x00\x88\x01\x01\x42\x07\n\x05_name\"]\n\x06Tensor\x12,\n\x0ctensor_shape\x18\x01 \x01(\x0b\x32\x16.federated.TensorShape\x12\r\n\x05\x64type\x18\x02 \x01(\t\x12\x16\n\x0etensor_content\x18\x03 \x01(\x0c\"@\n\x06Update\x12\x13\n\x0btensor_name\x18\x01 \x01(\t\x12!\n\x06tensor\x18\x02 \x01(\x0b\x32\x11.federated.Tensor\"n\n\x15MessageAdditionalData\x12\x12\n\ncurrent_mb\x18\x01 \x01(\r\x12\x15\n\rcurrent_epoch\x18\x02 \x01(\r\x12\x16\n\x0enum_max_epochs\x18\x03 \x01(\r\x12\x12\n\nid_machine\x18\x04 \x01(\r\"\xbd\x01\n\rMessageHeader\x12\x17\n\nid_request\x18\x01 \x01(\tH\x00\x88\x01\x01\x12\x18\n\x0bid_response\x18\x02 \x01(\tH\x01\x88\x01\x01\x12\x1a\n\rid_to_request\x18\x03 \x01(\tH\x02\x88\x01\x01\x12,\n\x0cmessage_type\x18\x04 \x01(\x0e\x32\x16.federated.MessageTypeB\r\n\x0b_id_requestB\x0e\n\x0c_id_responseB\x10\n\x0e_id_to_request\"\x97\x01\n\x13\x43lientTensorRequest\x12(\n\x06header\x18\x01 \x01(\x0b\x32\x18.federated.MessageHeader\x12\x32\n\x08metadata\x18\x02 \x01(\x0b\x32 .federated.MessageAdditionalData\x12\"\n\x07updates\x18\x03 \x03(\x0b\x32\x11.federated.Update\"\xd7\x01\n\x1dServerAggregatedTensorRequest\x12(\n\x06header\x18\x01 \x01(\x0b\x32\x18.federated.MessageHeader\x12\x32\n\x08metadata\x18\x02 \x01(\x0b\x32 .federated.MessageAdditionalData\x12!\n\x04\x64\x61ta\x18\x03 \x01(\x0b\x32\x11.federated.UpdateH\x00\x12%\n\x06nndata\x18\x04 \x01(\x0b\x32\x13.federated.NNUpdateH\x00\x42\x0e\n\x0coneof_values\"v\n\x16\x43lientReceivedResponse\x12(\n\x06header\x18\x01 \x01(\x0b\x32\x18.federated.MessageHeader\x12\x32\n\x08metadata\x18\x02 \x01(\x0b\x32 .federated.MessageAdditionalData\"v\n\x16ServerReceivedResponse\x12(\n\x06header\x18\x01 \x01(\x0b\x32\x18.federated.MessageHeader\x12\x32\n\x08metadata\x18\x02 \x01(\x0b\x32 .federated.MessageAdditionalData\"\x17\n\x05\x43hunk\x12\x0e\n\x06\x62uffer\x18\x01 \x01(\x0c\"\x17\n\x07Request\x12\x0c\n\x04name\x18\x01 \x01(\t\"\x17\n\x05Reply\x12\x0e\n\x06length\x18\x01 \x01(\x05\"\x80\x01\n\x05Tuple\x12\'\n\x06values\x18\x01 \x03(\x0b\x32\x17.federated.Tuple.Valuet\x1aN\n\x06Valuet\x12\x10\n\x06svalue\x18\x01 \x01(\tH\x00\x12\x10\n\x06ivalue\x18\x02 \x01(\x05H\x00\x12\x10\n\x06\x66value\x18\x03 \x01(\x02H\x00\x42\x0e\n\x0coneof_values\"\x84\x02\n\nDictionary\x12)\n\x05pairs\x18\x01 \x03(\x0b\x32\x1a.federated.Dictionary.Pair\x1a\xca\x01\n\x04Pair\x12\x0b\n\x03key\x18\x01 \x01(\t\x12/\n\x05value\x18\x02 \x01(\x0b\x32 .federated.Dictionary.Pair.Value\x1a\x83\x01\n\x05Value\x12\x10\n\x06svalue\x18\x01 \x01(\tH\x00\x12\x10\n\x06ivalue\x18\x02 \x01(\x05H\x00\x12\x10\n\x06\x66value\x18\x03 \x01(\x02H\x00\x12\"\n\x06tvalue\x18\x04 \x01(\x0b\x32\x10.federated.TupleH\x00\x12\x10\n\x06\x62value\x18\x05 \x01(\x08H\x00\x42\x0e\n\x0coneof_values\"\x9b\x01\n\x0c\x46\x65\x61tureUnion\x12\"\n\x03\x64ic\x18\x01 \x03(\x0b\x32\x15.federated.Dictionary\x12&\n\tinitialNN\x18\x02 \x01(\x0b\x32\x13.federated.NNUpdate\x12+\n\x0cmodel_params\x18\x03 \x01(\x0b\x32\x15.federated.Dictionary\x12\x12\n\nmodel_type\x18\x04 \x01(\t\"\xcf\t\n\x0bModelUpdate\x12%\n\nprior_mean\x18\x01 \x01(\x0b\x32\x11.federated.Tensor\x12)\n\x0eprior_variance\x18\x02 \x01(\x0b\x32\x11.federated.Tensor\x12\x1f\n\x04\x62\x65ta\x18\x03 \x01(\x0b\x32\x11.federated.Tensor\x12,\n\x11topic_word_matrix\x18\x04 \x01(\x0b\x32\x11.federated.Tensor\x12\x35\n\x1ainf_net_input_layer_weight\x18\x05 \x01(\x0b\x32\x11.federated.Tensor\x12\x33\n\x18inf_net_input_layer_bias\x18\x06 \x01(\x0b\x32\x11.federated.Tensor\x12\x35\n\x1ainf_net_hiddens_l00_weight\x18\x07 \x01(\x0b\x32\x11.federated.Tensor\x12\x34\n\x19inf_net_hiddens_l_00_bias\x18\x08 \x01(\x0b\x32\x11.federated.Tensor\x12.\n\x13inf_net_f_mu_weight\x18\t \x01(\x0b\x32\x11.federated.Tensor\x12,\n\x11inf_net_f_mu_bias\x18\n \x01(\x0b\x32\x11.federated.Tensor\x12>\n#inf_net_f_mu_batchnorm_running_mean\x18\x0b \x01(\x0b\x32\x11.federated.Tensor\x12=\n\"inf_net_f_mu_batchnorm_running_var\x18\x0c \x01(\x0b\x32\x11.federated.Tensor\x12\x45\n*inf_net_f_mu_batchnorm_num_batches_tracked\x18\r \x01(\x0b\x32\x11.federated.Tensor\x12\x31\n\x16inf_net_f_sigma_weight\x18\x0e \x01(\x0b\x32\x11.federated.Tensor\x12/\n\x14inf_net_f_sigma_bias\x18\x0f \x01(\x0b\x32\x11.federated.Tensor\x12\x41\n&inf_net_f_sigma_batchnorm_running_mean\x18\x10 \x01(\x0b\x32\x11.federated.Tensor\x12@\n%inf_net_f_sigma_batchnorm_running_var\x18\x11 \x01(\x0b\x32\x11.federated.Tensor\x12H\n-inf_net_f_sigma_batchnorm_num_batches_tracked\x18\x12 \x01(\x0b\x32\x11.federated.Tensor\x12\x36\n\x1b\x62\x65ta_batchnorm_running_mean\x18\x13 \x01(\x0b\x32\x11.federated.Tensor\x12\x35\n\x1a\x62\x65ta_batchnorm_running_var\x18\x14 \x01(\x0b\x32\x11.federated.Tensor\x12=\n\"beta_batchnorm_num_batches_tracked\x18\x15 \x01(\x0b\x32\x11.federated.Tensor\x12*\n\x0f\x62\x65st_components\x18\x16 \x01(\x0b\x32\x11.federated.Tensor\x12\x15\n\rcurrent_epoch\x18\x18 \x01(\x05\"\xf4\x03\n\nAdamUpdate\x12*\n\x05state\x18\x01 \x01(\x0b\x32\x1b.federated.AdamUpdate.State\x12\x36\n\x0bparamGroups\x18\x02 \x01(\x0b\x32!.federated.AdamUpdate.ParamGroups\x1a\xc2\x01\n\x05State\x12>\n\x0c\x63ontentState\x18\x02 \x03(\x0b\x32(.federated.AdamUpdate.State.ContentState\x1ay\n\x0c\x43ontentState\x12\x10\n\x08state_id\x18\x01 \x01(\x03\x12\x0c\n\x04step\x18\x02 \x01(\x03\x12\"\n\x07\x65xp_avg\x18\x03 \x01(\x0b\x32\x11.federated.Tensor\x12%\n\nexp_avg_sq\x18\x04 \x01(\x0b\x32\x11.federated.Tensor\x1a\xbc\x01\n\x0bParamGroups\x12\n\n\x02lr\x18\x01 \x01(\x02\x12\x36\n\x05\x62\x65tas\x18\x02 \x01(\x0b\x32\'.federated.AdamUpdate.ParamGroups.Betas\x12\x0b\n\x03\x65ps\x18\x03 \x01(\x02\x12\x14\n\x0cweight_decay\x18\x04 \x01(\x02\x12\x0f\n\x07\x61msgrad\x18\x05 \x01(\x08\x12\x0e\n\x06params\x18\x06 \x03(\x05\x1a%\n\x05\x42\x65tas\x12\r\n\x05\x62\x65ta1\x18\x01 \x01(\x02\x12\r\n\x05\x62\x65ta2\x18\x02 \x01(\x02\"H\n\tOptUpdate\x12+\n\nadamUpdate\x18\x01 \x01(\x0b\x32\x15.federated.AdamUpdateH\x00\x42\x0e\n\x0coneof_values\"`\n\x08NNUpdate\x12+\n\x0bmodelUpdate\x18\x01 \x01(\x0b\x32\x16.federated.ModelUpdate\x12\'\n\toptUpdate\x18\x02 \x01(\x0b\x32\x14.federated.OptUpdate*\x82\x01\n\x0bMessageType\x12\x16\n\x12\x43LIENT_TENSOR_SEND\x10\x00\x12\x1b\n\x17\x43LIENT_CONFIRM_RECEIVED\x10\x01\x12!\n\x1dSERVER_AGGREGATED_TENSOR_SEND\x10\x02\x12\x1b\n\x17SERVER_CONFIRM_RECEIVED\x10\x03\x32\xa5\x03\n\nFederation\x12V\n\x0fsendLocalTensor\x12\x1e.federated.ClientTensorRequest\x1a!.federated.ServerReceivedResponse\"\x00\x12T\n\x14sendAggregatedTensor\x12\x10.federated.Empty\x1a(.federated.ServerAggregatedTensorRequest\"\x00\x12\x30\n\x06upload\x12\x10.federated.Chunk\x1a\x10.federated.Reply\"\x00(\x01\x12\x32\n\x08\x64ownload\x12\x10.federated.Empty\x1a\x10.federated.Chunk\"\x00\x30\x01\x12\x39\n\x0csendLocalDic\x12\x15.federated.Dictionary\x1a\x10.federated.Reply\"\x00\x12H\n\x19sendGlobalDicAndInitialNN\x12\x10.federated.Empty\x1a\x17.federated.FeatureUnion\"\x00\x62\x06proto3'
+  serialized_pb=b'\n\x0f\x66\x65\x64\x65rated.proto\x12\tfederated\"\x07\n\x05\x45mpty\"g\n\x0bTensorShape\x12\'\n\x03\x64im\x18\x02 \x03(\x0b\x32\x1a.federated.TensorShape.Dim\x1a/\n\x03\x44im\x12\x0c\n\x04size\x18\x01 \x01(\x03\x12\x11\n\x04name\x18\x02 \x01(\tH\x00\x88\x01\x01\x42\x07\n\x05_name\"]\n\x06Tensor\x12,\n\x0ctensor_shape\x18\x01 \x01(\x0b\x32\x16.federated.TensorShape\x12\r\n\x05\x64type\x18\x02 \x01(\t\x12\x16\n\x0etensor_content\x18\x03 \x01(\x0c\"@\n\x06Update\x12\x13\n\x0btensor_name\x18\x01 \x01(\t\x12!\n\x06tensor\x18\x02 \x01(\x0b\x32\x11.federated.Tensor\"n\n\x15MessageAdditionalData\x12\x12\n\ncurrent_mb\x18\x01 \x01(\r\x12\x15\n\rcurrent_epoch\x18\x02 \x01(\r\x12\x16\n\x0enum_max_epochs\x18\x03 \x01(\r\x12\x12\n\nid_machine\x18\x04 \x01(\r\"\xbd\x01\n\rMessageHeader\x12\x17\n\nid_request\x18\x01 \x01(\tH\x00\x88\x01\x01\x12\x18\n\x0bid_response\x18\x02 \x01(\tH\x01\x88\x01\x01\x12\x1a\n\rid_to_request\x18\x03 \x01(\tH\x02\x88\x01\x01\x12,\n\x0cmessage_type\x18\x04 \x01(\x0e\x32\x16.federated.MessageTypeB\r\n\x0b_id_requestB\x0e\n\x0c_id_responseB\x10\n\x0e_id_to_request\"\x97\x01\n\x13\x43lientTensorRequest\x12(\n\x06header\x18\x01 \x01(\x0b\x32\x18.federated.MessageHeader\x12\x32\n\x08metadata\x18\x02 \x01(\x0b\x32 .federated.MessageAdditionalData\x12\"\n\x07updates\x18\x03 \x03(\x0b\x32\x11.federated.Update\"\xd7\x01\n\x1dServerAggregatedTensorRequest\x12(\n\x06header\x18\x01 \x01(\x0b\x32\x18.federated.MessageHeader\x12\x32\n\x08metadata\x18\x02 \x01(\x0b\x32 .federated.MessageAdditionalData\x12!\n\x04\x64\x61ta\x18\x03 \x01(\x0b\x32\x11.federated.UpdateH\x00\x12%\n\x06nndata\x18\x04 \x01(\x0b\x32\x13.federated.NNUpdateH\x00\x42\x0e\n\x0coneof_values\"v\n\x16\x43lientReceivedResponse\x12(\n\x06header\x18\x01 \x01(\x0b\x32\x18.federated.MessageHeader\x12\x32\n\x08metadata\x18\x02 \x01(\x0b\x32 .federated.MessageAdditionalData\"v\n\x16ServerReceivedResponse\x12(\n\x06header\x18\x01 \x01(\x0b\x32\x18.federated.MessageHeader\x12\x32\n\x08metadata\x18\x02 \x01(\x0b\x32 .federated.MessageAdditionalData\"\x17\n\x05\x43hunk\x12\x0e\n\x06\x62uffer\x18\x01 \x01(\x0c\"\x17\n\x07Request\x12\x0c\n\x04name\x18\x01 \x01(\t\"\x17\n\x05Reply\x12\x0e\n\x06length\x18\x01 \x01(\x05\"\x80\x01\n\x05Tuple\x12\'\n\x06values\x18\x01 \x03(\x0b\x32\x17.federated.Tuple.Valuet\x1aN\n\x06Valuet\x12\x10\n\x06svalue\x18\x01 \x01(\tH\x00\x12\x10\n\x06ivalue\x18\x02 \x01(\x05H\x00\x12\x10\n\x06\x66value\x18\x03 \x01(\x02H\x00\x42\x0e\n\x0coneof_values\"\x84\x02\n\nDictionary\x12)\n\x05pairs\x18\x01 \x03(\x0b\x32\x1a.federated.Dictionary.Pair\x1a\xca\x01\n\x04Pair\x12\x0b\n\x03key\x18\x01 \x01(\t\x12/\n\x05value\x18\x02 \x01(\x0b\x32 .federated.Dictionary.Pair.Value\x1a\x83\x01\n\x05Value\x12\x10\n\x06svalue\x18\x01 \x01(\tH\x00\x12\x10\n\x06ivalue\x18\x02 \x01(\x05H\x00\x12\x10\n\x06\x66value\x18\x03 \x01(\x02H\x00\x12\"\n\x06tvalue\x18\x04 \x01(\x0b\x32\x10.federated.TupleH\x00\x12\x10\n\x06\x62value\x18\x05 \x01(\x08H\x00\x42\x0e\n\x0coneof_values\"\x9b\x01\n\x0c\x46\x65\x61tureUnion\x12\"\n\x03\x64ic\x18\x01 \x03(\x0b\x32\x15.federated.Dictionary\x12&\n\tinitialNN\x18\x02 \x01(\x0b\x32\x13.federated.NNUpdate\x12+\n\x0cmodel_params\x18\x03 \x01(\x0b\x32\x15.federated.Dictionary\x12\x12\n\nmodel_type\x18\x04 \x01(\t\"\xb9\n\n\x0bModelUpdate\x12%\n\nprior_mean\x18\x01 \x01(\x0b\x32\x11.federated.Tensor\x12)\n\x0eprior_variance\x18\x02 \x01(\x0b\x32\x11.federated.Tensor\x12\x1f\n\x04\x62\x65ta\x18\x03 \x01(\x0b\x32\x11.federated.Tensor\x12,\n\x11topic_word_matrix\x18\x04 \x01(\x0b\x32\x11.federated.Tensor\x12\x35\n\x1ainf_net_input_layer_weight\x18\x05 \x01(\x0b\x32\x11.federated.Tensor\x12\x33\n\x18inf_net_input_layer_bias\x18\x06 \x01(\x0b\x32\x11.federated.Tensor\x12\x35\n\x1ainf_net_hiddens_l00_weight\x18\x07 \x01(\x0b\x32\x11.federated.Tensor\x12\x34\n\x19inf_net_hiddens_l_00_bias\x18\x08 \x01(\x0b\x32\x11.federated.Tensor\x12.\n\x13inf_net_f_mu_weight\x18\t \x01(\x0b\x32\x11.federated.Tensor\x12,\n\x11inf_net_f_mu_bias\x18\n \x01(\x0b\x32\x11.federated.Tensor\x12>\n#inf_net_f_mu_batchnorm_running_mean\x18\x0b \x01(\x0b\x32\x11.federated.Tensor\x12=\n\"inf_net_f_mu_batchnorm_running_var\x18\x0c \x01(\x0b\x32\x11.federated.Tensor\x12\x45\n*inf_net_f_mu_batchnorm_num_batches_tracked\x18\r \x01(\x0b\x32\x11.federated.Tensor\x12\x31\n\x16inf_net_f_sigma_weight\x18\x0e \x01(\x0b\x32\x11.federated.Tensor\x12/\n\x14inf_net_f_sigma_bias\x18\x0f \x01(\x0b\x32\x11.federated.Tensor\x12\x41\n&inf_net_f_sigma_batchnorm_running_mean\x18\x10 \x01(\x0b\x32\x11.federated.Tensor\x12@\n%inf_net_f_sigma_batchnorm_running_var\x18\x11 \x01(\x0b\x32\x11.federated.Tensor\x12H\n-inf_net_f_sigma_batchnorm_num_batches_tracked\x18\x12 \x01(\x0b\x32\x11.federated.Tensor\x12\x36\n\x1b\x62\x65ta_batchnorm_running_mean\x18\x13 \x01(\x0b\x32\x11.federated.Tensor\x12\x35\n\x1a\x62\x65ta_batchnorm_running_var\x18\x14 \x01(\x0b\x32\x11.federated.Tensor\x12=\n\"beta_batchnorm_num_batches_tracked\x18\x15 \x01(\x0b\x32\x11.federated.Tensor\x12*\n\x0f\x62\x65st_components\x18\x16 \x01(\x0b\x32\x11.federated.Tensor\x12\x34\n\x19inf_net_adapt_bert_weight\x18\x17 \x01(\x0b\x32\x11.federated.Tensor\x12\x32\n\x17inf_net_adapt_bert_bias\x18\x18 \x01(\x0b\x32\x11.federated.Tensor\x12\x15\n\rcurrent_epoch\x18\x19 \x01(\x05\"\xf4\x03\n\nAdamUpdate\x12*\n\x05state\x18\x01 \x01(\x0b\x32\x1b.federated.AdamUpdate.State\x12\x36\n\x0bparamGroups\x18\x02 \x01(\x0b\x32!.federated.AdamUpdate.ParamGroups\x1a\xc2\x01\n\x05State\x12>\n\x0c\x63ontentState\x18\x02 \x03(\x0b\x32(.federated.AdamUpdate.State.ContentState\x1ay\n\x0c\x43ontentState\x12\x10\n\x08state_id\x18\x01 \x01(\x03\x12\x0c\n\x04step\x18\x02 \x01(\x03\x12\"\n\x07\x65xp_avg\x18\x03 \x01(\x0b\x32\x11.federated.Tensor\x12%\n\nexp_avg_sq\x18\x04 \x01(\x0b\x32\x11.federated.Tensor\x1a\xbc\x01\n\x0bParamGroups\x12\n\n\x02lr\x18\x01 \x01(\x02\x12\x36\n\x05\x62\x65tas\x18\x02 \x01(\x0b\x32\'.federated.AdamUpdate.ParamGroups.Betas\x12\x0b\n\x03\x65ps\x18\x03 \x01(\x02\x12\x14\n\x0cweight_decay\x18\x04 \x01(\x02\x12\x0f\n\x07\x61msgrad\x18\x05 \x01(\x08\x12\x0e\n\x06params\x18\x06 \x03(\x05\x1a%\n\x05\x42\x65tas\x12\r\n\x05\x62\x65ta1\x18\x01 \x01(\x02\x12\r\n\x05\x62\x65ta2\x18\x02 \x01(\x02\"H\n\tOptUpdate\x12+\n\nadamUpdate\x18\x01 \x01(\x0b\x32\x15.federated.AdamUpdateH\x00\x42\x0e\n\x0coneof_values\"`\n\x08NNUpdate\x12+\n\x0bmodelUpdate\x18\x01 \x01(\x0b\x32\x16.federated.ModelUpdate\x12\'\n\toptUpdate\x18\x02 \x01(\x0b\x32\x14.federated.OptUpdate*\x82\x01\n\x0bMessageType\x12\x16\n\x12\x43LIENT_TENSOR_SEND\x10\x00\x12\x1b\n\x17\x43LIENT_CONFIRM_RECEIVED\x10\x01\x12!\n\x1dSERVER_AGGREGATED_TENSOR_SEND\x10\x02\x12\x1b\n\x17SERVER_CONFIRM_RECEIVED\x10\x03\x32\xa5\x03\n\nFederation\x12V\n\x0fsendLocalTensor\x12\x1e.federated.ClientTensorRequest\x1a!.federated.ServerReceivedResponse\"\x00\x12T\n\x14sendAggregatedTensor\x12\x10.federated.Empty\x1a(.federated.ServerAggregatedTensorRequest\"\x00\x12\x30\n\x06upload\x12\x10.federated.Chunk\x1a\x10.federated.Reply\"\x00(\x01\x12\x32\n\x08\x64ownload\x12\x10.federated.Empty\x1a\x10.federated.Chunk\"\x00\x30\x01\x12\x39\n\x0csendLocalDic\x12\x15.federated.Dictionary\x1a\x10.federated.Reply\"\x00\x12H\n\x19sendGlobalDicAndInitialNN\x12\x10.federated.Empty\x1a\x17.federated.FeatureUnion\"\x00\x62\x06proto3'
 )
 
 _MESSAGETYPE = _descriptor.EnumDescriptor(
@@ -53,8 +53,8 @@ _MESSAGETYPE = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   serialized_options=None,
-  serialized_start=3758,
-  serialized_end=3888,
+  serialized_start=3864,
+  serialized_end=3994,
 )
 _sym_db.RegisterEnumDescriptor(_MESSAGETYPE)
 
@@ -1082,8 +1082,22 @@ _MODELUPDATE = _descriptor.Descriptor(
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
     _descriptor.FieldDescriptor(
-      name='current_epoch', full_name='federated.ModelUpdate.current_epoch', index=22,
-      number=24, type=5, cpp_type=1, label=1,
+      name='inf_net_adapt_bert_weight', full_name='federated.ModelUpdate.inf_net_adapt_bert_weight', index=22,
+      number=23, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='inf_net_adapt_bert_bias', full_name='federated.ModelUpdate.inf_net_adapt_bert_bias', index=23,
+      number=24, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='current_epoch', full_name='federated.ModelUpdate.current_epoch', index=24,
+      number=25, type=5, cpp_type=1, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
@@ -1101,7 +1115,7 @@ _MODELUPDATE = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=1849,
-  serialized_end=3080,
+  serialized_end=3186,
 )
 
 
@@ -1153,8 +1167,8 @@ _ADAMUPDATE_STATE_CONTENTSTATE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=3271,
-  serialized_end=3392,
+  serialized_start=3377,
+  serialized_end=3498,
 )
 
 _ADAMUPDATE_STATE = _descriptor.Descriptor(
@@ -1184,8 +1198,8 @@ _ADAMUPDATE_STATE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=3198,
-  serialized_end=3392,
+  serialized_start=3304,
+  serialized_end=3498,
 )
 
 _ADAMUPDATE_PARAMGROUPS_BETAS = _descriptor.Descriptor(
@@ -1222,8 +1236,8 @@ _ADAMUPDATE_PARAMGROUPS_BETAS = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=3546,
-  serialized_end=3583,
+  serialized_start=3652,
+  serialized_end=3689,
 )
 
 _ADAMUPDATE_PARAMGROUPS = _descriptor.Descriptor(
@@ -1288,8 +1302,8 @@ _ADAMUPDATE_PARAMGROUPS = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=3395,
-  serialized_end=3583,
+  serialized_start=3501,
+  serialized_end=3689,
 )
 
 _ADAMUPDATE = _descriptor.Descriptor(
@@ -1326,8 +1340,8 @@ _ADAMUPDATE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=3083,
-  serialized_end=3583,
+  serialized_start=3189,
+  serialized_end=3689,
 )
 
 
@@ -1363,8 +1377,8 @@ _OPTUPDATE = _descriptor.Descriptor(
       create_key=_descriptor._internal_create_key,
     fields=[]),
   ],
-  serialized_start=3585,
-  serialized_end=3657,
+  serialized_start=3691,
+  serialized_end=3763,
 )
 
 
@@ -1402,8 +1416,8 @@ _NNUPDATE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=3659,
-  serialized_end=3755,
+  serialized_start=3765,
+  serialized_end=3861,
 )
 
 _TENSORSHAPE_DIM.containing_type = _TENSORSHAPE
@@ -1496,6 +1510,8 @@ _MODELUPDATE.fields_by_name['beta_batchnorm_running_mean'].message_type = _TENSO
 _MODELUPDATE.fields_by_name['beta_batchnorm_running_var'].message_type = _TENSOR
 _MODELUPDATE.fields_by_name['beta_batchnorm_num_batches_tracked'].message_type = _TENSOR
 _MODELUPDATE.fields_by_name['best_components'].message_type = _TENSOR
+_MODELUPDATE.fields_by_name['inf_net_adapt_bert_weight'].message_type = _TENSOR
+_MODELUPDATE.fields_by_name['inf_net_adapt_bert_bias'].message_type = _TENSOR
 _ADAMUPDATE_STATE_CONTENTSTATE.fields_by_name['exp_avg'].message_type = _TENSOR
 _ADAMUPDATE_STATE_CONTENTSTATE.fields_by_name['exp_avg_sq'].message_type = _TENSOR
 _ADAMUPDATE_STATE_CONTENTSTATE.containing_type = _ADAMUPDATE_STATE
@@ -1748,8 +1764,8 @@ _FEDERATION = _descriptor.ServiceDescriptor(
   index=0,
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_start=3891,
-  serialized_end=4312,
+  serialized_start=3997,
+  serialized_end=4418,
   methods=[
   _descriptor.MethodDescriptor(
     name='sendLocalTensor',
