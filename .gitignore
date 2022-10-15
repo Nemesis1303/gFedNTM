@@ -134,3 +134,7 @@ training_data/
 .pickle
 
 data/output_models
+
+logs_client.txt
+
+.vscode

@@ -62,8 +62,14 @@ file_preproc_real = ""
 path_real = "data/training_data"
 ####################################################
 
-nw = 0
+categories_node = ["computer_science",
+                   "economics",
+                   "sociology",
+                   "philosophy",
+                   "political_science"
+                   ]
 
+nw = 0
 
 def start_server(min_num_clients, model_type):
     """Initializes the server that is going to orchestrates the federated training.

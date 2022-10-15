@@ -281,6 +281,7 @@ def modelStateDict_to_proto(modelStateDict, current_epoch) -> federated_pb2.Mode
 
 def proto_to_modelStateDict(modelUpdate: federated_pb2.ModelUpdate) -> dict:
 
+    aux = modelUpdate
     inf_net_f_mu_batchnorm_num_batches_tracked = \
         deserializeTensor(
             modelUpdate.inf_net_f_mu_batchnorm_num_batches_tracked)

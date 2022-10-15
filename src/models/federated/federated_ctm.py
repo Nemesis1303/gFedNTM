@@ -243,6 +243,7 @@ class FederatedCTM(CTM, FederatedModel):
 
         # Get topics
         self.topics = self.get_topics()
+        print(self.topics)
 
         # Get doc-topic distribution
         self.thetas = \

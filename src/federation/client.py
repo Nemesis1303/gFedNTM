@@ -9,15 +9,16 @@ Created on Feb 1, 2022
 import time
 
 import numpy as np
-from src.models.base.contextualized_topic_models.utils.data_preparation import TopicModelDataPreparation
+from sklearn.feature_extraction.text import CountVectorizer
+from src.models.base.contextualized_topic_models.utils.data_preparation import \
+    TopicModelDataPreparation
 from src.models.base.pytorchavitm.datasets.bow_dataset import BOWDataset
 from src.models.federated.federated_avitm import FederatedAVITM
 from src.models.federated.federated_ctm import FederatedCTM
 from src.protos import federated_pb2, federated_pb2_grpc
-from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.pipeline import FeatureUnion
 from src.utils.auxiliary_functions import (proto_to_modelStateDict,
-                                           proto_to_optStateDict, serializeTensor)
+                                           proto_to_optStateDict,
+                                           serializeTensor)
 
 
 class Client:
@@ -60,7 +61,8 @@ class Client:
         else:
             import logging
             FMT = '[%(asctime)-15s] [%(filename)s] [%(levelname)s] %(message)s'
-            logging.basicConfig(format=FMT, level='INFO')
+            logging.basicConfig(format=FMT, level='INFO',
+                                filename="logs_client.txt")
             self._logger = logging.getLogger('Client')
 
         # Send vocabulary to server
@@ -82,12 +84,8 @@ class Client:
             df_lemas = corpus[["bow_text"]].values.tolist()
             local_corpus = [' '.join(doc) for doc in df_lemas]
             if "embeddings" in list(corpus.columns.values):
-                local_embeddings = corpus.embeddings.values     
-            # aux = [np.fromstring(emb, dtype=np.float64, sep='. ') for emb in local_embeddings]
-            # local_embeddings = np.array(aux)
-            # for i in range(len(local_embeddings)):
-            #     if len(local_embeddings[i]) != 192:
-            #         print(len(local_embeddings[i]))
+                local_embeddings = corpus.embeddings.values
+
         return local_corpus, local_embeddings
 
     def __prepare_vocab_to_send(self):
@@ -140,6 +138,10 @@ class Client:
         # Get global model_parameters, model_type, dictionary and initialized NN
         response = self._stub.sendGlobalDicAndInitialNN(federated_pb2.Empty())
 
+        self._logger.info(
+            'Client %s response received.',
+            str(self.id))
+
         # Unprotofy model params and model type
         model_params_aux = []
         for pair in response.model_params.pairs:
@@ -158,19 +160,23 @@ class Client:
             elif pair.value.HasField("bvalue"):
                 model_params_aux.append((pair.key, pair.value.bvalue))
         self._model_parameters = dict(model_params_aux)
-        self._local_model_type = response.model_type
+        self._local_model_type = "ctm"  # response._model_type
+
+        self._logger.info(
+            'Client %s model params and model type.',
+            str(self.id))
 
         # Unprotofy global dictionary
         vocabs = []
         for dic_i in range(len(response.dic)):
             vocab_i = dict([(pair.key, pair.value.ivalue)
                             for pair in response.dic[dic_i].pairs])
-            cv_i = CountVectorizer(vocabulary=vocab_i)
-            name_i = "CV" + str(dic_i)
-            vocabs.append((name_i, cv_i))
+            vocabs.append(vocab_i)
 
-        # Create V with by merging all vocabularies
-        self._global_vocab = FeatureUnion(vocabs)
+        self._global_vocab = CountVectorizer(vocabulary=vocabs[0])
+        self._logger.info(
+            'Client %s model vocab unprotofied.',
+            str(self.id))
 
         # Local document-term matrix as function of the global vocabulary
         train_bow = self._global_vocab.transform(
@@ -182,7 +188,7 @@ class Client:
         id2token = {k: v for k, v in zip(range(0, len(idx2token)), idx2token)}
         self._model_parameters["id2token"] = id2token
 
-        if self._local_model_type == "prod":
+        if self._local_model_type == "avitm":
 
             # The train dataset is an object from the class BOWDataset
             self._train_data = BOWDataset(train_bow, idx2token)
@@ -211,11 +217,11 @@ class Client:
             self._logger.error("Provided underlying model not supported")
 
         # Initialize local_model with initial NN
-        # modelStateDict = proto_to_modelStateDict(
-        #     response.initialNN.modelUpdate)
-        # optStateDict = proto_to_optStateDict(response.initialNN.optUpdate)
-        # self._local_model.model.load_state_dict(modelStateDict)
-        # self._local_model.optimizer.load_state_dict(optStateDict)
+        modelStateDict = proto_to_modelStateDict(
+            response.initialNN.modelUpdate)
+        optStateDict = proto_to_optStateDict(response.initialNN.optUpdate)
+        self._local_model.model.load_state_dict(modelStateDict)
+        self._local_model.optimizer.load_state_dict(optStateDict)
 
         self._logger.info(
             'Client %s initialized local model appropiately.', str(self.id))
@@ -299,6 +305,7 @@ class Client:
         """
 
         self._local_model.fit(self._train_data)
+        self._local_model.get_results_model()
 
         return
 

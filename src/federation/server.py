@@ -9,17 +9,15 @@ import time
 
 import numpy as np
 from gensim.test.utils import get_tmpfile
+from sklearn.feature_extraction.text import CountVectorizer
+from src.federation import federation, federation_client
 from src.models.federated.federated_avitm import FederatedAVITM
 from src.models.federated.federated_ctm import FederatedCTM
 from src.protos import federated_pb2, federated_pb2_grpc
-from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.pipeline import FeatureUnion
 from src.utils.auxiliary_functions import (deserializeNumpy,
-                       modelStateDict_to_proto,
-                       optStateDict_to_proto)
+                                           modelStateDict_to_proto,
+                                           optStateDict_to_proto)
 from waiting import wait
-
-from src.federation import federation, federation_client
 
 GRPC_TRACE = all
 
@@ -47,7 +45,8 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
         else:
             import logging
             FMT = '[%(asctime)-15s] [%(filename)s] [%(levelname)s] %(message)s'
-            logging.basicConfig(format=FMT, level='INFO')
+            logging.basicConfig(format=FMT, level='INFO',
+                                filename="logs_server.txt")
             self._logger = logging.getLogger('Server')
 
     def record_client_consensus(self, context, path_tmp_local_corpus, nr_samples):
@@ -185,9 +184,9 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
 
         # Serialize model_params
         model_params_dic = federated_pb2.Dictionary()
+
         for key_, value_ in self._model_parameters.items():
             if isinstance(value_, str):
-                print(key_)
                 el = federated_pb2.Dictionary.Pair(
                     key=key_, value=federated_pb2.Dictionary.Pair.Value(svalue=value_))
             elif value_ is None:
@@ -207,25 +206,34 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
                 el = federated_pb2.Dictionary.Pair(
                     key=key_, value=federated_pb2.Dictionary.Pair.Value(tvalue=tuple_))
             else:
-                el = federated_pb2.Dictionary.Pair(
-                    key=key_, value=federated_pb2.Dictionary.Pair.Value(ivalue=value_))
+
+                if isinstance(value_, int):
+                    el = federated_pb2.Dictionary.Pair(
+                        key=key_, value=federated_pb2.Dictionary.Pair.Value(ivalue=value_))
             model_params_dic.pairs.extend([el])
 
         # Get init_size
         vocabs = []
-        for dic_i in self._dicts:
-            cv_i = CountVectorizer(vocabulary=dic_i)
-            name_i = "CV" + str(dic_i)
-            vocabs.append((name_i, cv_i))
-        self._global_vocab = FeatureUnion(vocabs)
-        idx2token = self._global_vocab.get_feature_names_out()
+        for i in range(len(self._dicts)):
+            vocab_i = [key for key in self._dicts[i].keys()]
+            vocabs = list(set(vocabs) | set(vocab_i))
+        vocabs = sorted(vocabs)
+
+        vocabulary_dict = {}
+        for i, t in enumerate(vocabs):
+            vocabulary_dict[t] = i
+
+        cv_g = CountVectorizer(vocabulary=vocabulary_dict)
+
+        idx2token = cv_g.get_feature_names_out()
+        print(type(idx2token))
         self._model_parameters["input_size"] = len(idx2token)
         self._model_parameters["id2token"] = \
             {k: v for k, v in zip(range(0, len(idx2token)), idx2token)}
 
         # Create initial NN
         self._logger.info("Server initializing global model")
-        if self._model_type == "prod":
+        if self._model_type == "avitm":
             self._global_model = \
                 FederatedAVITM(self._model_parameters, self, self._logger)
         elif self._model_type == "ctm":
@@ -234,31 +242,31 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
         else:
             self._logger.error("Provided underlying model not supported")
 
-        # modelUpdate_ = \
-        #     modelStateDict_to_proto(self._global_model.model.state_dict(), -1)
-        # optUpdate_ = \
-        #     optStateDict_to_proto(self._global_model.optimizer.state_dict())
-        # nNUpdate = federated_pb2.NNUpdate(
-        #     modelUpdate=modelUpdate_,
-        #     optUpdate=optUpdate_
-        # )
-
-        # feature_union = federated_pb2.FeatureUnion(
-        #     initialNN=nNUpdate,
-        #     model_params=model_params_dic,
-        #     model_type=self._model_type)
+        aux = self._global_model.model.state_dict()
+        modelUpdate_ = \
+            modelStateDict_to_proto(self._global_model.model.state_dict(), -1)
+        optUpdate_ = \
+            optStateDict_to_proto(self._global_model.optimizer.state_dict())
+        nNUpdate = federated_pb2.NNUpdate(
+            modelUpdate=modelUpdate_,
+            optUpdate=optUpdate_
+        )
 
         feature_union = federated_pb2.FeatureUnion(
+            initialNN=nNUpdate,
             model_params=model_params_dic,
             model_type=self._model_type)
 
+        # feature_union = federated_pb2.FeatureUnion(
+        #     model_params=model_params_dic,
+        #     model_type=self._model_type)
+
         # Serialize clients vocab
-        for vocab_dict in self._dicts:
-            dic = federated_pb2.Dictionary()
-            for key_, value_ in vocab_dict.items():
-                dic.pairs.extend(
-                    [federated_pb2.Dictionary.Pair(key=key_, value=federated_pb2.Dictionary.Pair.Value(ivalue=value_))])
-            feature_union.dic.extend([dic])
+        dic = federated_pb2.Dictionary()
+        for key_, value_ in vocabulary_dict.items():
+            dic.pairs.extend(
+                [federated_pb2.Dictionary.Pair(key=key_, value=federated_pb2.Dictionary.Pair.Value(ivalue=value_))])
+        feature_union.dic.extend([dic])
 
         return feature_union
 
