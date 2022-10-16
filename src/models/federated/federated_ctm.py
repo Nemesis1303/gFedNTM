@@ -255,7 +255,7 @@ class FederatedCTM(CTM, FederatedModel):
         self.betas = self.get_topic_word_distribution()
 
         file_save = \
-            "data/output_models/model_client_" + \
+            "workspace/data/output_models/model_client_" + \
             str(self.fedTrManager.client.id) + ".npz"
 
         save_model_as_npz(file_save, self)

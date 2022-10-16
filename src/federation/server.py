@@ -257,10 +257,6 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
             model_params=model_params_dic,
             model_type=self._model_type)
 
-        # feature_union = federated_pb2.FeatureUnion(
-        #     model_params=model_params_dic,
-        #     model_type=self._model_type)
-
         # Serialize clients vocab
         dic = federated_pb2.Dictionary()
         for key_, value_ in vocabulary_dict.items():

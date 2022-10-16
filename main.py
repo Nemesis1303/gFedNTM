@@ -59,7 +59,7 @@ tuned_parameters = {
 # Training data
 file_synthetic = "data/training_data/synthetic2.npz"  # workspace/
 file_preproc_real = ""
-path_real = "data/training_data"
+path_real = "workspace/data/training_data"
 ####################################################
 
 categories_node = ["computer_science",
@@ -150,7 +150,7 @@ def start_client(id_client, data_type, fos):
         ('grpc.max_metadata_size', MAX_INBOUND_METADATA_SIZE)
     ]
     # gfedntm-server
-    with grpc.insecure_channel('localhost:50051', options=options) as channel:
+    with grpc.insecure_channel('gfedntm-server:50051', options=options) as channel:
         stub = federated_pb2_grpc.FederationStub(channel)
 
         # Create client
