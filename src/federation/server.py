@@ -429,5 +429,8 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
 
         request = federated_pb2.ServerAggregatedTensorRequest(
             header=header, nndata=nNUpdate)
+        
+        
+        self._global_model.get_topics_in_server()
 
         return request

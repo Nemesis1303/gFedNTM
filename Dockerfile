@@ -20,11 +20,11 @@ RUN apt install python3-dev -y
 
 VOLUME /data
 
-COPY . /workspace
+#COPY . /workspace
 
-#COPY main.py .
-#COPY requirements.txt .
-RUN python3 -m pip install -r /workspace/requirements.txt 
-#RUN python3 -m pip install -r requirements.txt 
+COPY main.py .
+COPY requirements.txt .
+#RUN python3 -m pip install -r /workspace/requirements.txt 
+RUN python3 -m pip install -r requirements.txt 
 
 

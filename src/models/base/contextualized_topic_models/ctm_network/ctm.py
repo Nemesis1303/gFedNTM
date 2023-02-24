@@ -659,7 +659,7 @@ class CTM(object):
         component_dists = self.best_components
         topics = defaultdict(list)
         topics_list = []
-        if self.n_components is not None:
+        if self.n_components is not None and component_dists is not None:
             for i in range(self.n_components):
                 _, idxs = torch.topk(component_dists[i], k)
                 component_words = [self.train_data.idx2token[idx]

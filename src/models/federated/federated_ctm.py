@@ -193,7 +193,7 @@ class FederatedCTM(CTM, FederatedModel):
 
     def fit(self, train_data, save_dir=None):
         """
-        Trains a federated AVITM model. 
+        Trains a federated CTM model. 
 
         Parameters
         ----------
@@ -259,3 +259,8 @@ class FederatedCTM(CTM, FederatedModel):
             str(self.fedTrManager.client.id) + ".npz"
 
         save_model_as_npz(file_save, self)
+    
+    def get_topics_in_server(self):
+        
+        self.topics = self.get_topics()
+        print(self.topics)
