@@ -14,7 +14,7 @@ from tqdm import tqdm
 
 # Local imports
 from .decoding_network import DecoderNetwork
-from ...utils.early_stopping.pytorchtools import EarlyStopping
+from src.models.base.utils.early_stopping.pytorchtools import EarlyStopping
 
 
 class CTM(object):

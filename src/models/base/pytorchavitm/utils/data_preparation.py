@@ -61,4 +61,4 @@ def prepare_dataset(corpus, val_size=0.25):
     val_bow = val_bow.toarray()
     val_data = BOWDataset(val_bow, idx2token)
 
-    return train_data, val_data, input_size, id2token, docs_train
+    return train_data, val_data, input_size, id2token, docs_train, cv

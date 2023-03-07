@@ -7,6 +7,7 @@ Created on March 3, 2023
 
 import argparse
 import json
+import logging
 import pickle
 import shutil
 from pathlib import Path
@@ -22,9 +23,6 @@ from tqdm import tqdm
 from src.models.base.pytorchavitm.avitm_network.avitm import AVITM
 from src.models.base.pytorchavitm.datasets.bow_dataset import BOWDataset
 from src.models.base.pytorchavitm.utils.data_preparation import prepare_dataset
-
-modelsdir = Path(
-    "/export/usuarios_ml4ds/lbartolome/data/project_folder/TMmodels/Federated_test")
 
 
 def printgr(text: str) -> str:
@@ -72,12 +70,14 @@ def generateSynthetic(just_inf: bool,
                       vocab_size: int,
                       n_topics: int,
                       beta: float,
+                      alpha: int,
                       n_docs: int,
                       n_docs_inf: int,
                       n_docs_global_inf: int,
                       nwords: tuple,
                       alg: str,
                       n_nodes: int,
+                      frozen_topics: int,
                       prior_frozen: list,
                       own_topics: int,
                       prior_nofrozen: list) -> tuple[np.ndarray, list, list]:
@@ -200,7 +200,7 @@ def create_model_folder(modelname, modelsdir):
 
 
 def convert_topic_word_to_init_size(vocab_size, model, model_type,
-                                    ntopics, id2token, all_words):
+                                    ntopics, id2token, all_words, betas):
     """It converts the topic-word distribution matrix obtained from the training of a model into a matrix with the dimensions of the original topic-word distribution, assigning zeros to those words that are not present in the corpus. 
     It is only of use in case we are training a model over a synthetic dataset, so as to later compare the performance of the attained model in what regards to the similarity between the original and the trained model.
 
@@ -237,7 +237,7 @@ def convert_topic_word_to_init_size(vocab_size, model, model_type,
         return None
 
 
-def train_avitm(modelname, modelsdir, corpus):
+def train_avitm(modelname, modelsdir, corpus, n_topics, logger):
     """_summary_
 
     :param modelname: _description_
@@ -258,7 +258,7 @@ def train_avitm(modelname, modelsdir, corpus):
         prepare_dataset(corpus)
     idx2token = train_data.idx2token
 
-    avitm = AVITM(logger=None,
+    avitm = AVITM(logger=logger,
                   input_size=input_size,
                   n_components=n_topics,
                   model_type="prodLDA",
@@ -270,11 +270,11 @@ def train_avitm(modelname, modelsdir, corpus):
                   lr=2e-3,
                   momentum=0.99,
                   solver='adam',
-                  num_epochs=100,
+                  num_epochs=1,
                   reduce_on_plateau=False,
                   topic_prior_mean=0.0,
                   topic_prior_variance=None,
-                  num_samples=20,
+                  num_samples=1,
                   num_data_loader_workers=0,
                   verbose=True)
 
@@ -320,7 +320,11 @@ def eval_thetas(thetas_theoretical, thetas_actual, n_docs):
     return score
 
 
-def run_iter_simulation(result_iters, tm_settings, centralized_settings):
+def run_iter_simulation(result_iters,
+                        tm_settings,
+                        centralized_settings,
+                        logger):
+
     # Baseline doc-topics generation
     topic_vectors, doc_topics_all, _ = generateSynthetic(
         True, False, **tm_settings, **centralized_settings)
@@ -371,7 +375,7 @@ def run_iter_simulation(result_iters, tm_settings, centralized_settings):
     # Train model
     modelname = "prod_centralized"
     modeldir, avitm, cv, id2token, idx2token = train_avitm(
-        modelname, modelsdir, corpus)
+        modelname, modelsdir, corpus, tm_settings['n_topics'], logger)
 
     # Get betas
     betas = avitm.get_topic_word_distribution()
@@ -388,33 +392,25 @@ def run_iter_simulation(result_iters, tm_settings, centralized_settings):
             model_type="avitm",
             ntopics=tm_settings['n_topics'],
             id2token=id2token,
-            all_words=all_words)
+            all_words=all_words,
+            betas=betas)
 
-    # Get thetas
-    #thetas = np.asarray(avitm.get_doc_topic_distribution(avitm.train_data))[0:n_docs,:]
-    #thetas_theoretical = doc_topics_all[0][0:n_docs]
-
-    # Eval betas and thetas
+    # Eval betas
     betas_31 = eval_betas(betas, topic_vectors)
-    #thetas_31 = eval_thetas(thetas_theoretical, thetas, len(thetas))
-    # sim_betas_centralized.append(betas_31)
     result_iters['centralized']['betas'].append(betas_31)
 
-    # Inference
-    # Get inferred thetas
+    # Inference: get inferred thetas
     docs_val_conv = [" ".join(inf[i]) for i in np.arange(len(inf))]
     val_bow = cv.transform(docs_val_conv)
     val_bow = val_bow.toarray()
     val_data = BOWDataset(val_bow, idx2token)
-
-    thetas_inf = np.asarray(avitm.get_doc_topic_distribution(
-        val_data))  # get_doc_topic_distribution
+    thetas_inf = \
+        np.asarray(avitm.get_doc_topic_distribution(val_data))
     thetas_theoretical = inf_doc_topics
 
     # Eval thetas
     thetas_312 = eval_thetas(
         thetas_theoretical, thetas_inf, len(thetas_inf))
-    # sim_thetas_centralized.append(thetas_312)
     result_iters['centralized']['thetas'].append(thetas_312)
 
     #############################
@@ -431,7 +427,7 @@ def run_iter_simulation(result_iters, tm_settings, centralized_settings):
         # Train model
         modelname = "prodlda_node"
         modeldir, avitm, cv, id2token, idx2token = train_avitm(
-            modelname, modelsdir, corpus)
+            modelname, modelsdir, corpus, tm_settings['n_topics'], logger)
 
         # Get betas
         betas = avitm.get_topic_word_distribution()
@@ -447,29 +443,21 @@ def run_iter_simulation(result_iters, tm_settings, centralized_settings):
                 model_type="avitm",
                 ntopics=tm_settings['n_topics'],
                 id2token=id2token,
-                all_words=all_words)
+                all_words=all_words,
+                betas=betas)
 
-        # Get thetas
-        #thetas = np.asarray(avitm.get_doc_topic_distribution(avitm.train_data))
-        #thetas_theoretical = doc_topics_all[0][0:n_docs]
-
-        # Eval betas and thetas
+        # Eval betas
         betas_32 = eval_betas(betas, topic_vectors)
         betas_nodes.append(betas_32)
 
-        #thetas_32 = eval_thetas(thetas_theoretical, thetas, len(thetas))
-
-        # Inference
-        # Get inferred thetas
+        # Inference: get inferred thetas
         docs_val_conv = \
             [" ".join(inf[i]) for i in np.arange(len(inf))]
         val_bow = cv.transform(docs_val_conv)
         val_bow = val_bow.toarray()
         val_data = BOWDataset(val_bow, idx2token)
-
         thetas_inf = np.asarray(avitm.get_doc_topic_distribution(
-            val_data))  # get_doc_topic_distribution
-
+            val_data))  
         thetas_theoretical = inf_doc_topics
 
         # Eval thetas
@@ -477,18 +465,11 @@ def run_iter_simulation(result_iters, tm_settings, centralized_settings):
             thetas_theoretical, thetas_inf, len(thetas_inf))
         thetas_nodes.append(thetas_322)
 
+    # Calculate average among nodes
     avg1 = sum(betas_nodes)/centralized_settings['n_nodes']
     avg2 = sum(thetas_nodes)/centralized_settings['n_nodes']
-    #std1 = np.std(betas_nodes)
-    #std2 = np.std(thetas_nodes)
-
     result_iters['non_colab']['betas'].append(avg1)
-    # sim_betas_non_colab_std_iters.append(std1)
-    print("Nodes averages betas and thetas inf: ",
-          str(avg1), str(avg2))
-    #print("Nodes averages betas and thetas inf std: ", str(std1), str(std2))
     result_iters['non_colab']['thetas'].append(avg2)
-    # sim_thetas_non_colab_std_iters.append(std2)
 
     ########################
     #       Baseline       #
@@ -498,7 +479,8 @@ def run_iter_simulation(result_iters, tm_settings, centralized_settings):
     thetas_baseline = eval_thetas(
         thetas_theoretical, thetas_bas, len(thetas_bas))
     result_iters['baseline']['thetas'].append(thetas_baseline)
-    
+
+
 def flatten_dict(d, parent_key='', sep='_'):
     """
     Flattens a nested dictionary into a flat dictionary
@@ -522,13 +504,16 @@ if __name__ == "__main__":
                         help="Path to folder where the results will be saved")
     args = parser.parse_args()
 
+    logging.basicConfig(level='INFO')
+    logger = logging.getLogger('Simulations')
+
     # Read settings from config file
     experiment_config = Path(args.path_results).joinpath("config.json")
     with experiment_config.open('r', encoding='utf8') as fin:
         modelInfo = json.load(fin)
 
         # Read folder where the actual models will be stored and the type of experiment that is going to be carried out
-        modelsdir = modelInfo['modelsdir']
+        modelsdir = Path(modelInfo['modelsdir'])
         experiment = modelInfo['experiment']
 
         tm_settings = {
@@ -560,7 +545,10 @@ if __name__ == "__main__":
 
         # Read lists for experiments
         frozen_topics_list = modelInfo['frozen_topics_list'].split()
+        frozen_topics_list = [int(el) for el in frozen_topics_list]
+        print(frozen_topics_list)
         eta_list = modelInfo['eta_list'].split()
+        eta_list = [float(el) for el in eta_list]
         iters = modelInfo['iters']
 
     # Dictionary to save the simulation results
@@ -583,8 +571,12 @@ if __name__ == "__main__":
     }
 
     if experiment == 0:
+        
+        print("experiment is 0")
 
-        for frozen_topics in frozen_topics_list:
+        for frozen_tpcs_ids in tqdm(range(len(frozen_topics_list))):
+            frozen_topics = frozen_topics_list[frozen_tpcs_ids]
+
             print("Executing for frozen topics ", str(frozen_topics))
 
             # Create a list of tuples to store the results for each of the iters
@@ -617,9 +609,10 @@ if __name__ == "__main__":
 
                 # Here we fix eta
                 eta = tm_settings["beta"]
-                
+
                 # Execute iteration
-                run_iter_simulation(result_iters, tm_settings, centralized_settings)
+                run_iter_simulation(result_iters, tm_settings,
+                                    centralized_settings, logger)
 
         simulations_keys = ['centralized', 'non_colab', 'baseline']
         stats_keys = ['betas', 'thetas']
@@ -633,15 +626,17 @@ if __name__ == "__main__":
                 simulations[sim_key][std_key].append(
                     np.std(result_iters[sim_key][stat_key]))
 
-        simulations_flattened = flatten_dict(simulations) 
-        df = pd.DataFrame(simulations)
+        simulations_flattened = flatten_dict(simulations)
+        df = pd.DataFrame(simulations_flattened)
         df = df.set_index(pd.Index(frozen_topics_list))
         df.index.name = 'Nr frozen topics'
         print(df)
 
     elif experiment == 1:
+        print("experiment is 0")
 
-        for eta in eta_list:
+        for eta_id in tqdm(range(len(eta_list))):
+            eta = eta_list[eta_id]
             print("Executing for eta equals to ", str(eta))
 
             # Create a list of tuples to store the results for each of the iters
@@ -675,11 +670,12 @@ if __name__ == "__main__":
                     "prior_nofrozen": prior_nofrozen
                 }
 
-                run_iter_simulation(result_iters, tm_settings, centralized_settings)
-            
+                run_iter_simulation(result_iters, tm_settings,
+                                    centralized_settings, logger)
+
             simulations_keys = ['centralized', 'non_colab', 'baseline']
             stats_keys = ['betas', 'thetas']
-        
+
             for sim_key in simulations_keys:
                 for stat_key in stats_keys:
                     mean_key = f"{stat_key}_mean"
@@ -689,8 +685,8 @@ if __name__ == "__main__":
                     simulations[sim_key][std_key].append(
                         np.std(result_iters[sim_key][stat_key]))
 
-            simulations_flattened = flatten_dict(simulations) 
-            df = pd.DataFrame(simulations)
+            simulations_flattened = flatten_dict(simulations)
+            df = pd.DataFrame(simulations_flattened)
             df = df.set_index(pd.Index(eta_list))
             df.index.name = 'Eta'
             print(df)

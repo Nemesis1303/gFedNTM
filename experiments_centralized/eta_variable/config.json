@@ -1,0 +1,20 @@
+{   "modelsdir":"/Users/lbartolome/Documents/GitHub/gFedNTM/experiments_centralized/models_",
+    "n_nodes": 5,
+    "vocab_size": 5000,
+    "n_topics": 50,
+    "beta": 1e-2,
+    "alpha": 0.1,
+    "n_docs": 10,
+    "n_docs_inf": 10,
+    "n_docs_global_inf": 10,
+    "nwords": {
+        "min_words": 150,
+        "max_words": 250
+    },
+    "alg": "lda",
+    "frozen_topics": 5,
+    "frozen_topics_list": "5",
+    "eta_list": "1e-2",
+    "experiment":0,
+    "iters":2
+  }

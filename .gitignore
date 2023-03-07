@@ -132,6 +132,7 @@ dmypy.json
 training_data/
 .txt
 .pickle
+experiments_centralized/models_
 
 data/output_models
 

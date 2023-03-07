@@ -7,7 +7,7 @@ from collections import defaultdict
 import numpy as np
 import torch
 # Local imports
-from src.models.utils.early_stopping.pytorchtools import EarlyStopping
+from src.models.base.utils.early_stopping.pytorchtools import EarlyStopping
 from scipy.special import softmax
 from torch import optim
 from torch.optim.lr_scheduler import ReduceLROnPlateau
@@ -414,7 +414,8 @@ class AVITM(object):
                         1, self.num_epochs, samples_processed, len(
                             self.train_data) * self.num_epochs,
                         train_loss, val_loss, e - s))
-
+                
+                #import pdb; pdb.set_trace()
                 self.early_stopping(val_loss, self)
                 if self.early_stopping.early_stop:
                     self.logger.info("Early stopping")
