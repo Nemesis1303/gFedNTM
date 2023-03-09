@@ -15,6 +15,6 @@
     "frozen_topics": 5,
     "frozen_topics_list": "5 10 15 30 40",
     "eta_list": "1e-2 0.02 0.03 0.04 0.08 1",
-    "experiment":0,
+    "experiment":1,
     "iters":5
   }

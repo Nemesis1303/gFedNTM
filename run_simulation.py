@@ -270,11 +270,11 @@ def train_avitm(modelname, modelsdir, corpus, n_topics, logger):
                   lr=2e-3,
                   momentum=0.99,
                   solver='adam',
-                  num_epochs=1,
+                  num_epochs=100,
                   reduce_on_plateau=False,
                   topic_prior_mean=0.0,
                   topic_prior_variance=None,
-                  num_samples=1,
+                  num_samples=20,
                   num_data_loader_workers=0,
                   verbose=True)
 
@@ -499,8 +499,8 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(
         description="Scripts for Embeddings Service")
-    parser.add_argument("--path_results", type=str, default=None,
-                        required=True, metavar=("path_results"),
+    parser.add_argument("--path_results", type=str, default="/Users/lbartolome/Documents/GitHub/gFedNTM/experiments_centralized/eta_variable",
+                        required=False, metavar=("path_results"),
                         help="Path to folder where the results will be saved")
     args = parser.parse_args()
 
@@ -569,6 +569,9 @@ if __name__ == "__main__":
                 'thetas_mean': [], 'thetas_std': []
             }
     }
+    
+    simulations_keys = ['centralized', 'non_colab', 'baseline']
+    stats_keys = ['betas', 'thetas']
 
     if experiment == 0:
         
@@ -614,17 +617,14 @@ if __name__ == "__main__":
                 run_iter_simulation(result_iters, tm_settings,
                                     centralized_settings, logger)
 
-        simulations_keys = ['centralized', 'non_colab', 'baseline']
-        stats_keys = ['betas', 'thetas']
-
-        for sim_key in simulations_keys:
-            for stat_key in stats_keys:
-                mean_key = f"{stat_key}_mean"
-                std_key = f"{stat_key}_std"
-                simulations[sim_key][mean_key].append(
-                    np.mean(result_iters[sim_key][stat_key]))
-                simulations[sim_key][std_key].append(
-                    np.std(result_iters[sim_key][stat_key]))
+            for sim_key in simulations_keys:
+                for stat_key in stats_keys:
+                    mean_key = f"{stat_key}_mean"
+                    std_key = f"{stat_key}_std"
+                    simulations[sim_key][mean_key].append(
+                        np.mean(result_iters[sim_key][stat_key]))
+                    simulations[sim_key][std_key].append(
+                        np.std(result_iters[sim_key][stat_key]))
 
         simulations_flattened = flatten_dict(simulations)
         df = pd.DataFrame(simulations_flattened)
@@ -633,7 +633,7 @@ if __name__ == "__main__":
         print(df)
 
     elif experiment == 1:
-        print("experiment is 0")
+        print("experiment is 1")
 
         for eta_id in tqdm(range(len(eta_list))):
             eta = eta_list[eta_id]
@@ -673,9 +673,6 @@ if __name__ == "__main__":
                 run_iter_simulation(result_iters, tm_settings,
                                     centralized_settings, logger)
 
-            simulations_keys = ['centralized', 'non_colab', 'baseline']
-            stats_keys = ['betas', 'thetas']
-
             for sim_key in simulations_keys:
                 for stat_key in stats_keys:
                     mean_key = f"{stat_key}_mean"
@@ -685,11 +682,14 @@ if __name__ == "__main__":
                     simulations[sim_key][std_key].append(
                         np.std(result_iters[sim_key][stat_key]))
 
-            simulations_flattened = flatten_dict(simulations)
-            df = pd.DataFrame(simulations_flattened)
-            df = df.set_index(pd.Index(eta_list))
-            df.index.name = 'Eta'
-            print(df)
+        simulations_flattened = flatten_dict(simulations)
+        import pdb; pdb.set_trace()
+        print(simulations_flattened)
+        print(eta_list)
+        df = pd.DataFrame(simulations_flattened)
+        df = df.set_index(pd.Index(eta_list))
+        df.index.name = 'Eta'
+        print(df)
     # Update where to save
     results_file = Path(args.path_results).joinpath("results.pickle")
     with open(results_file, 'wb') as handle:
