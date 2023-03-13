@@ -1,4 +1,4 @@
-{   "modelsdir":"/Users/lbartolome/Documents/GitHub/gFedNTM/experiments_centralized/models_",
+{   "modelsdir":"/export/usuarios_ml4ds/lbartolome/gFedNTM/experiments_centralized/_models",
     "n_nodes": 5,
     "vocab_size": 5000,
     "n_topics": 50,

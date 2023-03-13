@@ -683,7 +683,7 @@ if __name__ == "__main__":
                         np.std(result_iters[sim_key][stat_key]))
 
         simulations_flattened = flatten_dict(simulations)
-        import pdb; pdb.set_trace()
+        #import pdb; pdb.set_trace()
         print(simulations_flattened)
         print(eta_list)
         df = pd.DataFrame(simulations_flattened)
