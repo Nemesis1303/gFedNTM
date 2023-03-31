@@ -160,7 +160,7 @@ class Client:
             elif pair.value.HasField("bvalue"):
                 model_params_aux.append((pair.key, pair.value.bvalue))
         self._model_parameters = dict(model_params_aux)
-        self._local_model_type = "ctm"  # response._model_type
+        self._local_model_type = "ctm"  # response._model_type # TODO: This need to be add from the main or through the server-client ack
 
         self._logger.info(
             'Client %s model params and model type.',

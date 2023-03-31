@@ -267,3 +267,7 @@ class FederatedAVITM(AVITM, FederatedModel):
         sim_mat_actual = np.sqrt(self.thetas).dot(np.sqrt(self.thetas.T))
         print('Difference in evaluation of doc similarity:', np.sum(
             np.abs(sim_mat_theoretical - sim_mat_actual))/len(gt_thetas))
+        
+    def get_topics_in_server(self):
+        # TODO: To be implemented
+        pass

@@ -386,9 +386,20 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
         keys = self._federation.federation_clients[0].tensors.keys()
         averages = {}
         for key in keys:
+
+            N = np.array(
+                [client.nr_samples for client in self._federation.federation_clients])
             clients_tensors = [
                 client.tensors[key]*client.nr_samples for client in self._federation.federation_clients]
-            average_tensor = np.mean(np.stack(clients_tensors), axis=0)
+            average_tensor = np.sum(
+                np.stack(clients_tensors), axis=0) / N.sum()
+
+            ####
+            # TODO: Check if this alternative is faster and dimensions ok
+            # N = np.array([client.nr_samples for client in self._federation.federation_clients])
+            # clients_tensors = [client.tensors[key] for client in self._federation.federation_clients]
+            # average_tensor = (np.sum(np.stack(clients_tensors)*N[:, np.newaxis, np.newaxis], axis=0) / N.sum())
+
             averages[key] = average_tensor
             print("The average tensor " + key + " is: ", average_tensor)
 
@@ -429,8 +440,7 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
 
         request = federated_pb2.ServerAggregatedTensorRequest(
             header=header, nndata=nNUpdate)
-        
-        
+
         self._global_model.get_topics_in_server()
 
         return request

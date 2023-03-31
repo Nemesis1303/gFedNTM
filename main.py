@@ -195,8 +195,8 @@ def main():
                         help="Id of the client. If this argument is not provided, the server is started.")
     parser.add_argument('--source', type=str, default=None,
                         help="Path to the training data.")
-    parser.add_argument('--model_type', type=str, default="prod",
-                        help="ProdLDA (prod) or CTM (ctm).")
+    parser.add_argument('--model_type', type=str, default="avitm",
+                        help="ProdLDA (avitm) or CTM (ctm).")
     parser.add_argument('--min_clients_federation', type=int, default=1,
                         help="Minimum number of client that are necessary for starting a federation. This parameter only affects the server.")
     parser.add_argument('--data_type', type=str, default="synthetic",
