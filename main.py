@@ -157,8 +157,8 @@ def start_client(id_client, data_type, fos):
         ('grpc.max_metadata_size', MAX_INBOUND_METADATA_SIZE)
     ]
     # gfedntm-server
-    with grpc.insecure_channel('localhost:50051', options=options) as channel:
-        stub = federated_pb2_grpc.FederationStub(channel)
+    with grpc.insecure_channel('gfedntm-server:50051', options=options) as channel:
+        stub = federated_pb2_grpc.FederationStub(channel)#localhost
 
         # Create client
         client = Client(id=id_client,

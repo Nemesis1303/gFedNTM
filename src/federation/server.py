@@ -220,7 +220,7 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
         cv_g = CountVectorizer(vocabulary=vocabulary_dict)
 
         idx2token = cv_g.get_feature_names_out()
-        print(type(idx2token))
+        print(idx2token)
         self._model_parameters["input_size"] = len(idx2token)
         self._model_parameters["id2token"] = \
             {k: v for k, v in zip(range(0, len(idx2token)), idx2token)}
