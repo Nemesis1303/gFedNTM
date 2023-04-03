@@ -2,7 +2,7 @@
 """
 Created on Feb 1, 2022
 
-.. codeauthor:: L. Calvo-Bartolomé (lcalvo@pa.uc3m.es)
+@author: L. Calvo-Bartolomé (lcalvo@pa.uc3m.es)
 """
 
 
@@ -27,7 +27,7 @@ class Federation:
             logging.basicConfig(level='INFO')
             self.logger = logging.getLogger('Federation')
 
-    def connect_consensus(self, client, path_tmp_local_corpus):
+    def connect_consensus(self, client):
         """
         Class to register the connection of a client in the federation for the first time, i.e. for the agreement of a common vocabulary. 
 
@@ -37,8 +37,6 @@ class Federation:
         ----------
         client : str
             Client idenfication obtained from the context that provides information on the RPC
-        path_tmp_local_corpus: pathlib.Path
-            Path to the temporary local corpus
         """
 
         self.logger.info("Client {} connecting for consensus".format(client))
@@ -46,8 +44,7 @@ class Federation:
             if client not in self.federation:
                 self.federation[client] = 1
                 new_federation_client = \
-                    FederationClient(federation_key=client,
-                                     path_tmp_local_corpus=path_tmp_local_corpus)
+                    FederationClient(federation_key=client)
                 self.federation_clients.append(new_federation_client)
             else:
                 self.federation[client] += 1

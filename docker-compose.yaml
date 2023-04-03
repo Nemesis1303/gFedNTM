@@ -23,7 +23,7 @@ services:
     image: nemesis1303/gfedntm
     container_name: gfedntm-server
     restart: always
-    command: python3 workspace/main.py --min_clients_federation 5 --model_type ctm
+    command: python3 workspace/main.py --min_clients_federation 1 --model_type avitm
     tty: true
     ports:
       - 8888:8888
@@ -34,7 +34,7 @@ services:
     image: nemesis1303/gfedntm
     container_name: gfedntm-client1
     restart: always
-    command: python3 workspace/main.py --id 1 --data_type real --fos computer_science
+    command: python3 workspace/main.py --id 1 #--data_type real --fos computer_science
     tty: true
     ports:
       - 8889:8889
@@ -47,7 +47,7 @@ services:
     image: nemesis1303/gfedntm
     container_name: gfedntm-client2
     restart: always
-    command: python3 workspace/main.py --id 2 --data_type real --fos economics
+    command: python3 workspace/main.py --id 2 #--data_type real --fos economics
     tty: true
     ports:
       - 8810:8810

@@ -10,10 +10,9 @@ class FederationClient:
     """Class for representing a client that has connected to the server for the federated learning of a topic model.
     """
 
-    def __init__(self, federation_key, path_tmp_local_corpus):
+    def __init__(self, federation_key):
 
         self.federation_key = federation_key
-        self.path_tmp_local_corpus = path_tmp_local_corpus
         self.tensors = None
         self.current_epoch = -1
         self.current_id_msg = -2

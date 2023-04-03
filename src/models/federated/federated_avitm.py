@@ -1,10 +1,17 @@
+"""
+Created on Feb 1, 2022
+
+@author: L. Calvo-Bartolomé (lcalvo@pa.uc3m.es)
+"""
 import datetime
+
 import numpy as np
 import torch
-from src.models.base.pytorchavitm.avitm_network.avitm import AVITM
-from src.models.federated.federated_model import FederatedModel
 from sklearn.preprocessing import normalize
 from torch.utils.data import DataLoader
+
+from src.models.base.pytorchavitm.avitm_network.avitm import AVITM
+from src.models.federated.federated_model import FederatedModel
 from src.utils.auxiliary_functions import save_model_as_npz
 from src.utils.utils_postprocessing import convert_topic_word_to_init_size
 
@@ -219,6 +226,9 @@ class FederatedAVITM(AVITM, FederatedModel):
                 len(self.train_data)*self.num_epochs, train_loss, e - s))
 
             # save best
+            if epoch == 0:
+                print("ENTRA EN EPOCH 0")
+                self.best_components = self.model.beta
             if train_loss < self.best_loss_train:
                 self.best_components = self.model.beta
                 self.best_loss_train = train_loss
@@ -251,7 +261,7 @@ class FederatedAVITM(AVITM, FederatedModel):
         all_words = \
             ['wd'+str(word) for word in np.arange(vocab_size+1)
              if word > 0]
-    
+
         self.betas = convert_topic_word_to_init_size(
             vocab_size=vocab_size,
             model=self,
@@ -267,7 +277,9 @@ class FederatedAVITM(AVITM, FederatedModel):
         sim_mat_actual = np.sqrt(self.thetas).dot(np.sqrt(self.thetas.T))
         print('Difference in evaluation of doc similarity:', np.sum(
             np.abs(sim_mat_theoretical - sim_mat_actual))/len(gt_thetas))
-        
+
     def get_topics_in_server(self):
-        # TODO: To be implemented
+        # TODO: fix this
+        #self.topics = self.get_topics()
+        #print(self.topics)
         pass

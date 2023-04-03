@@ -2,10 +2,8 @@
 """
 Created on Feb 1, 2022
 
-.. codeauthor:: L. Calvo-Bartolomé (lcalvo@pa.uc3m.es)
+@author: L. Calvo-Bartolomé (lcalvo@pa.uc3m.es)
 """
-
-
 import time
 
 import numpy as np
@@ -30,6 +28,7 @@ class Client:
                  stub: federated_pb2_grpc.FederationStub,
                  local_corpus: list,
                  data_type: str,
+                 field_mappings: dict,
                  logger=None):
         """
         Object's initializer
@@ -47,7 +46,7 @@ class Client:
         self.id = id
         self._stub = stub
         self._local_corpus, self._local_embeddings = \
-            self.__get_local_corpus(data_type, local_corpus)
+            self.__get_local_corpus(data_type, local_corpus, field_mappings)
 
         # Other attributes
         self._local_model_type = None
@@ -71,7 +70,7 @@ class Client:
         # Wait for the consensed vocabulary and initial NN
         self.__wait_for_agreed_vocab_NN()
 
-    def __get_local_corpus(self, data_type, corpus):
+    def __get_local_corpus(self, data_type, corpus, field_mappings):
         """
         Gets the the local training corpus based on whether the input provided is synthetic or real
         """
@@ -81,10 +80,12 @@ class Client:
             local_corpus = \
                 [" ".join(corpus[i]) for i in np.arange(len(corpus))]
         else:
-            df_lemas = corpus[["bow_text"]].values.tolist()
+            text_field = field_mappings['raw_text']
+            emb_field = field_mappings['embeddings']
+            df_lemas = corpus[[text_field]].values.tolist()
             local_corpus = [' '.join(doc) for doc in df_lemas]
-            if "embeddings" in list(corpus.columns.values):
-                local_embeddings = corpus.embeddings.values
+            if emb_field in list(corpus.columns.values):
+                local_embeddings = corpus[emb_field].values
 
         return local_corpus, local_embeddings
 
@@ -160,10 +161,10 @@ class Client:
             elif pair.value.HasField("bvalue"):
                 model_params_aux.append((pair.key, pair.value.bvalue))
         self._model_parameters = dict(model_params_aux)
-        self._local_model_type = "ctm"  # response._model_type # TODO: This need to be add from the main or through the server-client ack
+        self._local_model_type = response.model_type
 
         self._logger.info(
-            'Client %s model params and model type.',
+            'Client %s received model params and model type.',
             str(self.id))
 
         # Unprotofy global dictionary

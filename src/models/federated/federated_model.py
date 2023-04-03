@@ -1,4 +1,8 @@
+"""
+Created on Feb 1, 2022
 
+@author: L. Calvo-Bartolomé (lcalvo@pa.uc3m.es)
+"""
 from abc import abstractmethod
 
 from src.federation.federated_trainer_manager import FederatedTrainerManager
@@ -30,7 +34,7 @@ class FederatedModel(object):
     @abstractmethod
     def _optimize_on_minibatch(self):
         pass
-    
+
     @abstractmethod
     def get_results_model(self):
         pass

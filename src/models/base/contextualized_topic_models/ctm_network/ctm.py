@@ -418,8 +418,11 @@ class CTM(object):
         if self.validation_data is not None:
             self.early_stopping = EarlyStopping(patience=patience, verbose=self.verbose, path=save_dir, delta=delta)
 
-        train_loader = DataLoader(self.train_data, batch_size=self.batch_size, shuffle=True,
-                                  num_workers=self.num_data_loader_workers)
+        train_loader = DataLoader(
+            self.train_data,
+            batch_size=self.batch_size,
+            shuffle=True,
+            num_workers=self.num_data_loader_workers)
 
         # init training variables
         train_loss = 0
@@ -441,7 +444,9 @@ class CTM(object):
             if self.validation_data is not None:
 
                 validation_loader = DataLoader(
-                    self.validation_data, batch_size=self.batch_size, shuffle=True,
+                    self.validation_data,
+                    batch_size=self.batch_size,
+                    shuffle=True,
                     num_workers=self.num_data_loader_workers)
 
                 # train epoch

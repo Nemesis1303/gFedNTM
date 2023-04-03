@@ -2,7 +2,7 @@
 """
 Created on Feb 1, 2022
 
-.. codeauthor:: L. Calvo-Bartolomé (lcalvo@pa.uc3m.es)
+@author: L. Calvo-Bartolomé (lcalvo@pa.uc3m.es)
 """
 
 import time
@@ -49,7 +49,7 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
                                 filename="logs_server.txt")
             self._logger = logging.getLogger('Server')
 
-    def record_client_consensus(self, context, path_tmp_local_corpus, nr_samples):
+    def record_client_consensus(self, context, nr_samples):
         """
         Method to record the communication between a server and one of the clients in the federation at the time the clients first try to send its local vocabulary.
 
@@ -57,8 +57,6 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
         ----------
         context : AuthMetadataContext
             An AuthMetadataContext providing information on the RPC
-        path_tmp_local_corpus: pathlib.Path
-            Path to the temporary file where the local corpus of the client currently under communication is located
         nr_samples: Number of client's data points 
         """
 
@@ -74,8 +72,7 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
             self._federation.disconnect(context.peer())
 
         context.add_callback(unregister_client)
-        self._federation.connect_consensus(
-            context.peer(), path_tmp_local_corpus)
+        self._federation.connect_consensus(context.peer())
 
     def record_client(self, context, gradient, current_mb, current_iter, current_id_msg, num_max_iter):
         """
@@ -143,8 +140,6 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
             Server's response to confirm a client that its sent vocabulary dictionary was received
         """
 
-        path_tmp_local_corpus = get_tmpfile(context.peer())
-
         # Get client's vocab and save it dicts list
         vocab = dict([(pair.key, pair.value.ivalue)
                      for pair in request.pairs])
@@ -153,8 +148,7 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
         cv = CountVectorizer(vocabulary=vocab)
         nr_samples = len(cv.get_feature_names_out())
 
-        self.record_client_consensus(
-            context, path_tmp_local_corpus, nr_samples)
+        self.record_client_consensus(context, nr_samples)
 
         return federated_pb2.Reply(length=len(vocab))
 
@@ -244,7 +238,7 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
 
         aux = self._global_model.model.state_dict()
         modelUpdate_ = \
-            modelStateDict_to_proto(self._global_model.model.state_dict(), -1)
+            modelStateDict_to_proto(self._global_model.model.state_dict(), -1, self._model_type)
         optUpdate_ = \
             optStateDict_to_proto(self._global_model.optimizer.state_dict())
         nNUpdate = federated_pb2.NNUpdate(
@@ -408,7 +402,7 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
         self._global_model.optimize_on_minibatch_from_server(averages)
 
         modelUpdate_ = \
-            modelStateDict_to_proto(self._global_model.model.state_dict(), -1)
+            modelStateDict_to_proto(self._global_model.model.state_dict(), -1, self._model_type)
         optUpdate_ = \
             optStateDict_to_proto(self._global_model.optimizer.state_dict())
         nNUpdate = federated_pb2.NNUpdate(

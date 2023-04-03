@@ -1,11 +1,17 @@
+"""
+Created on Feb 1, 2022
+
+@author: L. Calvo-Bartolomé (lcalvo@pa.uc3m.es)
+"""
 import datetime
 
 import numpy as np
 import torch
-from src.models.base.contextualized_topic_models.ctm_network.ctm import CTM
-from src.models.federated.federated_model import FederatedModel
 from sklearn.preprocessing import normalize
 from torch.utils.data import DataLoader
+
+from src.models.base.contextualized_topic_models.ctm_network.ctm import CTM
+from src.models.federated.federated_model import FederatedModel
 from src.utils.auxiliary_functions import save_model_as_npz
 
 
@@ -232,6 +238,8 @@ class FederatedCTM(CTM, FederatedModel):
                 len(self.train_data)*self.num_epochs, train_loss, e - s))
 
             # save best
+            if epoch == 0:
+                self.best_components = self.model.beta
             if train_loss < self.best_loss_train:
                 self.best_components = self.model.beta
                 self.best_loss_train = train_loss
@@ -259,8 +267,8 @@ class FederatedCTM(CTM, FederatedModel):
             str(self.fedTrManager.client.id) + ".npz"
 
         save_model_as_npz(file_save, self)
-    
+
     def get_topics_in_server(self):
-        
+
         self.topics = self.get_topics()
         print(self.topics)

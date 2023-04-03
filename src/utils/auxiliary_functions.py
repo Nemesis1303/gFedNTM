@@ -2,14 +2,15 @@
 """
 Created on Feb 1, 2022
 
-.. codeauthor:: L. Calvo-Bartolomé (lcalvo@pa.uc3m.es)
+@author: L. Calvo-Bartolomé (lcalvo@pa.uc3m.es)
 """
 import pickle
 
 import numpy as np
 import torch
-from src.protos import federated_pb2
 from scipy import sparse
+
+from src.protos import federated_pb2
 
 ##############################################################################
 #                                CONSTANTS                                   #
@@ -227,11 +228,54 @@ def proto_to_optStateDict(modelUpdate: federated_pb2.OptUpdate) -> dict:
     return optStateDict
 
 
-def modelStateDict_to_proto(modelStateDict, current_epoch) -> federated_pb2.ModelUpdate:
+def modelStateDict_to_proto(modelStateDict, current_epoch, model_type) -> federated_pb2.ModelUpdate:
 
-    # topic_word_matrix=serializeTensor(modelStateDict['topic_word_matrix']),
-    
-    modelUpdate = federated_pb2.ModelUpdate(
+    if model_type == "ctm":
+        modelUpdate = federated_pb2.ModelUpdate(
+            prior_mean=serializeTensor(modelStateDict['prior_mean']),
+            prior_variance=serializeTensor(modelStateDict['prior_variance']),
+            beta=serializeTensor(modelStateDict['beta']),
+            inf_net_input_layer_weight=serializeTensor(
+                modelStateDict['inf_net.input_layer.weight']),
+            inf_net_input_layer_bias=serializeTensor(
+                modelStateDict['inf_net.input_layer.bias']),
+            inf_net_hiddens_l00_weight=serializeTensor(
+                modelStateDict['inf_net.hiddens.l_0.0.weight']),
+            inf_net_hiddens_l_00_bias=serializeTensor(
+                modelStateDict['inf_net.hiddens.l_0.0.bias']),
+            inf_net_f_mu_weight=serializeTensor(
+                modelStateDict['inf_net.f_mu.weight']),
+            inf_net_f_mu_bias=serializeTensor(modelStateDict['inf_net.f_mu.bias']),
+            inf_net_f_mu_batchnorm_running_mean=serializeTensor(
+                modelStateDict['inf_net.f_mu_batchnorm.running_mean']),
+            inf_net_f_mu_batchnorm_running_var=serializeTensor(
+                modelStateDict['inf_net.f_mu_batchnorm.running_var']),
+            inf_net_f_mu_batchnorm_num_batches_tracked=serializeTensor(
+                modelStateDict['inf_net.f_mu_batchnorm.num_batches_tracked']),
+            inf_net_f_sigma_weight=serializeTensor(
+                modelStateDict['inf_net.f_sigma.weight']),
+            inf_net_f_sigma_bias=serializeTensor(
+                modelStateDict['inf_net.f_sigma.bias']),
+            inf_net_f_sigma_batchnorm_running_mean=serializeTensor(
+                modelStateDict['inf_net.f_sigma_batchnorm.running_mean']),
+            inf_net_f_sigma_batchnorm_running_var=serializeTensor(
+                modelStateDict['inf_net.f_sigma_batchnorm.running_var']),
+            inf_net_f_sigma_batchnorm_num_batches_tracked=serializeTensor(
+                modelStateDict['inf_net.f_sigma_batchnorm.num_batches_tracked']),
+            beta_batchnorm_running_mean=serializeTensor(
+                modelStateDict['beta_batchnorm.running_mean']),
+            beta_batchnorm_running_var=serializeTensor(
+                modelStateDict['beta_batchnorm.running_var']),
+            beta_batchnorm_num_batches_tracked=serializeTensor(
+                modelStateDict['beta_batchnorm.num_batches_tracked']),
+            current_epoch=current_epoch,
+            inf_net_adapt_bert_weight=serializeTensor(
+                    modelStateDict['inf_net.adapt_bert.weight']),
+            inf_net_adapt_bert_bias= serializeTensor(
+                    modelStateDict['inf_net.adapt_bert.bias'])
+        )
+    else:
+            modelUpdate = federated_pb2.ModelUpdate(
         prior_mean=serializeTensor(modelStateDict['prior_mean']),
         prior_variance=serializeTensor(modelStateDict['prior_variance']),
         beta=serializeTensor(modelStateDict['beta']),
@@ -269,13 +313,8 @@ def modelStateDict_to_proto(modelStateDict, current_epoch) -> federated_pb2.Mode
         beta_batchnorm_num_batches_tracked=serializeTensor(
             modelStateDict['beta_batchnorm.num_batches_tracked']),
         current_epoch=current_epoch,
-        inf_net_adapt_bert_weight=serializeTensor(
-                modelStateDict['inf_net.adapt_bert.weight']),
-        inf_net_adapt_bert_bias= serializeTensor(
-                modelStateDict['inf_net.adapt_bert.bias'])
     )
-
-    # TODO: inf_net_adapt_bert_weight and inf_net_adapt_bert_bias should not be general, they are not the same for ctm and prod; check if it is necessary to send the total modelState
+        
     return modelUpdate
 
 
@@ -327,15 +366,15 @@ def proto_to_modelStateDict(modelUpdate: federated_pb2.ModelUpdate) -> dict:
     if modelUpdate.HasField("topic_word_matrix"):
         modelStateDict["topic_word_matrix"] = deserializeTensor(
             modelUpdate.topic_word_matrix)
-    
+
     if modelUpdate.HasField("inf_net_adapt_bert_weight"):
         modelStateDict["inf_net.adapt_bert.weight"] =\
-        deserializeTensor(
+            deserializeTensor(
             modelUpdate.inf_net_adapt_bert_weight)
-    
+
     if modelUpdate.HasField("inf_net_adapt_bert_bias"):
         modelStateDict["inf_net.adapt_bert.bias"] =\
-        deserializeTensor(
+            deserializeTensor(
             modelUpdate.inf_net_adapt_bert_bias)
 
     return modelStateDict

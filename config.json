@@ -1,0 +1,14 @@
+{
+    "cordis": {
+        "id": "id",
+        "raw_text": "objective",
+        "title": "title",
+        "//": "Depending on the source 'id' is 'projectID' and 'objective' is 'summary'"
+    },
+    "scholar": {
+        "id": "id",
+        "raw_text": "bow_text",
+        "embeddings": "embeddings",
+        "title": "title"
+    }
+}

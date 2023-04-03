@@ -2,10 +2,11 @@
 """
 Created on Feb 4, 2022
 
-.. codeauthor:: L. Calvo-Bartolomé (lcalvo@pa.uc3m.es)
+@author: L. Calvo-Bartolomé (lcalvo@pa.uc3m.es)
 """
 
 import argparse
+import json
 import multiprocessing as mp
 import pathlib
 import sys
@@ -57,9 +58,9 @@ tuned_parameters = {
 }
 
 # Training data
-file_synthetic = "data/training_data/synthetic2.npz"  # workspace/
+file_synthetic = "workspace/data/training_data/synthetic.npz"  # workspace/
 file_preproc_real = ""
-path_real = "data/training_data"#workspace
+path_real = "workspace/data/training_data"  # workspace
 ####################################################
 
 categories_node = ["computer_science",
@@ -70,6 +71,7 @@ categories_node = ["computer_science",
                    ]
 
 nw = 0
+
 
 def start_server(min_num_clients, model_type):
     """Initializes the server that is going to orchestrates the federated training.
@@ -120,6 +122,7 @@ def start_client(id_client, data_type, fos):
         doc_topic_distrib_gt_together = []
         for i in np.arange(len(doc_topic_distrib_gt_all)):
             doc_topic_distrib_gt_together.extend(doc_topic_distrib_gt_all[i])
+        field_mappings = None
 
     elif data_type == "real":
         corpusFile = pathlib.Path(path_real).joinpath('corpus.parquet')
@@ -131,6 +134,11 @@ def start_client(id_client, data_type, fos):
         print(df['fieldsOfStudy'].values)
         df = df[df['fieldsOfStudy'] == fos]
         corpus = df
+        
+        # TODO: Make this generic
+        with open('config.json') as f:
+            field_mappings = json.load(f)
+        field_mappings = field_mappings["scholar"]
 
     else:
         print("Specified data type not supported")
@@ -138,8 +146,8 @@ def start_client(id_client, data_type, fos):
     # START CLIENT
     # Open channel for communication with the server
     MAX_MESSAGE_LENGTH = 80 * 1024 * 1024
-    MAX_INBOUND_MESSAGE_SIZE =  8 * 1024 * 1024
-    MAX_INBOUND_METADATA_SIZE =  80 * 1024 * 1024
+    MAX_INBOUND_MESSAGE_SIZE = 8 * 1024 * 1024
+    MAX_INBOUND_METADATA_SIZE = 80 * 1024 * 1024
     options = [
         ('grpc.max_message_length', MAX_MESSAGE_LENGTH),
         ('grpc.max_send_message_length', MAX_MESSAGE_LENGTH),
@@ -156,7 +164,8 @@ def start_client(id_client, data_type, fos):
         client = Client(id=id_client,
                         stub=stub,
                         local_corpus=corpus,
-                        data_type=data_type)
+                        data_type=data_type,
+                        field_mappings=field_mappings)
 
         # Start training of local model
         client.train_local_model()
@@ -207,6 +216,8 @@ def main():
     parser.add_argument("--fos", type=str, default="computer_science",
                         help="Category")
     args = parser.parse_args()
+
+    # TODO: add info about source and text/emb field
 
     if args.preproc:
         print("Carrying out preprocessing of ", file_preproc_real)

@@ -388,12 +388,15 @@ class AVITM(object):
             samples_processed += sp
             e = datetime.datetime.now()
             pbar.update(1)
+            
+            self.best_components = self.model.beta
 
             if self.validation_data is not None:
 
                 validation_loader = DataLoader(
                     self.validation_data,
-                    batch_size=self.batch_size, shuffle=True,
+                    batch_size=self.batch_size,
+                    shuffle=True,
                     num_workers=mp.cpu_count())
 
                 # train epoch
@@ -415,14 +418,16 @@ class AVITM(object):
                             self.train_data) * self.num_epochs,
                         train_loss, val_loss, e - s))
                 
-                #import pdb; pdb.set_trace()
-                self.early_stopping(val_loss, self)
-                if self.early_stopping.early_stop:
-                    self.logger.info("Early stopping")
+                if np.isnan(val_loss) or np.isnan(train_loss):
                     break
+                else:
+                    self.early_stopping(val_loss, self)
+                    if self.early_stopping.early_stop:
+                        self.logger.info("Early stopping")
+                        break
+                    
             else:
                 # Save last epoch
-                self.best_components = self.model.beta
                 if save_dir is not None:
                     self.save(save_dir)
 
