@@ -184,6 +184,60 @@ class FederatedAVITM(AVITM, FederatedModel):
         train_loss /= samples_processed
 
         return samples_processed, train_loss
+    
+    def preFit(self, train_data, save_dir=None):
+        self.model_dir = save_dir
+        self.train_data = train_data
+        # TODO: Include validation data
+        self.current_minibatch = 0
+        self.current_epoch = 0
+        self.samples_processed = 0
+        self.train_loader_iter = iter(self.train_loader)
+        self.current_batch_sample = next(self.train_loader_iter)
+
+        self.train_loader = DataLoader(
+            self.train_data, batch_size=self.batch_size,
+            shuffle=True, num_workers=0)
+        self.model.train()
+
+    def deltaFit(self):        
+        sp, train_loss = \
+                self._train_epoch_delta(train_loader)
+        self.samples_processed += sp
+        
+        try:
+            self.current_batch_sample = next(self.train_loader_iter)
+        except StopIteration as ex:
+            # report
+            print("Epoch: [{}/{}]\tSamples: [{}/{}]\tTrain Loss: {}\tTime: {}".format(
+                self.current_epoch+1, self.num_epochs, samples_processed,
+                len(self.train_data)*self.num_epochs, train_loss, datetime.datetime.now()))
+
+            # save best
+            if self.current_epoch == 0:
+                print("ENTRA EN EPOCH 0")
+                self.best_components = self.model.beta
+            if train_loss < self.best_loss_train:
+                self.best_components = self.model.beta
+                self.best_loss_train = train_loss
+
+                if self.save_dir is not None:
+                    self.save(self.save_dir)
+            
+            # reset iter and get first
+            self.train_loader_iter = iter(self.train_loader)
+            self.current_batch_sample = next(self.train_loader_iter)
+            # train again
+            self.model.train()
+            # next epoch
+            self.current_epoch += 1
+        
+        # Epoch end reached
+        if self.current_epoch >= self.num_epochs:
+            print("Epoch end reached")
+            self.get_results_model()    
+        
+        
 
     def fit(self, train_data, save_dir=None):
         """

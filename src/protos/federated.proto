@@ -213,3 +213,7 @@ service Federation {
   rpc sendLocalDic(Dictionary) returns (Reply) {}
   rpc sendGlobalDicAndInitialNN(Empty) returns (FeatureUnion) {}
 }
+
+service FederationServer {
+  rpc getGradient(ServerAggregatedTensorRequest) returns (ClientTensorRequest) {}
+}

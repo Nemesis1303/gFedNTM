@@ -18,7 +18,26 @@ from src.utils.auxiliary_functions import (proto_to_modelStateDict,
                                            proto_to_optStateDict,
                                            serializeTensor)
 
-
+class FederatedClientServer(federated_pb2_grpc.FederationServerServicer):
+    """Class that describes the behaviour of the GRPC "client-server" to which several clients are connected to create a federation for the joint training of a topic model.
+    """
+    def __init__(self, local_model, train_data, logger=None):
+        self._local_model = local_model
+        self._local_model.preFit(train_data)
+        # Create logger object
+        if logger:
+            self._logger = logger
+        else:
+            import logging
+            FMT = '[%(asctime)-15s] [%(filename)s] [%(levelname)s] %(message)s'
+            logging.basicConfig(format=FMT, level='INFO',
+                                filename="logs_client-server.txt")
+            self._logger = logging.getLogger('ClientServer')
+            
+    def getGradient(self, request, context):
+        # TODO Apply aggregated
+        return self._local_model.deltaFit()
+    
 class Client:
     """ Class containing the stubs to interact with the server-side part via a gRPC channel.
     """

@@ -338,11 +338,6 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
         if len(self._federation.federation_clients) < self._min_num_clients:
             return False
         for client in self._federation.federation_clients:
-            if client.current_mb != self._current_minibatch:
-                print("DIFERENT")
-                print(client.current_mb)
-                print(self._current_minibatch)
-                # return False
             if not client.can_get_update:
                 return False
         return True

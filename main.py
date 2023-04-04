@@ -17,7 +17,7 @@ import grpc
 import numpy as np
 import pandas as pd
 
-from src.federation.client import Client
+from src.federation.client import Client, FederatedClientServer
 from src.federation.server import FederatedServer
 from src.protos import federated_pb2_grpc
 
@@ -175,7 +175,20 @@ def start_client(id_client, data_type, fos):
             eval_parameters = [
                 vocab_size, doc_topic_distrib_gt_all[id_client-1], word_topic_distrib_gt]
             client.eval_local_model(eval_params=eval_parameters)
+            
+    # START "CLIENT-SERVER"
+    opts = [("grpc.keepalive_time_ms", 10000),
+            ("grpc.keepalive_timeout_ms", 5000),
+            ("grpc.keepalive_permit_without_calls", True),
+            ("grpc.http2.max_ping_strikes", 0)]
 
+    server = grpc.server(futures.ThreadPoolExecutor(), options=opts)
+    federated_server = FederatedClientServer(client._local_model, client._train_data)
+    federated_pb2_grpc.add_FederationServerServicer_to_server(
+        federated_server, server)
+    server.add_insecure_port('[::]:' + str(50051 + id_client))
+    server.start()
+    server.wait_for_termination()
 
 def preproc():
     """Carries out simple preprocessing tasks and prepare a training file in the format required by the federation.
