@@ -53,6 +53,7 @@ class Client:
         self._model_parameters = None
         self._local_model = None
         self._train_data = None
+        self._global_epoch = -3
 
         # Create logger object
         if logger:

@@ -21,6 +21,7 @@ class FederationClient:
         self.nr_samples = -5
         self.vocab_sent = False
         self.can_get_update = False
+        self.global_epoch = -3
 
     def set_num_max_iter(self, num_max_iter):
         """
@@ -72,3 +73,17 @@ class FederationClient:
         for client_pos in range(len(federation_clients)):
             if key == federation_clients[client_pos].federation_key:
                 federation_clients[client_pos].can_get_update = update
+    
+    def set_global_epoch_by_key(key, federation_clients, global_epoch):
+        """_summary_
+
+        :param key: _description_
+        :type key: _type_
+        :param federation_clients: _description_
+        :type federation_clients: _type_
+        :param global_epoch: _description_
+        :type global_epoch: _type_
+        """        
+        for client_pos in range(len(federation_clients)):
+            if key == federation_clients[client_pos].federation_key:
+                federation_clients[client_pos].global_epoch = global_epoch

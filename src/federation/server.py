@@ -31,6 +31,7 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
         self._min_num_clients = min_num_clients
         self._current_minibatch = -1
         self._current_epoch = -2
+        self._global_epoch = -3
         self._id_server = "IDS" + "_" + str(round(time.time()))
         self._dicts = []
 
