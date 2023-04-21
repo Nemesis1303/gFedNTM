@@ -60,7 +60,7 @@ services:
     image: nemesis1303/gfedntm
     container_name: gfedntm-client3
     restart: always
-    command: python3 workspace/main.py --id 3 --data_type real --fos sociology
+    command: python3 workspace/main.py --id 3 #--data_type real --fos sociology
     tty: true
     ports:
       - 8811:8811
@@ -73,7 +73,7 @@ services:
     image: nemesis1303/gfedntm
     container_name: gfedntm-client4
     restart: always
-    command: python3 workspace/main.py --id 4 --data_type real --fos philosophy
+    command: python3 workspace/main.py --id 4 #--data_type real --fos philosophy
     tty: true
     ports:
       - 8812:8812
@@ -86,7 +86,7 @@ services:
     image: nemesis1303/gfedntm
     container_name: gfedntm-client5
     restart: always
-    command: python3 workspace/main.py --id 5 --data_type real --fos political_science
+    command: python3 workspace/main.py --id 5 #--data_type real --fos political_science
     tty: true
     ports:
       - 8813:8813
