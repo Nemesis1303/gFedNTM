@@ -1,3 +1,6 @@
+[![arXiv](https://img.shields.io/badge/arXiv-2212.02269-<COLOR>.svg)](https://arxiv.org/abs/2212.02269)
+[![PyPI - License](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/Nemesis1303/gFedNTM/blob/main/LICENSE)
+
 # **gFedNTM**
 
 ``gFedNTM`` is a general federated framework for training neural topic models (NTMs) that utilizes Google Remote Procedure Call (gRPC) for server-client communication.
