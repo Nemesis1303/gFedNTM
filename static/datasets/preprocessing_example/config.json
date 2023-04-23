@@ -1,0 +1,16 @@
+{
+    "TrDtSet": "/Users/lbartolome/Documents/GitHub/gFedNTM/static/datasets/preprocessing_example/scholar_dtst.json",
+    "trainer": "ctm",
+    "Preproc": {
+      "min_lemas": 15,
+      "no_below": 10,
+      "no_above": 0.6,
+      "keep_n": 500000,
+      "stopwords": [
+        "static/wordlists/S2_equivalences.json"
+      ],
+      "equivalences": [
+        "static/wordlists/S2_stopwords.json"
+      ]
+    }
+  }

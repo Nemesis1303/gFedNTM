@@ -28,7 +28,6 @@ class Client:
                  stub: federated_pb2_grpc.FederationStub,
                  local_corpus: list,
                  data_type: str,
-                 field_mappings: dict,
                  logger=None):
         """
         Object's initializer
@@ -45,15 +44,6 @@ class Client:
 
         self.id = id
         self._stub = stub
-        self._local_corpus, self._local_embeddings = \
-            self.__get_local_corpus(data_type, local_corpus, field_mappings)
-
-        # Other attributes
-        self._local_model_type = None
-        self._model_parameters = None
-        self._local_model = None
-        self._train_data = None
-        self._global_epoch = -3
 
         # Create logger object
         if logger:
@@ -65,13 +55,23 @@ class Client:
                                 filename="logs_client.txt")
             self._logger = logging.getLogger('Client')
 
+        self._local_corpus, self._local_embeddings = \
+            self.__get_local_corpus(data_type, local_corpus)
+
+        # Other attributes
+        self._local_model_type = None
+        self._model_parameters = None
+        self._local_model = None
+        self._train_data = None
+        self._global_epoch = -3
+
         # Send vocabulary to server
         self.__send_local_vocab()
 
         # Wait for the consensed vocabulary and initial NN
         self.__wait_for_agreed_vocab_NN()
 
-    def __get_local_corpus(self, data_type, corpus, field_mappings):
+    def __get_local_corpus(self, data_type, corpus):
         """
         Gets the the local training corpus based on whether the input provided is synthetic or real
         """
@@ -81,13 +81,10 @@ class Client:
             local_corpus = \
                 [" ".join(corpus[i]) for i in np.arange(len(corpus))]
         else:
-            text_field = field_mappings['raw_text']
-            emb_field = field_mappings['embeddings']
-            df_lemas = corpus[[text_field]].values.tolist()
+            df_lemas = corpus[["bow_text"]].values.tolist()
             local_corpus = [' '.join(doc) for doc in df_lemas]
-            if emb_field in list(corpus.columns.values):
-                local_embeddings = corpus[emb_field].values
-
+            if "embeddings" in list(corpus.columns.values):
+                local_embeddings = corpus["embeddings"].values
         return local_corpus, local_embeddings
 
     def __prepare_vocab_to_send(self):

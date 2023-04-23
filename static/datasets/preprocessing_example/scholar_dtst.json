@@ -5,12 +5,13 @@
     "visibility": "private",
     "Dtsets": [
       {
-        "parquet": "/export/usuarios_ml4ds/lbartolome/data/scholar_federated_small",
+        "parquet": "/Users/lbartolome/Documents/GitHub/gFedNTM/static/datasets/s2cs_tiny.parquet",
         "source": "Scholar",
         "idfld": "id",
         "lemmasfld": [
           "lemmas"
         ],
+        "fosfld" : "fieldsOfStudy",
         "filter": ""
       }
     ],

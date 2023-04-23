@@ -128,13 +128,9 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-# Training data
-training_data/
-.txt
-.pickle
-experiments_centralized/models_
-
-data/output_models
+static/output_models
+static/datasets/synthetic2.npz
+static/datasets/corpus.parquet
 
 logs_client.txt
 
