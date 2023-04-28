@@ -9,17 +9,25 @@ import numpy as np
 import torch
 from sklearn.preprocessing import normalize
 from torch.utils.data import DataLoader
+#from src.federation.client import Client
 
 from src.models.base.pytorchavitm.avitm_network.avitm import AVITM
+from src.models.base.pytorchavitm.datasets.bow_dataset import BOWDataset
 from src.models.federated.federated_model import FederatedModel
 from src.utils.auxiliary_functions import save_model_as_npz
 from src.utils.utils_postprocessing import convert_topic_word_to_init_size
 
 
 class FederatedAVITM(AVITM, FederatedModel):
-    def __init__(self, tm_params, client, logger):
+    """Class for the Federated AVITM model.
+    """
 
-        FederatedModel.__init__(self, tm_params, client, logger)
+    def __init__(self,
+                 tm_params: dict,
+                 #client: Client,
+                 logger=None) -> None:
+
+        FederatedModel.__init__(self, tm_params, logger)
 
         AVITM.__init__(
             self,
@@ -43,38 +51,169 @@ class FederatedAVITM(AVITM, FederatedModel):
             num_data_loader_workers=tm_params["num_data_loader_workers"],
             verbose=tm_params["verbose"])
 
-        # Current epoch for tracking federated model
-        self.current_mb = -1
-
-        # Training set info parameters
+        # Parameters for tracking federated model
+        self.model_dir = None
         self.train_data = None
-        self.id2token = self.tm_params["id2token"]
+        self.current_mb = -1
+        self.current_epoch = -1
+        self.samples_processed = -1
+        self.train_loader_iter = None
+        self.current_batch_sample = None
 
         # Post-training parameters
         self.topics = None
         self.thetas = None
         self.betas = None
 
-    def _train_minibatch(self, X, train_loss, samples_processed):
+    # ======================================================
+    # Client-side training
+    # ======================================================
+    def preFit(self, train_data: BOWDataset, save_dir=None) -> None:
+        """Carries out the initialization of all parameters needed for training of a local model.
+
+        Parameters
+        ----------
+        train_data: BOWDataset
+            Training dataset.
+        save_dir: str, optional
+            Directory to save checkpoint models to, defaults to None.
+        """
+
+        self.model_dir = save_dir
+        self.train_data = train_data
+
+        self.current_mb = 0
+        self.current_epoch = 0
+        self.samples_processed = 0
+
+        self.train_loader = DataLoader(
+            self.train_data, batch_size=self.batch_size,
+            shuffle=True, num_workers=0)
+        # TODO: Check if this is necessary
+        self.train_loader_iter = iter(self.train_loader)
+        self.current_batch_sample = next(self.train_loader_iter)
+
+        # Initialize training variables before starting the first epoch
+        self.model.train()
+
+        # Training of the local model starts ->>>
+
+        return
+
+    def train_mb_delta(self) -> dict:
+        """Generates gradient update for a minibatch of samples.
+        
+        Returns
+        -------
+        params: dict
+            Dictionary containing the parameters to be sent to the server.
+        """
+
+        # Get samples in minibatch
+        self.X = self.current_batch_sample['X']
 
         if self.USE_CUDA:
-            X = X.cuda()
+            self.X = self.X.cuda()
 
         # Forward pass
         self.model.zero_grad()  # Update gradients to zero
-        prior_mean, prior_var, posterior_mean, posterior_var, posterior_log_var, word_dists = self.model(
-            X)
+        prior_mean, prior_var, posterior_mean,\
+            posterior_var, posterior_log_var, \
+            word_dists = self.model(self.X)
 
         # Backward pass: Compute gradients
-        loss = self._loss(X, word_dists, prior_mean, prior_var,
-                          posterior_mean, posterior_var, posterior_log_var)
-        loss.backward()
+        self.loss = self._loss(self.X, word_dists, prior_mean, prior_var,
+                               posterior_mean, posterior_var, posterior_log_var)
+        self.loss.backward()
 
-        return loss, train_loss, samples_processed
+        # Gradient update
+        params = {
+            "prior_mean": self.model.prior_mean,
+            "prior_variance": self.model.prior_variance,
+            "beta": self.model.beta,
+            "current_mb": self.current_mb,
+            "current_epoch": self.current_mb,
+            "num_epochs": self.num_epochs
+        }
 
-    def optimize_on_minibatch_from_server(self, updates):
+        return params
+
+    def deltaUpdateFit(self, modelStateDict) -> None:
+        """Updates gradient with aggregated gradient from server and calculates loss.
+        
+        Parameters
+        ----------
+        modelStateDict: dict
+            Dictionary containing the model parameters to be updated.
+        """
+
+        # Update local model's state dict
+        localStateDict = self.model.state_dict()
+        localStateDict["prior_mean"] = modelStateDict["prior_mean"]
+        localStateDict["prior_variance"] = modelStateDict["prior_variance"]
+        localStateDict["beta"] = modelStateDict["beta"]
+        self.model.load_state_dict(localStateDict)
+
+        # Calculate minibatch's train loss and samples processed
+        samples_processed = self.X.size()[0] #TODO: this should be +=
+        train_loss = self.loss.item() #TODO: this should be +=
+
+        # Minitbatch ends
+        self.current_mb += 1
+
+        try:
+            # Get next minibatch
+            self.current_batch_sample = next(self.train_loader_iter)  # !!!!!!
+        except StopIteration as ex:
+            # If there is no next minibatch, the epoch has ended, so we report, eset the iterator and get the first one
+            print("Epoch: [{}/{}]\tSamples: [{}/{}]\tTrain Loss: {}\tTime: {}".format(
+                self.current_epoch+1, self.num_epochs, self.samples_processed,
+                len(self.train_data)*self.num_epochs, train_loss, datetime.datetime.now()))
+
+            # Save best epoch results
+            if self.current_epoch == 0:
+                self.best_components = self.model.beta
+            if train_loss < self.best_loss_train:
+                self.best_components = self.model.beta
+                self.best_loss_train = train_loss
+
+                if self.save_dir is not None:
+                    self.save(self.save_dir)
+
+            # Reset iterator and get first
+            self.train_loader_iter = iter(self.train_loader)
+            self.current_batch_sample = next(self.train_loader_iter)
+
+            # Next epoch
+            self.current_epoch += 1
+
+        # Epoch end reached
+        if self.current_epoch >= self.num_epochs:
+            print("Epoch end reached")
+            self.get_results_model()
+
+        return
+
+    # ======================================================
+    # Server-side training
+    # ======================================================
+    def optimize_on_minibatch_from_server(self, updates) -> None:
+        """Updates the gradients of the local model after aggregating the gradients from the clients.
+
+        Parameters
+        ----------
+        updates: dict
+            Dictionary with the gradients to be updated.
+        """
 
         # Upadate gradients
+        # Parameter0 = prior_mean
+        # Parameter1 = prior_variance
+        # Parameter2 = beta
+        # self.model.prior_mean.grad = update
+        # self.model.prior_variance = updates[0]
+        # self.model.prior_variance = updates[1]
+        # self.model.beta.grad = updates[2]
         self.model.prior_mean.grad = torch.Tensor(updates["prior_mean"])
         self.model.prior_variance.grad = torch.Tensor(
             updates["prior_variance"])
@@ -85,157 +224,9 @@ class FederatedAVITM(AVITM, FederatedModel):
 
         return
 
-    def _optimize_on_minibatch(self, X, loss, train_loss, samples_processed):
-        # Update gradients
-        # Parameter0 = prior_mean
-        # Parameter1 = prior_variance
-        # Parameter2 = beta
-        #self.model.prior_mean.grad = update
-        #self.model.prior_variance = updates[0]
-        #self.model.prior_variance = updates[1]
-        #self.model.beta.grad = updates[2]
-
-        # Perform one step of the optimizer (SGD/Adam)
-        # self.optimizer.step()
-
-        # Compute train loss
-        samples_processed += X.size()[0]
-        train_loss += loss.item()
-
-        return train_loss, samples_processed
-
-    def _train_epoch(self, loader):
-        """
-        Trains one epoch of the local AVITM model.
-
-        Parameters
-        ----------
-        loader: DataLoader
-            Python iterable over the training dataset with which the epoch is going to be trained.
-
-        Returns
-        -------
-        samples_processed: int
-            Number of processed samples
-        train_loss: float
-            Training loss
-        """
-
-        self.model.train()
-
-        train_loss = 0
-        samples_processed = 0
-
-        # Counter for the current minibatch
-        self.current_mb = 0
-
-        # Training epoch starts
-        for batch_samples in loader:
-
-            # Get samples in minibatch
-            X = batch_samples['X']
-
-            # Get gradients minibatch
-            loss, train_loss, samples_processed = \
-                self._train_minibatch(
-                    X, train_loss, samples_processed)
-
-            # Send minibatch' gradient to the server (gradient already converted to np)
-            params = {
-                "prior_mean": self.model.prior_mean,
-                "prior_variance": self.model.prior_variance,
-                "beta": self.model.beta,
-                "current_mb": self.current_mb,
-                "current_epoch": self.current_mb,
-                "num_epochs": self.num_epochs
-            }
-
-            self.fedTrManager.send_gradient_minibatch(params)
-
-            self.logger.info(
-                'Client %s sent gradient %s/%s and is waiting for updates.',
-                str(self.fedTrManager.client.id), str(self.current_mb),
-                str(self.current_epoch))
-
-            # Update model with server's weigths
-            modelStateDict, optStateDict = self.fedTrManager.get_update_minibatch()
-
-            localStateDict = self.model.state_dict()
-            localStateDict["prior_mean"] = modelStateDict["prior_mean"]
-            localStateDict["prior_variance"] = modelStateDict["prior_variance"]
-            localStateDict["beta"] = modelStateDict["beta"]
-
-            #modelStateDict["topic_word_matrix"] = self.model.topic_word_matrix
-            #self.model.prior_mean = modelStateDict["prior_mean"]
-            #self.model.prior_variance = modelStateDict["prior_variance"]
-            #self.model.beta = nn.Parameter(modelStateDict["beta"])
-            self.model.load_state_dict(localStateDict)
-            # self.optimizer.load_state_dict(optStateDict)
-
-            # Calculate minibatch's train loss and samples processed
-            train_loss, samples_processed = \
-                self._optimize_on_minibatch(
-                    X, loss, train_loss, samples_processed)
-
-            self.current_mb += 1  # One minibatch ends
-        # Training epoch ends
-
-        # Calculate epoch's train loss and samples processed
-        train_loss /= samples_processed
-
-        return samples_processed, train_loss
-
-    def fit(self, train_data, save_dir=None):
-        """
-        Trains a federated AVITM model. 
-
-        Parameters
-        ----------
-        save_dir: pathlib.Path, optional
-            Directory to save checkpoint models to, defaults to None.
-        """
-
-        self.model_dir = save_dir
-        self.train_data = train_data
-        # TODO: Include validation data
-        self.current_minibatch = 0
-        self.current_epoch = 0
-
-        train_loader = DataLoader(
-            self.train_data, batch_size=self.batch_size,
-            shuffle=True, num_workers=0)
-
-        # Initialize training variables
-        train_loss = 0
-        samples_processed = 0
-
-        # Training of the local model
-        for epoch in range(self.num_epochs):
-            self.current_epoch = epoch
-
-            # Train epoch
-            s = datetime.datetime.now()
-            sp, train_loss = \
-                self._train_epoch(train_loader)
-            samples_processed += sp
-            e = datetime.datetime.now()
-
-            # report
-            print("Epoch: [{}/{}]\tSamples: [{}/{}]\tTrain Loss: {}\tTime: {}".format(
-                epoch+1, self.num_epochs, samples_processed,
-                len(self.train_data)*self.num_epochs, train_loss, e - s))
-
-            # save best
-            if epoch == 0:
-                print("ENTRA EN EPOCH 0")
-                self.best_components = self.model.beta
-            if train_loss < self.best_loss_train:
-                self.best_components = self.model.beta
-                self.best_loss_train = train_loss
-
-                if save_dir is not None:
-                    self.save(save_dir)
-
+    # ======================================================
+    # Evaluation
+    # ======================================================
     def get_results_model(self):
 
         # Get topics
@@ -250,9 +241,9 @@ class FederatedAVITM(AVITM, FederatedModel):
         # Get word-topic distribution
         self.betas = self.get_topic_word_distribution()
 
-        file_save = \
-            "workspace/static/output_models/model_client_" + \
-            str(self.fedTrManager.client.id) + ".npz"
+        # file_save = \
+        #     "workspace/static/output_models/model_client_" + \
+        #     str(self.fedTrManager.client.id) + ".npz"
 
         save_model_as_npz(file_save, self)
 
@@ -280,6 +271,6 @@ class FederatedAVITM(AVITM, FederatedModel):
 
     def get_topics_in_server(self):
         # TODO: fix this
-        #self.topics = self.get_topics()
-        #print(self.topics)
+        # self.topics = self.get_topics()
+        # print(self.topics)
         pass

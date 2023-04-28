@@ -7,10 +7,8 @@ Created on Feb 4, 2022
 """
 
 import argparse
-import json
 import multiprocessing as mp
 import pathlib
-import sys
 from concurrent import futures
 from subprocess import check_output
 
@@ -18,10 +16,11 @@ import grpc
 import numpy as np
 import pandas as pd
 
-from src.federation.client import Client
+from src.federation.client import Client, FederatedClientServer
 from src.federation.server import FederatedServer
 from src.protos import federated_pb2_grpc
 
+address = ['localhost:50051', 'gfedntm-server:50051']
 # ======================================================
 # Training params
 # ======================================================
@@ -78,12 +77,12 @@ def start_server(min_num_clients, model_type):
         min_num_clients=min_num_clients,
         model_params={**fixed_parameters, **tuned_parameters}, model_type=model_type
     )
+
     federated_pb2_grpc.add_FederationServicer_to_server(
         federated_server, server)
     server.add_insecure_port('[::]:50051')
     server.start()
     server.wait_for_termination()
-
 
 def start_client(id_client: int, data_type: str, fos: str, source: str):
     """Initialize a client that is going to contribute to the training of a federated topic model.
@@ -132,7 +131,7 @@ def start_client(id_client: int, data_type: str, fos: str, source: str):
         ('grpc.max_inbound_metadata_size', MAX_INBOUND_METADATA_SIZE),
         ('grpc.max_metadata_size', MAX_INBOUND_METADATA_SIZE)
     ]
-    with grpc.insecure_channel('gfedntm-server:50051', options=options) as channel:
+    with grpc.insecure_channel(address[0], options=options) as channel:
         stub = federated_pb2_grpc.FederationStub(channel)
 
         # Create client
@@ -141,14 +140,29 @@ def start_client(id_client: int, data_type: str, fos: str, source: str):
                         local_corpus=corpus,
                         data_type=data_type)
 
-        # Start training of local model
-        client.train_local_model()
+        # # Start training of local model
+        # client.train_local_model()
 
-        # Print evaluation results if data_type is synthetic
-        if data_type == "synthetic":
-            eval_parameters = [
-                vocab_size, doc_topic_distrib_gt_all[id_client-1], word_topic_distrib_gt]
-            client.eval_local_model(eval_params=eval_parameters)
+        # # Print evaluation results if data_type is synthetic
+        # if data_type == "synthetic":
+        #     eval_parameters = [
+        #         vocab_size, doc_topic_distrib_gt_all[id_client-1], word_topic_distrib_gt]
+        #     client.eval_local_model(eval_params=eval_parameters)
+
+    # Start client-server
+    # opts = [("grpc.keepalive_time_ms", 10000),
+    #         ("grpc.keepalive_timeout_ms", 5000),
+    #         ("grpc.keepalive_permit_without_calls", True),
+    #         ("grpc.http2.max_ping_strikes", 0)]
+
+    # client_server = grpc.server(futures.ThreadPoolExecutor(), options=opts)
+    # federated_server = FederatedClientServer(
+    #     client.local_model, client.train_data)
+    # federated_pb2_grpc.add_FederationServerServicer_to_server(
+    #     federated_server, client_server)
+    # client_server.add_insecure_port('[::]:' + str(50051 + id_client))
+    # client_server.start()
+    # client_server.wait_for_termination()
 
 
 def preproc(spark: bool, nw: int, configFile: pathlib.Path):
@@ -196,7 +210,7 @@ def main():
                         help="Client ID. \
                         If not provided, the server (ID=0) is started.")
     parser.add_argument('--source', type=str,
-                        default="workspace/data/training_data/synthetic.npz",
+                        default="/workspaces/gFedNTM/static/datasets/synthetic.npz",
                         help="Path to the training data.")
     parser.add_argument('--data_type', type=str, default="synthetic",
                         help="synthetic or real")

@@ -13,6 +13,7 @@ class FederationClient:
     def __init__(self, federation_key):
 
         self.federation_key = federation_key
+        self.client_id = None
         self.tensors = None
         self.current_epoch = -1
         self.current_id_msg = -2
@@ -22,6 +23,7 @@ class FederationClient:
         self.vocab_sent = False
         self.can_get_update = False
         self.global_epoch = -3
+        self.ready_for_training = False
 
     def set_num_max_iter(self, num_max_iter):
         """
@@ -74,6 +76,13 @@ class FederationClient:
             if key == federation_clients[client_pos].federation_key:
                 federation_clients[client_pos].can_get_update = update
     
+    def set_can_start_training(key, federation_clients, update):
+        """It searches for the client described by the given key in the list of federation_clients, and when found, the boolean update specifies whether the client can start the training or not.
+        """
+        for client_pos in range(len(federation_clients)):
+            if key == federation_clients[client_pos].federation_key:
+                federation_clients[client_pos].ready_for_training = update
+
     def set_global_epoch_by_key(key, federation_clients, global_epoch):
         """_summary_
 
@@ -83,7 +92,14 @@ class FederationClient:
         :type federation_clients: _type_
         :param global_epoch: _description_
         :type global_epoch: _type_
-        """        
+        """
         for client_pos in range(len(federation_clients)):
             if key == federation_clients[client_pos].federation_key:
                 federation_clients[client_pos].global_epoch = global_epoch
+
+    def set_id_by_key(key, federation_clients, id):
+        """Sets the ID of a client with the specified key in the list of federation_clients.
+        """
+        for client_pos in range(len(federation_clients)):
+            if key == federation_clients[client_pos].federation_key:
+                federation_clients[client_pos].client_id = id

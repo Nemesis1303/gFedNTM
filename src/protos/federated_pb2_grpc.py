@@ -36,13 +36,18 @@ class FederationStub(object):
                 )
         self.sendLocalDic = channel.unary_unary(
                 '/federated.Federation/sendLocalDic',
-                request_serializer=federated__pb2.Dictionary.SerializeToString,
+                request_serializer=federated__pb2.DictRequest.SerializeToString,
                 response_deserializer=federated__pb2.Reply.FromString,
                 )
         self.sendGlobalDicAndInitialNN = channel.unary_unary(
                 '/federated.Federation/sendGlobalDicAndInitialNN',
                 request_serializer=federated__pb2.Empty.SerializeToString,
                 response_deserializer=federated__pb2.FeatureUnion.FromString,
+                )
+        self.trainFederatedModel = channel.unary_unary(
+                '/federated.Federation/trainFederatedModel',
+                request_serializer=federated__pb2.ClientTensorRequest.SerializeToString,
+                response_deserializer=federated__pb2.Empty.FromString,
                 )
 
 
@@ -85,6 +90,12 @@ class FederationServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def trainFederatedModel(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_FederationServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -110,13 +121,18 @@ def add_FederationServicer_to_server(servicer, server):
             ),
             'sendLocalDic': grpc.unary_unary_rpc_method_handler(
                     servicer.sendLocalDic,
-                    request_deserializer=federated__pb2.Dictionary.FromString,
+                    request_deserializer=federated__pb2.DictRequest.FromString,
                     response_serializer=federated__pb2.Reply.SerializeToString,
             ),
             'sendGlobalDicAndInitialNN': grpc.unary_unary_rpc_method_handler(
                     servicer.sendGlobalDicAndInitialNN,
                     request_deserializer=federated__pb2.Empty.FromString,
                     response_serializer=federated__pb2.FeatureUnion.SerializeToString,
+            ),
+            'trainFederatedModel': grpc.unary_unary_rpc_method_handler(
+                    servicer.trainFederatedModel,
+                    request_deserializer=federated__pb2.ClientTensorRequest.FromString,
+                    response_serializer=federated__pb2.Empty.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -208,7 +224,7 @@ class Federation(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/federated.Federation/sendLocalDic',
-            federated__pb2.Dictionary.SerializeToString,
+            federated__pb2.DictRequest.SerializeToString,
             federated__pb2.Reply.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
@@ -227,5 +243,116 @@ class Federation(object):
         return grpc.experimental.unary_unary(request, target, '/federated.Federation/sendGlobalDicAndInitialNN',
             federated__pb2.Empty.SerializeToString,
             federated__pb2.FeatureUnion.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def trainFederatedModel(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/federated.Federation/trainFederatedModel',
+            federated__pb2.ClientTensorRequest.SerializeToString,
+            federated__pb2.Empty.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+
+class FederationServerStub(object):
+    """Missing associated documentation comment in .proto file."""
+
+    def __init__(self, channel):
+        """Constructor.
+
+        Args:
+            channel: A grpc.Channel.
+        """
+        self.getGradient = channel.unary_unary(
+                '/federated.FederationServer/getGradient',
+                request_serializer=federated__pb2.ServerGetGradientRequest.SerializeToString,
+                response_deserializer=federated__pb2.ClientTensorRequest.FromString,
+                )
+        self.sendAggregatedTensor = channel.unary_unary(
+                '/federated.FederationServer/sendAggregatedTensor',
+                request_serializer=federated__pb2.ServerAggregatedTensorRequest.SerializeToString,
+                response_deserializer=federated__pb2.ClientReceivedResponse.FromString,
+                )
+
+
+class FederationServerServicer(object):
+    """Missing associated documentation comment in .proto file."""
+
+    def getGradient(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def sendAggregatedTensor(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+
+def add_FederationServerServicer_to_server(servicer, server):
+    rpc_method_handlers = {
+            'getGradient': grpc.unary_unary_rpc_method_handler(
+                    servicer.getGradient,
+                    request_deserializer=federated__pb2.ServerGetGradientRequest.FromString,
+                    response_serializer=federated__pb2.ClientTensorRequest.SerializeToString,
+            ),
+            'sendAggregatedTensor': grpc.unary_unary_rpc_method_handler(
+                    servicer.sendAggregatedTensor,
+                    request_deserializer=federated__pb2.ServerAggregatedTensorRequest.FromString,
+                    response_serializer=federated__pb2.ClientReceivedResponse.SerializeToString,
+            ),
+    }
+    generic_handler = grpc.method_handlers_generic_handler(
+            'federated.FederationServer', rpc_method_handlers)
+    server.add_generic_rpc_handlers((generic_handler,))
+
+
+ # This class is part of an EXPERIMENTAL API.
+class FederationServer(object):
+    """Missing associated documentation comment in .proto file."""
+
+    @staticmethod
+    def getGradient(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/federated.FederationServer/getGradient',
+            federated__pb2.ServerGetGradientRequest.SerializeToString,
+            federated__pb2.ClientTensorRequest.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def sendAggregatedTensor(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/federated.FederationServer/sendAggregatedTensor',
+            federated__pb2.ServerAggregatedTensorRequest.SerializeToString,
+            federated__pb2.ClientReceivedResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

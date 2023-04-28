@@ -47,8 +47,9 @@ message MessageAdditionalData {
 enum MessageType {
   CLIENT_TENSOR_SEND = 0;
   CLIENT_CONFIRM_RECEIVED = 1;
-  SERVER_AGGREGATED_TENSOR_SEND = 2;
-  SERVER_CONFIRM_RECEIVED = 3; 
+  CLIENT_READY_FOR_TRAINING = 2;
+  SERVER_AGGREGATED_TENSOR_SEND = 3;
+  SERVER_CONFIRM_RECEIVED = 4; 
 }
 
 message MessageHeader {
@@ -124,6 +125,11 @@ message Dictionary {
     Value value = 2;
   };
   repeated Pair pairs = 1;
+}
+
+message DictRequest {
+  Dictionary vocab = 1;
+  int32 client_id = 2;
 }
 
 message FeatureUnion {
@@ -205,11 +211,21 @@ message NNUpdate {
   OptUpdate optUpdate = 2;
 }
 
+message ServerGetGradientRequest {
+  int64 iter = 1;
+}
+
 service Federation {
   rpc sendLocalTensor(ClientTensorRequest) returns (ServerReceivedResponse) {}
   rpc sendAggregatedTensor(Empty) returns (ServerAggregatedTensorRequest) {}
   rpc upload(stream Chunk) returns (Reply) {}
   rpc download(Empty) returns (stream Chunk) {}
-  rpc sendLocalDic(Dictionary) returns (Reply) {}
+  rpc sendLocalDic(DictRequest) returns (Reply) {}
   rpc sendGlobalDicAndInitialNN(Empty) returns (FeatureUnion) {}
+  rpc trainFederatedModel(ClientTensorRequest) returns (Empty) {}
+}
+
+service FederationServer {
+  rpc getGradient(ServerGetGradientRequest) returns (ClientTensorRequest) {}
+  rpc sendAggregatedTensor(ServerAggregatedTensorRequest) returns (ClientReceivedResponse) {}
 }

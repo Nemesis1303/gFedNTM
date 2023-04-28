@@ -99,7 +99,7 @@ class Federation:
             else:
                 self.federation[client] += 1
         if waiting:
-            self.logger.info("Client {} connecting waiting".format(client))
+            self.logger.info("Client {} connecting waiting for training to start".format(client))
         else:
             self.logger.info(
                 "Client {} connected for vocabulary consensus".format(client))
