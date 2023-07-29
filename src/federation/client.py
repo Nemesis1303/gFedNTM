@@ -163,8 +163,6 @@ class FederatedClientServer(federated_pb2_grpc.FederationServerServicer):
 # ======================================================
 # CLIENT
 # ======================================================
-
-
 class Client:
     """ Class that describes the client's behaviour during the vocabulary consensus phase.
     """
@@ -200,6 +198,8 @@ class Client:
             logging.basicConfig(format=FMT, level='DEBUG')
             self._logger = logging.getLogger('Client')
             self._logger.setLevel(logging.DEBUG)
+        
+        # Get local corpus and embeddings (if CTM)
         self._local_corpus, self._local_embeddings = \
             self.__get_local_corpus(data_type, local_corpus)
 

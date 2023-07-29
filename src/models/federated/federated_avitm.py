@@ -9,7 +9,6 @@ import numpy as np
 import torch
 from sklearn.preprocessing import normalize
 from torch.utils.data import DataLoader
-#from src.federation.client import Client
 
 from src.models.base.pytorchavitm.avitm_network.avitm import AVITM
 from src.models.base.pytorchavitm.datasets.bow_dataset import BOWDataset
@@ -24,7 +23,7 @@ class FederatedAVITM(AVITM, FederatedModel):
 
     def __init__(self,
                  tm_params: dict,
-                 #client: Client,
+                 # client: Client,
                  logger=None) -> None:
 
         FederatedModel.__init__(self, tm_params, logger)
@@ -82,18 +81,23 @@ class FederatedAVITM(AVITM, FederatedModel):
         self.model_dir = save_dir
         self.train_data = train_data
 
+        # Initialize training variables
         self.current_mb = 0
         self.current_epoch = 0
         self.samples_processed = 0
+        self.train_loss = 0
 
+        # Initialize train dataLoader and get first sample
         self.train_loader = DataLoader(
-            self.train_data, batch_size=self.batch_size,
-            shuffle=True, num_workers=0)
-        # TODO: Check if this is necessary
+            self.train_data,
+            batch_size=self.batch_size,
+            shuffle=True,
+            num_workers=0)
         self.train_loader_iter = iter(self.train_loader)
         self.current_batch_sample = next(self.train_loader_iter)
 
-        # Initialize training variables before starting the first epoch
+        # Set the model to train mode before starting the first epoch
+        # This should be done at the beginning of each epoch
         self.model.train()
 
         # Training of the local model starts ->>>
@@ -102,7 +106,7 @@ class FederatedAVITM(AVITM, FederatedModel):
 
     def train_mb_delta(self) -> dict:
         """Generates gradient update for a minibatch of samples.
-        
+
         Returns
         -------
         params: dict
@@ -126,7 +130,7 @@ class FederatedAVITM(AVITM, FederatedModel):
                                posterior_mean, posterior_var, posterior_log_var)
         self.loss.backward()
 
-        # Gradient update
+        # Create gradient update to be sent to the server
         params = {
             "prior_mean": self.model.prior_mean,
             "prior_variance": self.model.prior_variance,
@@ -138,9 +142,9 @@ class FederatedAVITM(AVITM, FederatedModel):
 
         return params
 
-    def deltaUpdateFit(self, modelStateDict) -> None:
+    def deltaUpdateFit(self, modelStateDict, n_samples=20) -> None:
         """Updates gradient with aggregated gradient from server and calculates loss.
-        
+
         Parameters
         ----------
         modelStateDict: dict
@@ -155,8 +159,8 @@ class FederatedAVITM(AVITM, FederatedModel):
         self.model.load_state_dict(localStateDict)
 
         # Calculate minibatch's train loss and samples processed
-        samples_processed = self.X.size()[0] #TODO: this should be +=
-        train_loss = self.loss.item() #TODO: this should be +=
+        self.samples_processed += self.X.size()[0]
+        self.train_loss += self.loss.item()
 
         # Minitbatch ends
         self.current_mb += 1
@@ -168,17 +172,18 @@ class FederatedAVITM(AVITM, FederatedModel):
             # If there is no next minibatch, the epoch has ended, so we report, eset the iterator and get the first one
             print("Epoch: [{}/{}]\tSamples: [{}/{}]\tTrain Loss: {}\tTime: {}".format(
                 self.current_epoch+1, self.num_epochs, self.samples_processed,
-                len(self.train_data)*self.num_epochs, train_loss, datetime.datetime.now()))
+                len(self.train_data)*self.num_epochs, self.train_loss, datetime.datetime.now()))
 
             # Save best epoch results
             if self.current_epoch == 0:
                 self.best_components = self.model.beta
-            if train_loss < self.best_loss_train:
+            if self.train_loss < self.best_loss_train:
                 self.best_components = self.model.beta
-                self.best_loss_train = train_loss
+                self.best_loss_train = self.train_loss
 
-                if self.save_dir is not None:
-                    self.save(self.save_dir)
+                # TODO_ Remove comments
+                #if self.save_dir is not None:
+                #    self.save(self.save_dir)
 
             # Reset iterator and get first
             self.train_loader_iter = iter(self.train_loader)
@@ -190,7 +195,9 @@ class FederatedAVITM(AVITM, FederatedModel):
         # Epoch end reached
         if self.current_epoch >= self.num_epochs:
             print("Epoch end reached")
-            self.get_results_model()
+            self.training_doc_topic_distributions = self.get_doc_topic_distribution(
+                self.train_data, n_samples)
+            # self.get_results_model()
 
         return
 
@@ -245,7 +252,7 @@ class FederatedAVITM(AVITM, FederatedModel):
         #     "workspace/static/output_models/model_client_" + \
         #     str(self.fedTrManager.client.id) + ".npz"
 
-        save_model_as_npz(file_save, self)
+        #save_model_as_npz(file_save, self)
 
     def evaluate_synthetic_model(self, vocab_size, gt_thetas, gt_betas):
 
@@ -273,4 +280,4 @@ class FederatedAVITM(AVITM, FederatedModel):
         # TODO: fix this
         # self.topics = self.get_topics()
         # print(self.topics)
-        pass
+        print("Coge los topics in server")

@@ -39,7 +39,6 @@ class FederationClient:
         - current epoch to which the minibatch belongs to
         - id of the message in which the current tensor is being sent
         """
-
         self.tensors = tensors
         self.current_mb = current_mb
         self.current_epoch = current_epoch,

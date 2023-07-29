@@ -7,7 +7,9 @@ Created on Feb 4, 2022
 """
 
 import argparse
+import configparser
 import multiprocessing as mp
+import os
 import pathlib
 from concurrent import futures
 from subprocess import check_output
@@ -19,41 +21,24 @@ import pandas as pd
 from src.federation.client import Client, FederatedClientServer
 from src.federation.server import FederatedServer
 from src.protos import federated_pb2_grpc
+from src.utils.auxiliary_functions import read_config_experiments
 
-address = ['localhost:50051', 'gfedntm-server:50051']
-# ======================================================
-# Training params
-# ======================================================
-fixed_parameters = {
-    "contextual_size": 192,  # 768
-    "inference_type": 'combined',
-    "n_components": 10,
-    "model_type": 'prodLDA',
-    "hidden_sizes": (100, 100),
-    "activation": 'softplus',
-    "dropout": 0.2,
-    "learn_priors": True,
-    "lr": 2e-3,
-    "momentum": 0.99,
-    "solver": 'adam',
-    "num_epochs": 5,
-    "batch_size": 4,
-    "num_samples": 10,
-    "reduce_on_plateau": False,
-    "num_data_loader_workers": mp.cpu_count(),
-    "label_size": 0,
-    "loss_weights": None,
-    "topic_prior_mean": 0.0,
-    "topic_prior_variance": None,
-    "verbose": True
-}
+# Read default training parameters
+#workdir =  os.path.dirname(os.path.dirname(os.getcwd()))
+workdir = "/workspace"
+configFile = os.path.join(workdir, "config/dft_params.cf")
+training_params = read_config_experiments(configFile)
 
-tuned_parameters = {
-    "bow_size": 0,
-    "input_size": 0,
-    "n_components": 50,
-}
 
+# Define address for communication between client and server
+config = configparser.ConfigParser()
+config.read(configFile)
+if workdir.startswith("/workspace/gFedNTM/") or not workdir.startswith("/workspace"):
+    address = config.get("addresses", "local")
+else:
+    address = config.get("addresses", "docker")
+
+print(address)
 
 def start_server(min_num_clients, model_type):
     """Initializes the server that is going to orchestrates the federated training.
@@ -74,9 +59,9 @@ def start_server(min_num_clients, model_type):
 
     server = grpc.server(futures.ThreadPoolExecutor(), options=opts)
     federated_server = FederatedServer(
-        min_num_clients=min_num_clients,
-        model_params={**fixed_parameters, **tuned_parameters}, model_type=model_type
-    )
+                            min_num_clients=min_num_clients,
+                            model_params={**training_params},
+                            model_type=model_type)
 
     federated_pb2_grpc.add_FederationServicer_to_server(
         federated_server, server)
@@ -131,7 +116,7 @@ def start_client(id_client: int, data_type: str, fos: str, source: str):
         ('grpc.max_inbound_metadata_size', MAX_INBOUND_METADATA_SIZE),
         ('grpc.max_metadata_size', MAX_INBOUND_METADATA_SIZE)
     ]
-    with grpc.insecure_channel(address[0], options=options) as channel:
+    with grpc.insecure_channel(address, options=options) as channel:
         stub = federated_pb2_grpc.FederationStub(channel)
 
         # Create client
