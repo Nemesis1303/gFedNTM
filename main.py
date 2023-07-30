@@ -18,29 +18,18 @@ import grpc
 import numpy as np
 import pandas as pd
 
-from src.federation.client import Client, FederatedClientServer
+from src.federation.client import Client
 from src.federation.server import FederatedServer
 from src.protos import federated_pb2_grpc
 from src.utils.auxiliary_functions import read_config_experiments
 
-# Read default training parameters
-#workdir =  os.path.dirname(os.path.dirname(os.getcwd()))
-workdir = "/workspace"
-configFile = os.path.join(workdir, "config/dft_params.cf")
-training_params = read_config_experiments(configFile)
-
-
-# Define address for communication between client and server
-config = configparser.ConfigParser()
-config.read(configFile)
-if workdir.startswith("/workspace/gFedNTM/") or not workdir.startswith("/workspace"):
-    address = config.get("addresses", "local")
-else:
-    address = config.get("addresses", "docker")
-
-print(address)
-
-def start_server(min_num_clients, model_type):
+def start_server(min_num_clients:int,
+                 model_type:str,
+                 max_iters:int,
+                 opts_server:list,
+                 opts_client:list,
+                 address:str,
+                 training_params:dict):
     """Initializes the server that is going to orchestrates the federated training.
 
     Parameters
@@ -49,19 +38,29 @@ def start_server(min_num_clients, model_type):
         Minimum number of clients to start the federation
     model_type: str
         Underlying topic modeling algorithm with which the federated topic model is going to be constructed (prod|ctm)
+    max_iters: int
+        Maximum number of iterations for the federated training
+    opts_server: list
+        List of options for the server
+    opts_client: list
+        List of options for the server when it behaves as a 'client'
+    address: str
+        Address of the server
+    training_params: dict
+        Dictionary with the parameters for the training of the federated topic model
     """
-
-    # START SERVER
-    opts = [("grpc.keepalive_time_ms", 10000),
-            ("grpc.keepalive_timeout_ms", 5000),
-            ("grpc.keepalive_permit_without_calls", True),
-            ("grpc.http2.max_ping_strikes", 0)]
-
-    server = grpc.server(futures.ThreadPoolExecutor(), options=opts)
+    
+    client_server_addres = \
+        "gfedntm-client" if address.startswith("gfedntm-server") else "localhost"
+    print(client_server_addres)
+    server = grpc.server(futures.ThreadPoolExecutor(), options=opts_server)
     federated_server = FederatedServer(
                             min_num_clients=min_num_clients,
                             model_params={**training_params},
-                            model_type=model_type)
+                            model_type=model_type,
+                            max_iters=max_iters,
+                            opts_client=opts_client,
+                            client_server_addres=client_server_addres)
 
     federated_pb2_grpc.add_FederationServicer_to_server(
         federated_server, server)
@@ -69,7 +68,13 @@ def start_server(min_num_clients, model_type):
     server.start()
     server.wait_for_termination()
 
-def start_client(id_client: int, data_type: str, fos: str, source: str):
+def start_client(id_client:int,
+                 data_type:str,
+                 fos:str,
+                 source:str,
+                 address:str,
+                 opts_client:list,
+                 opts_server:list):
     """Initialize a client that is going to contribute to the training of a federated topic model.
 
     Parameters
@@ -82,6 +87,12 @@ def start_client(id_client: int, data_type: str, fos: str, source: str):
         Category or label describing the data in source belonging to the client given by 'id_client'
     source: str
         Path to the data that is going to be used by the client for the training
+    address: str
+        Address of the server
+    opts_client: list
+        List of options for the client
+    opts_server: list
+        List of options for the 'client-server'
     """
 
     if data_type == "synthetic":
@@ -105,49 +116,15 @@ def start_client(id_client: int, data_type: str, fos: str, source: str):
 
     # START CLIENT
     # Open channel for communication with the server
-    MAX_MESSAGE_LENGTH = 80 * 1024 * 1024
-    MAX_INBOUND_MESSAGE_SIZE = 8 * 1024 * 1024
-    MAX_INBOUND_METADATA_SIZE = 80 * 1024 * 1024
-    options = [
-        ('grpc.max_message_length', MAX_MESSAGE_LENGTH),
-        ('grpc.max_send_message_length', MAX_MESSAGE_LENGTH),
-        ('grpc.max_receive_message_length', MAX_MESSAGE_LENGTH),
-        ('grpc.max_inbound_message_size', MAX_INBOUND_MESSAGE_SIZE),
-        ('grpc.max_inbound_metadata_size', MAX_INBOUND_METADATA_SIZE),
-        ('grpc.max_metadata_size', MAX_INBOUND_METADATA_SIZE)
-    ]
-    with grpc.insecure_channel(address, options=options) as channel:
+    with grpc.insecure_channel(address, options=opts_client) as channel:
         stub = federated_pb2_grpc.FederationStub(channel)
 
         # Create client
-        client = Client(id=id_client,
+        _ = Client(id=id_client,
                         stub=stub,
                         local_corpus=corpus,
-                        data_type=data_type)
-
-        # # Start training of local model
-        # client.train_local_model()
-
-        # # Print evaluation results if data_type is synthetic
-        # if data_type == "synthetic":
-        #     eval_parameters = [
-        #         vocab_size, doc_topic_distrib_gt_all[id_client-1], word_topic_distrib_gt]
-        #     client.eval_local_model(eval_params=eval_parameters)
-
-    # Start client-server
-    # opts = [("grpc.keepalive_time_ms", 10000),
-    #         ("grpc.keepalive_timeout_ms", 5000),
-    #         ("grpc.keepalive_permit_without_calls", True),
-    #         ("grpc.http2.max_ping_strikes", 0)]
-
-    # client_server = grpc.server(futures.ThreadPoolExecutor(), options=opts)
-    # federated_server = FederatedClientServer(
-    #     client.local_model, client.train_data)
-    # federated_pb2_grpc.add_FederationServerServicer_to_server(
-    #     federated_server, client_server)
-    # client_server.add_insecure_port('[::]:' + str(50051 + id_client))
-    # client_server.start()
-    # client_server.wait_for_termination()
+                        data_type=data_type,
+                        opts_server=opts_server)
 
 
 def preproc(spark: bool, nw: int, configFile: pathlib.Path):
@@ -208,6 +185,8 @@ def main():
                         help="Minimum number of client that are necessary for starting a federation. This parameter only affects the server.")
     parser.add_argument('--model_type', type=str, default="avitm",
                         help="Underlying model type: avitm/ctm.")
+    parser.add_argument('--max_iters', type=int, default=10,
+                        help="Maximum number of global iterations to train the federated topic model.")
 
     # ========================================================================
     # Parameters for preprocessing
@@ -223,6 +202,43 @@ def main():
                         help="path to configuration file")
 
     args = parser.parse_args()
+    
+    # Read default training parameters
+    #workdir =  os.path.dirname(os.path.dirname(os.getcwd()))
+    workdir = "/workspace" # TODO: Configure
+    configFile = os.path.join(workdir, "config/dft_params.cf")
+    training_params = read_config_experiments(configFile)
+
+
+    # Define address for communication between client and server
+    config = configparser.ConfigParser()
+    config.read(configFile)
+    if workdir.startswith("/workspace/gFedNTM/") or not workdir.startswith("/workspace"):
+        address = config.get("addresses", "local")
+    else:
+        address = config.get("addresses", "docker")
+        
+    print(address)
+        
+    # Define 'client' options for GRPC communication (80*1024*1024)
+    MAX_MESSAGE_LENGTH = int(config.get("grpc", "max_message_length")) 
+    MAX_INBOUND_MESSAGE_SIZE = int(config.get("grpc", "max_inbound_message_size"))
+    MAX_INBOUND_METADATA_SIZE = int(config.get("grpc", "max_inbound_metadata_size"))
+    opts_client = [
+        ('grpc.max_message_length', MAX_MESSAGE_LENGTH),
+        ('grpc.max_send_message_length', MAX_MESSAGE_LENGTH),
+        ('grpc.max_receive_message_length', MAX_MESSAGE_LENGTH),
+        ('grpc.max_inbound_message_size', MAX_INBOUND_MESSAGE_SIZE),
+        ('grpc.max_inbound_metadata_size', MAX_INBOUND_METADATA_SIZE),
+        ('grpc.max_metadata_size', MAX_INBOUND_METADATA_SIZE)
+    ]
+
+    # Define 'server' options for GRPC communication
+    opts_server = [
+        ("grpc.keepalive_time_ms", int(config.get("grpc", "keepalive_time_ms"))),
+        ("grpc.keepalive_timeout_ms", int(config.get("grpc", "keepalive_timeout_ms"))),
+        ("grpc.keepalive_permit_without_calls", True if config.get("grpc", "keepalive_permit_without_calls") == "True" else False),
+        ("grpc.http2.max_ping_strikes", int(config.get("grpc", "max_ping_strikes")))]
 
     if args.preproc:
         print("Preprocessing data")
@@ -231,11 +247,24 @@ def main():
     elif args.id == 0:
         print("Starting server with", args.min_clients_federation,
               "as minimum number of clients to start the federation.")
-        start_server(args.min_clients_federation, args.model_type)
+        start_server(
+            min_num_clients=args.min_clients_federation,
+            model_type=args.model_type,
+            max_iters=args.max_iters,
+            opts_server=opts_server,
+            opts_client=opts_client,
+            address=address,
+            training_params=training_params)
     else:
         print("Starting client with id ", args.id)
-        start_client(args.id, args.data_type, args.fos, args.source)
-
+        start_client(
+            id_client=args.id,
+            data_type=args.data_type,
+            fos=args.fos,
+            source=args.source,
+            address=address,
+            opts_client=opts_client,
+            opts_server=opts_server)
 
 if __name__ == "__main__":
     main()

@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 """
-These scripts contain the two classes that define the client-side part of the federated learning process. 
+This script contains the two classes that define the client-side part of the federated learning process. 
 
-- The Client class contains the stubs to interact with the server-side part via a gRPC channel during the vocabulary consensus phase.
+* The CLIENT class: This class contains stubs that facilitate interactions with the server-side via a gRPC channel during the vocabulary consensus phase.
 
-- The Federated Client Server class describes the client's behavior when it acts as a 'client-server' to process the server petitions to process another gradient update that contributes to the joint training of a topic model.
+* The FEDERATEDCLIENTSERVER class: This class defines the behavior of the client when it acts as a 'client-server' to process server petitions for another gradient update. T
 
 Created on Feb 1, 2022
-
+Last updated on Jul 29, 2023
 @author: L. Calvo-Bartolomé (lcalvo@pa.uc3m.es)
 """
 import time
@@ -172,6 +172,7 @@ class Client:
                  stub: federated_pb2_grpc.FederationStub,
                  local_corpus: list,
                  data_type: str,
+                 opts_server: dict,
                  logger=None):
         """
         Object's initializer
@@ -217,26 +218,13 @@ class Client:
         self.__wait_for_agreed_vocab_NN()
 
         # Create client_server in separate thread
-        self.__start_client_server()
-        # try:
-        #     thread = threading.Thread(target=self.__start_client_server)
-        #     thread.daemon = True
-        #     thread.start()
-        #     self._logger.info("Client-server thread started")
-        # except:
-        #     self._logger.info("Could not start client-server thread")
+        self.__start_client_server(opts_server)
 
         # Send ready for training after vocabulary consensus phase
         self.__send_ready_for_training()
 
-    def __start_client_server(self):
-
-        opts = [("grpc.keepalive_time_ms", 10000),
-                ("grpc.keepalive_timeout_ms", 5000),
-                ("grpc.keepalive_permit_without_calls", True),
-                ("grpc.http2.max_ping_strikes", 0)]
-
-        client_server = grpc.server(futures.ThreadPoolExecutor(), options=opts)
+    def __start_client_server(self, opts_server: dict):
+        client_server = grpc.server(futures.ThreadPoolExecutor(), options=opts_server)
         federated_server = FederatedClientServer(
             self.local_model, self.train_data, self.id)
         federated_pb2_grpc.add_FederationServerServicer_to_server(
@@ -298,8 +286,10 @@ class Client:
             dic.pairs.extend(
                 [federated_pb2.Dictionary.Pair(key=key_, value=federated_pb2.Dictionary.Pair.Value(ivalue=value_))])
 
-        # Construct request to send
-        req = federated_pb2.DictRequest(vocab=dic, client_id=self.id)
+         # Construct request to send
+        req = federated_pb2.DictRequest(vocab=dic,
+                                        client_id=self.id,
+                                        nr_samples=len(self._local_corpus))
 
         # Send dictionary to the server and wait for his response
         if self._stub:
@@ -432,93 +422,3 @@ class Client:
             response = self._stub.trainFederatedModel(request)
 
         return
-
-    def send_per_minibatch_gradient(self, gradients, current_mb, current_epoch, num_epochs):
-        """
-        Sends a minibatch's gradient update to the server.
-
-        Parameters
-        ----------
-        gradients : List[List[gradient_name,gradient_value]]
-            Gradients to be sent to the server in the current minibatch
-        current_mb: int
-            Current minibatch, i.e. minibatch to which the gradient that is going to be sent corresponds
-        current_epoch: int
-            Current epoch, i.e. epoch to which the minibatch corresponds
-        num_epochs: int
-            Number of epochs that is going to be used for training the model.
-
-        Returns
-        -------
-        data : federated_pb2.Update
-            Prototocol buffer that is going to be send through the gRPC channel
-        """
-
-        # Generate request's header
-        id_message = "ID" + str(self.id) + "_" + str(round(time.time()))
-        header = federated_pb2.MessageHeader(id_request=id_message,
-                                             message_type=federated_pb2.MessageType.CLIENT_TENSOR_SEND)
-        # Generate request's metadata
-        metadata = \
-            federated_pb2.MessageAdditionalData(current_mb=current_mb,
-                                                current_epoch=current_epoch,
-                                                num_max_epochs=num_epochs,
-                                                id_machine=int(self.id))
-        # Generate Protos Updates
-        updates_ = []
-        for gradient in gradients:
-            tensor_protos = serializeTensor(gradient[1])
-            protos_update = federated_pb2.Update(
-                tensor_name=gradient[0],
-                tensor=tensor_protos
-            )
-            updates_.append(protos_update)
-
-        # Generate Protos ClientTensorRequest with the update
-        request = federated_pb2.ClientTensorRequest(
-            header=header, metadata=metadata, updates=updates_)
-
-        # Send request to the server and wait for his response
-        if self._stub:
-            response = self._stub.sendLocalTensor(request)
-            self._logger.info('Client %s received a response to request %s',
-                              str(self.id), response.header.id_to_request)
-
-    def listen_for_updates(self):
-        """
-        Waits for an update from the server.
-
-        Returns
-        -------
-        update : federated_pb2.ServerAggregatedTensorRequest
-            Update from the server with the average tensor generated from all federation clients' updates.
-        """
-
-        update = self._stub.sendAggregatedTensor(federated_pb2.Empty())
-        self._logger.info('Client %s received updated for minibatch %s of epoch %s ',
-                          str(self.id),
-                          str(self._local_model.current_mb),
-                          str(self._local_model.current_epoch))
-
-        return update
-
-    def train_local_model(self):
-        """
-        Trains a the local model. 
-
-        To do so, we send the server the gradients corresponding with the parameter beta of the model, and the server returns an update of such a parameter, which is calculated by averaging the per minibatch beta parameters that he gets from the set of clients that are connected to the federation. After obtaining the beta updates from the server, the client keeps with the training of its own local model. This process is repeated for each minibatch of each epoch.
-        """
-
-        self._local_model.fit(self._train_data)
-        self._local_model.get_results_model()
-
-        return
-
-    def eval_local_model(self, eval_params):
-        """
-        Evaluates the local model if synthetic data is being used.
-        """
-
-        self._local_model.get_results_model()
-        self._local_model.evaluate_synthetic_model(
-            eval_params[0], eval_params[1], eval_params[2])

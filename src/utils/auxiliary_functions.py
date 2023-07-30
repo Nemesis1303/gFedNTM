@@ -137,7 +137,7 @@ def optStateDict_to_proto(optStateDict) -> federated_pb2.OptUpdate:
             state_ = federated_pb2.AdamUpdate.State()
             for j in optStateDict[i].keys():  # 0
                 # Read step
-                step_ = optStateDict[i][j]["step"]
+                step_ = serializeTensor(optStateDict[i][j]["step"])
                 # Read exp_avg
                 exp_avg_ = serializeTensor(optStateDict[i][j]["exp_avg"])
                 # Read exp_avg_sq

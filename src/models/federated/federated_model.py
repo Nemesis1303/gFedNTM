@@ -5,9 +5,6 @@ Created on Feb 1, 2022
 """
 from abc import abstractmethod
 
-from src.federation.federated_trainer_manager import FederatedTrainerManager
-
-
 class FederatedModel(object):
     """
     Wrapper for a Generic Federated Topic Model. 

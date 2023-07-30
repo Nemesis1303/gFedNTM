@@ -26,3 +26,12 @@ num_epochs = 100
 num_samples = 20
 thetas_thr = 0.003
 verbose = True
+
+[grpc]
+max_message_length = 83886080
+max_inbound_message_size = 83886080
+max_inbound_metadata_size = 83886080
+keepalive_time_ms = 10000
+keepalive_timeout_ms = 5000
+keepalive_permit_without_calls = True
+max_ping_strikes = 0
