@@ -151,6 +151,8 @@ class FederatedClientServer(federated_pb2_grpc.FederationServerServicer):
 
         # TODO: Check if this is needed
         optStateDict = proto_to_optStateDict(request.nndata.optUpdate)
+        
+        # Update local model with server's weights
         self._local_model.deltaUpdateFit(modelStateDict)
 
         header = federated_pb2.MessageHeader(

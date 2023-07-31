@@ -23,7 +23,6 @@ class FederatedAVITM(AVITM, FederatedModel):
 
     def __init__(self,
                  tm_params: dict,
-                 # client: Client,
                  logger=None) -> None:
 
         FederatedModel.__init__(self, tm_params, logger)
@@ -92,7 +91,7 @@ class FederatedAVITM(AVITM, FederatedModel):
             self.train_data,
             batch_size=self.batch_size,
             shuffle=True,
-            num_workers=0)
+            num_workers=self.num_data_loader_workers)
         self.train_loader_iter = iter(self.train_loader)
         self.current_batch_sample = next(self.train_loader_iter)
 
@@ -169,7 +168,10 @@ class FederatedAVITM(AVITM, FederatedModel):
             # Get next minibatch
             self.current_batch_sample = next(self.train_loader_iter)  # !!!!!!
         except StopIteration as ex:
-            # If there is no next minibatch, the epoch has ended, so we report, eset the iterator and get the first one
+            # If there is no next minibatch, the epoch has ended, so we report, reset the iterator and get the first one
+            
+            self.train_loss /= self.samples_processed
+            
             print("Epoch: [{}/{}]\tSamples: [{}/{}]\tTrain Loss: {}\tTime: {}".format(
                 self.current_epoch+1, self.num_epochs, self.samples_processed,
                 len(self.train_data)*self.num_epochs, self.train_loss, datetime.datetime.now()))
@@ -197,7 +199,7 @@ class FederatedAVITM(AVITM, FederatedModel):
             print("Epoch end reached")
             self.training_doc_topic_distributions = self.get_doc_topic_distribution(
                 self.train_data, n_samples)
-            # self.get_results_model()
+            self.get_results_model()
 
         return
 
@@ -213,7 +215,15 @@ class FederatedAVITM(AVITM, FederatedModel):
             Dictionary with the gradients to be updated.
         """
 
-        # Upadate gradients
+        # Update model's parameters from the forward pass carried at client's side
+        self.model.topic_word_matrix = self.model.beta
+        
+        self.best_components = self.model.beta
+        #print("This are the best components:")
+        #if self.best_components is not None:
+        #    print(self.best_components)
+        
+        # Upadate gradients after averaging from the clients'
         # Parameter0 = prior_mean
         # Parameter1 = prior_variance
         # Parameter2 = beta
@@ -238,6 +248,8 @@ class FederatedAVITM(AVITM, FederatedModel):
 
         # Get topics
         self.topics = self.get_topics()
+        
+        print(self.topics)
 
         # Get doc-topic distribution
         self.thetas = \
@@ -278,6 +290,8 @@ class FederatedAVITM(AVITM, FederatedModel):
 
     def get_topics_in_server(self):
         # TODO: fix this
-        # self.topics = self.get_topics()
-        # print(self.topics)
+        # Get word-topic distribution
+        self.betas = self.get_topic_word_distribution()
         print("Coge los topics in server")
+        print(self.betas)
+        

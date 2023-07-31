@@ -395,7 +395,7 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
                             client_tensor_req.metadata.current_epoch, client_tensor_req.header.id_request)
                         print(f"Connecting to {address_to_connect} worked as expected")
                 
-                print("Entering into sleep")
+                self._logger.info(f"Entering into sleep")
                 time.sleep(3)
 
             # Aggregate gradients from clients
@@ -404,8 +404,6 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
 
             # Calculate average for each tensor
             # Get dict of tensor, of entry per update
-            print("LLEGA 3")
-            print(f"these are the federation clients: {self._federation.federation_clients}")
             keys = client.tensors.keys()
             averages = {}
             for key in keys:
@@ -422,9 +420,7 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
                 # average_tensor = (np.sum(np.stack(clients_tensors)*N[:, np.newaxis, np.newaxis], axis=0) / N.sum())
 
                 averages[key] = average_tensor
-                #print("The average tensor " +
-                #    key + " is: ", average_tensor)
-            print("LLEGA 4")
+
             # Peform updates
             # TODO: Update for different models
             self._global_model.optimize_on_minibatch_from_server(averages)
@@ -444,7 +440,6 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
 
             # Send Aggregated request to Server-Clients
             for client_pos in range(len(self._federation.federation_clients)):
-                print("LLEGA 5")
                 client = self._federation.federation_clients[client_pos]
 
                 # address_to_connect = 'gfedntm-client' + \
@@ -477,6 +472,6 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
                         # get ack confirming received ok
                         ack = stub.sendAggregatedTensor(agg_request)
                 self._logger.info(f"ACK received for iter {i}")     
-            self._global_model.get_topics_in_server()
+        self._global_model.get_topics_in_server()
 
         return federated_pb2.Empty()

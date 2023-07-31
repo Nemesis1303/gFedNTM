@@ -185,7 +185,7 @@ def main():
                         help="Minimum number of client that are necessary for starting a federation. This parameter only affects the server.")
     parser.add_argument('--model_type', type=str, default="avitm",
                         help="Underlying model type: avitm/ctm.")
-    parser.add_argument('--max_iters', type=int, default=10,
+    parser.add_argument('--max_iters', type=int, default=100,
                         help="Maximum number of global iterations to train the federated topic model.")
 
     # ========================================================================
