@@ -1,4 +1,4 @@
-{   "modelsdir":"/export/usuarios_ml4ds/lbartolome/gFedNTM/experiments_centralized/_models",
+{   "modelsdir":"/export/usuarios_ml4ds/lbartolome/Repos/my_repos/gFedNTM/experiments/centralized/results/models_",
     "n_nodes": 5,
     "vocab_size": 5000,
     "n_topics": 50,
@@ -13,8 +13,8 @@
     },
     "alg": "lda",
     "frozen_topics": 5,
-    "frozen_topics_list": "5 10 15 30 40",
+    "frozen_topics_list": "5 10 15 20 25 30 35 40",
     "eta_list": "1e-2 0.02 0.03 0.04 0.08 1",
     "experiment":0,
-    "iters":10
+    "iters":20
   }

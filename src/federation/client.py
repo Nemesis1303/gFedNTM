@@ -46,10 +46,12 @@ class FederatedClientServer(federated_pb2_grpc.FederationServerServicer):
                  local_model: Union[FederatedAVITM, FederatedCTM],
                  train_data: Union[BOWDataset, CTMDataset],
                  id: int,
+                 save_client:str,
                  logger=None):
 
         self._local_model = local_model
         self.id = id
+        self._save_client = save_client
         # Initialize all parameters needed for the training of the local model
         self._local_model.preFit(train_data)
         
@@ -153,7 +155,9 @@ class FederatedClientServer(federated_pb2_grpc.FederationServerServicer):
         optStateDict = proto_to_optStateDict(request.nndata.optUpdate)
         
         # Update local model with server's weights
-        self._local_model.deltaUpdateFit(modelStateDict)
+        self._local_model.deltaUpdateFit(
+            modelStateDict=modelStateDict,
+            save_dir=self._save_client)
 
         header = federated_pb2.MessageHeader(
             id_request=str(self.global_epoch),
@@ -175,6 +179,7 @@ class Client:
                  local_corpus: list,
                  data_type: str,
                  opts_server: dict,
+                 save_client:str,
                  logger=None):
         """
         Object's initializer
@@ -187,10 +192,19 @@ class Client:
             Module acting as the interface for gRPC client
         local_corpus : List[str]
             List of documents that constitute the node's local corpus
+        data_type : str
+            Type of data used for the training of the local model
+        opts_server : dict
+            Dictionary with the options for the GRPC client-server
+        save_client : str
+            Path to save the client's model
+        logger : logging.Logger, optional
+            Logger object, by default None
         """
 
         self.id = id
         self._stub = stub
+        self._save_client = save_client
 
         # Create logger object
         if logger:
@@ -220,15 +234,15 @@ class Client:
         self.__wait_for_agreed_vocab_NN()
 
         # Create client_server in separate thread
-        self.__start_client_server(opts_server)
+        self.__start_client_server(opts_server,save_client)
 
         # Send ready for training after vocabulary consensus phase
         self.__send_ready_for_training()
 
-    def __start_client_server(self, opts_server: dict):
+    def __start_client_server(self, opts_server: dict, save_client:str):
         client_server = grpc.server(futures.ThreadPoolExecutor(), options=opts_server)
         federated_server = FederatedClientServer(
-            self.local_model, self.train_data, self.id)
+            self.local_model, self.train_data, self.id, save_client, self._logger)
         federated_pb2_grpc.add_FederationServerServicer_to_server(
             federated_server, client_server)
         client_server.add_insecure_port('[::]:' + str(50051 + self.id))
@@ -422,5 +436,14 @@ class Client:
         # Send request to the server and wait for his response
         if self._stub:
             response = self._stub.trainFederatedModel(request)
+            
+            print(f"Client {self.id} finished training. Waiting for other clients to finish...")
+            time.sleep(10)
+        
+        print(f"Getting results at client side...")
+        self.local_model.get_results_model(self._save_client)
+        
+        print(f"Client {self.id} finished training. Waiting for server...")
+        time.sleep(10)
 
         return

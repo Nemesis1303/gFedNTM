@@ -13,7 +13,7 @@ import os
 import pathlib
 from concurrent import futures
 from subprocess import check_output
-
+import datetime as DT
 import grpc
 import numpy as np
 import pandas as pd
@@ -29,7 +29,8 @@ def start_server(min_num_clients:int,
                  opts_server:list,
                  opts_client:list,
                  address:str,
-                 training_params:dict):
+                 training_params:dict,
+                 save_server:str):
     """Initializes the server that is going to orchestrates the federated training.
 
     Parameters
@@ -48,11 +49,15 @@ def start_server(min_num_clients:int,
         Address of the server
     training_params: dict
         Dictionary with the parameters for the training of the federated topic model
+    save_server: str
+        Path to save the global model of the federated topic model
     """
     
     client_server_addres = \
         "gfedntm-client" if address.startswith("gfedntm-server") else "localhost"
     print(client_server_addres)
+    
+    save_server += f"/global_model_{DT.datetime.now().strftime('%Y%m%d')}"
     server = grpc.server(futures.ThreadPoolExecutor(), options=opts_server)
     federated_server = FederatedServer(
                             min_num_clients=min_num_clients,
@@ -60,6 +65,7 @@ def start_server(min_num_clients:int,
                             model_type=model_type,
                             max_iters=max_iters,
                             opts_client=opts_client,
+                            save_server=save_server,
                             client_server_addres=client_server_addres)
 
     federated_pb2_grpc.add_FederationServicer_to_server(
@@ -74,7 +80,8 @@ def start_client(id_client:int,
                  source:str,
                  address:str,
                  opts_client:list,
-                 opts_server:list):
+                 opts_server:list,
+                 save_client:str):
     """Initialize a client that is going to contribute to the training of a federated topic model.
 
     Parameters
@@ -93,6 +100,8 @@ def start_client(id_client:int,
         List of options for the client
     opts_server: list
         List of options for the 'client-server'
+    save_client: str
+        Path to the folder where the client is going to save the results of the training
     """
 
     if data_type == "synthetic":
@@ -113,6 +122,8 @@ def start_client(id_client:int,
 
     else:
         print("Specified data type not supported")
+        
+    save_client += f"{id_client}/model_{id_client}_{DT.datetime.now().strftime('%Y%m%d')}"
 
     # START CLIENT
     # Open channel for communication with the server
@@ -121,11 +132,11 @@ def start_client(id_client:int,
 
         # Create client
         _ = Client(id=id_client,
-                        stub=stub,
-                        local_corpus=corpus,
-                        data_type=data_type,
-                        opts_server=opts_server)
-
+                   stub=stub,
+                   local_corpus=corpus,
+                   data_type=data_type,
+                   opts_server=opts_server,
+                   save_client=save_client)
 
 def preproc(spark: bool, nw: int, configFile: pathlib.Path):
     """Carries out simple preprocessing tasks and prepare a training file in the format required by the federation.
@@ -209,7 +220,6 @@ def main():
     configFile = os.path.join(workdir, "config/dft_params.cf")
     training_params = read_config_experiments(configFile)
 
-
     # Define address for communication between client and server
     config = configparser.ConfigParser()
     config.read(configFile)
@@ -217,8 +227,11 @@ def main():
         address = config.get("addresses", "local")
     else:
         address = config.get("addresses", "docker")
-        
     print(address)
+    
+    # Define directories to save results
+    save_client = config.get("save_dir", "save_client")
+    save_server = config.get("save_dir", "save_server")
         
     # Define 'client' options for GRPC communication (80*1024*1024)
     MAX_MESSAGE_LENGTH = int(config.get("grpc", "max_message_length")) 
@@ -254,7 +267,8 @@ def main():
             opts_server=opts_server,
             opts_client=opts_client,
             address=address,
-            training_params=training_params)
+            training_params=training_params,
+            save_server=save_server)
     else:
         print("Starting client with id ", args.id)
         start_client(
@@ -264,7 +278,8 @@ def main():
             source=args.source,
             address=address,
             opts_client=opts_client,
-            opts_server=opts_server)
+            opts_server=opts_server,
+            save_client=save_client)
 
 if __name__ == "__main__":
     main()

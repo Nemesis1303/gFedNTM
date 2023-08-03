@@ -35,3 +35,7 @@ keepalive_time_ms = 10000
 keepalive_timeout_ms = 5000
 keepalive_permit_without_calls = True
 max_ping_strikes = 0
+
+[save_dir]
+save_client = /workspace/static/output_models/client
+save_server = /workspace/static/output_models/server

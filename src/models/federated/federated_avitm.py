@@ -80,7 +80,7 @@ class FederatedAVITM(AVITM, FederatedModel):
         self.model_dir = save_dir
         self.train_data = train_data
 
-        # Initialize training variables
+        # Initialize training variables before the training loop
         self.current_mb = 0
         self.current_epoch = 0
         self.samples_processed = 0
@@ -141,7 +141,7 @@ class FederatedAVITM(AVITM, FederatedModel):
 
         return params
 
-    def deltaUpdateFit(self, modelStateDict, n_samples=20) -> None:
+    def deltaUpdateFit(self, modelStateDict, save_dir, n_samples=20) -> None:
         """Updates gradient with aggregated gradient from server and calculates loss.
 
         Parameters
@@ -199,7 +199,7 @@ class FederatedAVITM(AVITM, FederatedModel):
             print("Epoch end reached")
             self.training_doc_topic_distributions = self.get_doc_topic_distribution(
                 self.train_data, n_samples)
-            self.get_results_model()
+            self.get_results_model(save_dir)
 
         return
 
@@ -217,11 +217,7 @@ class FederatedAVITM(AVITM, FederatedModel):
 
         # Update model's parameters from the forward pass carried at client's side
         self.model.topic_word_matrix = self.model.beta
-        
         self.best_components = self.model.beta
-        #print("This are the best components:")
-        #if self.best_components is not None:
-        #    print(self.best_components)
         
         # Upadate gradients after averaging from the clients'
         # Parameter0 = prior_mean
@@ -244,13 +240,18 @@ class FederatedAVITM(AVITM, FederatedModel):
     # ======================================================
     # Evaluation
     # ======================================================
-    def get_results_model(self):
+    def get_results_model(self, save_dir:str) -> None:
+        """Gets the results of the model after training at the CLIENT side.
+        
+        Parameters
+        ----------
+        save_dir: str
+            Directory where the model will be saved.
+        """
 
         # Get topics
         self.topics = self.get_topics()
         
-        print(self.topics)
-
         # Get doc-topic distribution
         self.thetas = \
             np.asarray(self.get_doc_topic_distribution(self.train_data))
@@ -260,11 +261,14 @@ class FederatedAVITM(AVITM, FederatedModel):
         # Get word-topic distribution
         self.betas = self.get_topic_word_distribution()
 
-        # file_save = \
+        #file_save = \
         #     "workspace/static/output_models/model_client_" + \
         #     str(self.fedTrManager.client.id) + ".npz"
 
-        #save_model_as_npz(file_save, self)
+        print("Saving model at: ", save_dir)
+        save_model_as_npz(save_dir, self)
+        
+        return
 
     def evaluate_synthetic_model(self, vocab_size, gt_thetas, gt_betas):
 
@@ -288,10 +292,17 @@ class FederatedAVITM(AVITM, FederatedModel):
         print('Difference in evaluation of doc similarity:', np.sum(
             np.abs(sim_mat_theoretical - sim_mat_actual))/len(gt_thetas))
 
-    def get_topics_in_server(self):
+    def get_topics_in_server(self, save_dir:str):
+        """Gets the topics of the model after training at the SERVER side.
+        The topics' chemical description cannot be inferred since the server does not have access to the training corpus. Inference is required in order to get the topic distribution.
+        """
+        
         # TODO: fix this
         # Get word-topic distribution
         self.betas = self.get_topic_word_distribution()
         print("Coge los topics in server")
         print(self.betas)
+        
+        print("Saving global model...")
+        save_model_as_npz(save_dir, self)
         

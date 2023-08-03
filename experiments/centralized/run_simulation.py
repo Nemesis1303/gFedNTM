@@ -11,7 +11,7 @@ import logging
 import pickle
 import shutil
 from pathlib import Path
-
+import sys
 import colored
 import numpy as np
 import pandas as pd
@@ -20,6 +20,7 @@ from scipy.special import softmax
 from sklearn.preprocessing import normalize
 from tqdm import tqdm
 
+sys.path.append('../..')
 from src.models.base.pytorchavitm.avitm_network.avitm import AVITM
 from src.models.base.pytorchavitm.datasets.bow_dataset import BOWDataset
 from src.models.base.pytorchavitm.utils.data_preparation import prepare_dataset
@@ -28,26 +29,34 @@ from src.models.base.pytorchavitm.utils.data_preparation import prepare_dataset
 def printgr(text: str) -> str:
     """    
     Prints the text string given as input in green.
-
-    :param text: Text to print
-    :type text: str
-    :return: Text to print in green
-    :rtype: str
+    
+    Paramaters
+    ----------
+    text: str
+        Text to print
+    
+    Returns
+    -------
+    str: Text to print in green
     """
     print(colored.stylize(text, colored.fg('green')))
 
 
 def rotateArray(arr: np.ndarray, n: int, d: int) -> np.ndarray:
     """Rotates an array of size n by d elements. 
-
-    :param arr: Array to rotate
-    :type arr: np.ndarray
-    :param n: Size of the array
-    :type n: int
-    :param d: Number of positions to rotate the array
-    :type d: int
-    :return: The rotated array
-    :rtype: np.ndarray
+    
+    Parameters
+    ----------
+    arr: np.ndarray
+        Array to rotate
+    n: int
+        Size of the array
+    d: int 
+        Number of positions to rotate the array
+    
+    Returns
+    --------
+    np.ndarray: The rotated array
     """
 
     temp = []
@@ -83,36 +92,40 @@ def generateSynthetic(just_inf: bool,
                       prior_nofrozen: list) -> tuple[np.ndarray, list, list]:
     """It generates a synthetic dataset for each of the nodes (the generation of just the topic vectors can also be carried out standalone). Documents therein have been generated using a vocabulary of vocab_size terms with no semantic meaning (e.g., term317, term56314) from a given LDA or ProdLDA generative model. The corpus consists of n_docs training +  n_docs_inf documents, or just n_docs_global_inf inference documents, each of them with a random length drawn uniformly in the range given by nwords .
 
-    :param just_inf: Boolean specifying whether the documents to be generated are going to be used just for inference, or both training and inference
-    :type just_inf: bool
-    :param gen_docs: Boolean specifying whether the documents need to be generated or it is enough with just the topic vectors
-    :type gen_docs: bool
-    :param vocab_size: Size of the vocabulary with which the documents will be generated
-    :type vocab_size: int
-    :param n_topics: Number of topics in the LDA/ProdLDA model
-    :type n_topics: int
-    :param beta: Prior Dirichlet parameter for the topics
-    :type beta: float
-    :param n_docs: Number of training documents to be generated
-    :type n_docs: int
-    :param n_docs_inf: Number of documents for inference to be generated if both training and inference documents are being generated
-    :type n_docs_inf: int
-    :param n_docs_global_inf: Number of documents for inference when no training documents are being generated
-    :type n_docs_global_inf: int
-    :param nwords: Tuple with the information of the maximum and minimum number of words a document must have
-    :type nwords: tuple
-    :param alg: Algorithm (LDA/ProdLDA) that will be used for the documents' generation
-    :type alg: str
-    :param n_nodes: Number of nodes in the federation
-    :type n_nodes: int
-    :param prior_frozen: Documents prior of the frozen topics
-    :type prior_frozen: list
-    :param own_topics: Number of own topics each node has
-    :type own_topics: int
-    :param prior_nofrozen: Documents prior of the non-frozen topics
-    :type prior_nofrozen: list
-    :return: three lists, with the word-topic distribution, and a list of document-topic distriubtions and the documents itself, for each of the nodes in the generation
-    :rtype: tuple[np.ndarray,list,list]
+
+    Parameters:
+    just_inf:  bool 
+        Boolean specifying whether the documents to be generated are going to be used just for inference, or both training and inference
+    gen_docs: bool 
+        Boolean specifying whether the documents need to be generated or it is enough with just the topic vectors
+    vocab_size: int 
+        Size of the vocabulary with which the documents will be generated
+    n_topics: int
+        Number of topics in the LDA/ProdLDA model
+    beta: float
+        Prior Dirichlet parameter for the topics
+    n_docs: int
+        Number of training documents to be generated
+    n_docs_inf: int
+        Number of documents for inference to be generated if both training and inference documents are being generated
+    n_docs_global_inf: int 
+        Number of documents for inference when no training documents are being generated
+    nwords: tuple
+        Tuple with the information of the maximum and minimum number of words a document must have
+    alg: str
+        Algorithm (LDA/ProdLDA) that will be used for the documents' generation
+    n_nodes: int 
+        Number of nodes in the federation
+    prior_frozen: list
+        Documents prior of the frozen topics
+    own_topics: int 
+        Number of own topics each node has
+    prior_nofrozen: list
+        Documents prior of the non-frozen topics
+    
+    Returns
+    -------
+    tuple[np.ndarray,list,list]: A tuple with the topic-word distribution, a list of a list of document-topic distriubtions and the documents itself, for each of the nodes in the generation
     """
 
     if just_inf:
@@ -168,15 +181,22 @@ def generateSynthetic(just_inf: bool,
     return topic_vectors, doc_topics_all, documents_all
 
 
-def create_model_folder(modelname, modelsdir):
-    """_summary_
-
-    :param modelname: _description_
-    :type modelname: _type_
-    :param modelsdir: _description_
-    :type modelsdir: _type_
-    :return: _description_
-    :rtype: _type_
+def create_model_folder(modelname, modelsdir) -> tuple[Path, Path]:
+    """Creates a folder for the model and saves the training configuration in a json file.
+    
+    Parameters
+    ----------
+    modelname : str
+        Name of the model
+    modelsdir : Path
+        Path to the folder where the model will be saved
+        
+    Returns
+    -------
+    modeldir : Path
+        Path to the folder where the model will be saved
+    configFile : Path
+        Path to the json file with the training configuration
     """
 
     # Create model folder and save model training configuration
@@ -199,25 +219,36 @@ def create_model_folder(modelname, modelsdir):
     return modeldir, configFile
 
 
-def convert_topic_word_to_init_size(vocab_size, model, model_type,
-                                    ntopics, id2token, all_words, betas):
+def convert_topic_word_to_init_size(vocab_size:int,
+                                    model,
+                                    model_type:str,
+                                    ntopics:int,
+                                    id2token:list[tuple],
+                                    all_words:list[str],
+                                    betas:np.ndarray):
     """It converts the topic-word distribution matrix obtained from the training of a model into a matrix with the dimensions of the original topic-word distribution, assigning zeros to those words that are not present in the corpus. 
     It is only of use in case we are training a model over a synthetic dataset, so as to later compare the performance of the attained model in what regards to the similarity between the original and the trained model.
-
-    :param vocab_size: Size of the synethic'data vocabulary
-    :type vocab_size: int
-    :param model: Model whose topic-word matrix is being transformed
-    :type model: _type_
-    :param model_type: Type of the trained model (e.g. AVITM)
-    :type model_type: str
-    :param ntopics: Number of topics of the trained model
-    :type ntopics: int
-    :param id2token: Mappings with the content of the document-term matrix
-    :type id2token: List[tuple]
-    :param all_words: List of all the words of the vocabulary of size vocab_size
-    :type all_words: List[str]
-    :return: Normalized transormed topic-word distribution
-    :rtype: ndarray
+    
+    Parameters
+    ----------
+    vocab_size: int
+        Size of the synethic'data vocabulary
+    model: 
+        Model whose topic-word matrix is being transformed
+    model_type: str
+        Type of the trained model (e.g. AVITM)
+    ntopics: int
+        Number of topics of the trained model
+    id2token: List[tuple]
+        Mappings with the content of the document-term matrix
+    all_words: List[str]
+        List of all the words of the vocabulary of size vocab_size
+    betas: np.ndarray
+        Beta values of the trained model
+    
+    Returns
+    -------
+    np.ndarray: Topic-word distribution matrix of the trained model with the dimensions of the original topic-word distribution
     """
 
     if model_type == "avitm":
@@ -237,7 +268,11 @@ def convert_topic_word_to_init_size(vocab_size, model, model_type,
         return None
 
 
-def train_avitm(modelname, modelsdir, corpus, n_topics, logger):
+def train_avitm(modelname:str,
+                modelsdir:str,
+                corpus,
+                n_topics:int,
+                logger:logging.Logger=None):
     """_summary_
 
     :param modelname: _description_
@@ -499,7 +534,14 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(
         description="Scripts for Embeddings Service")
-    parser.add_argument("--path_results", type=str, default="/Users/lbartolome/Documents/GitHub/gFedNTM/experiments_centralized/eta_variable",
+    parser.add_argument("--path_results",
+                        type=str,
+                        default="/Users/lbartolome/Documents/GitHub/gFedNTM/experiments_centralized/eta_variable",
+                        required=False, metavar=("path_results"),
+                        help="Path to folder where the results will be saved")
+    parser.add_argument("--path_config",
+                        type=str,
+                        default="/Users/lbartolome/Documents/GitHub/gFedNTM/experiments_centralized/eta_variable",
                         required=False, metavar=("path_results"),
                         help="Path to folder where the results will be saved")
     args = parser.parse_args()
@@ -508,7 +550,7 @@ if __name__ == "__main__":
     logger = logging.getLogger('Simulations')
 
     # Read settings from config file
-    experiment_config = Path(args.path_results).joinpath("config.json")
+    experiment_config = Path(args.path_config).joinpath("config.json")
     with experiment_config.open('r', encoding='utf8') as fin:
         modelInfo = json.load(fin)
 
@@ -690,7 +732,20 @@ if __name__ == "__main__":
         df = df.set_index(pd.Index(eta_list))
         df.index.name = 'Eta'
         print(df)
+    
     # Update where to save
     results_file = Path(args.path_results).joinpath("results.pickle")
     with open(results_file, 'wb') as handle:
         pickle.dump(df, handle)
+        
+        
+##############################################################################################################
+# ----------------
+# eta_variable
+# ----------------
+## --path_results /export/usuarios_ml4ds/lbartolome/Repos/my_repos/gFedNTM/experiments/centralized/results/eta_variable --path_config /export/usuarios_ml4ds/lbartolome/Repos/my_repos/gFedNTMexperiments/centralized/config/eta_variable
+
+# ----------------
+# frozen_variable
+# ----------------
+## --path_results /export/usuarios_ml4ds/lbartolome/Repos/my_repos/gFedNTM/experiments/centralized/results/frozen_variable --path_config /export/usuarios_ml4ds/lbartolome/Repos/my_repos/gFedNTMexperiments/centralized/config/frozen_variable

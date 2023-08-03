@@ -40,8 +40,12 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
         Dictionary with the parameters of the topic model
     model_type: str
         Underlying topic modeling algorithm with which the federated topic model is going to be constructed (prod|ctm)
+    save_server: str
+        Path to to save the global model of the federated topic model
     client_server_addres: str
         Base address of a client server
+    logger: logging.Logger
+        Logger object to log messages
     """
 
     def __init__(self,
@@ -50,6 +54,7 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
                  model_type:str,
                  max_iters:int,
                  opts_client:dict,
+                 save_server:str,
                  client_server_addres:str="gfedntm-client",
                  logger:logging.Logger=None):
         
@@ -60,6 +65,7 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
         self._max_iters = max_iters
         self._opts_client = opts_client
         self._client_server_addres = client_server_addres
+        self._save_server = save_server
 
         # Create logger object
         if logger:
@@ -472,6 +478,10 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
                         # get ack confirming received ok
                         ack = stub.sendAggregatedTensor(agg_request)
                 self._logger.info(f"ACK received for iter {i}")     
-        self._global_model.get_topics_in_server()
+        print(f"This is the save dir {self._save_server}")
+        self._global_model.get_topics_in_server(self._save_server)
+        
+        print(f"Server {self._id_server} finished training. Waiting for saving")
+        time.sleep(10)
 
         return federated_pb2.Empty()
