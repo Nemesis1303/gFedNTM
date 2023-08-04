@@ -743,9 +743,9 @@ if __name__ == "__main__":
 # ----------------
 # eta_variable
 # ----------------
-## --path_results /export/usuarios_ml4ds/lbartolome/Repos/my_repos/gFedNTM/experiments/centralized/results/eta_variable --path_config /export/usuarios_ml4ds/lbartolome/Repos/my_repos/gFedNTMexperiments/centralized/config/eta_variable
+## --path_results /export/usuarios_ml4ds/lbartolome/Repos/my_repos/gFedNTM/experiments/centralized/results/eta_variable --path_config /export/usuarios_ml4ds/lbartolome/Repos/my_repos/gFedNTM/experiments/centralized/config/eta_variable
 
 # ----------------
 # frozen_variable
 # ----------------
-## --path_results /export/usuarios_ml4ds/lbartolome/Repos/my_repos/gFedNTM/experiments/centralized/results/frozen_variable --path_config /export/usuarios_ml4ds/lbartolome/Repos/my_repos/gFedNTMexperiments/centralized/config/frozen_variable
+## --path_results /export/usuarios_ml4ds/lbartolome/Repos/my_repos/gFedNTM/experiments/centralized/results/frozen_variable --path_config /export/usuarios_ml4ds/lbartolome/Repos/my_repos/gFedNTM/experiments/centralized/config/frozen_variable

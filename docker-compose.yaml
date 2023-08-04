@@ -30,7 +30,7 @@ services:
     networks:
       - gfedntm_network
     volumes:
-      - ./static/output_models:/workspace/static/output_models/server
+      - ./static/output_models/server:/workspace/static/output_models/server
 
   gfedntm-client1:
     image: nemesis1303/gfedntm
@@ -43,7 +43,7 @@ services:
     networks:
       - gfedntm_network
     volumes:
-      - ./static/output_models:/workspace/static/output_models/client1
+      - ./static/output_models/client1:/workspace/static/output_models/client1
 
   gfedntm-client2:
     image: nemesis1303/gfedntm
@@ -56,7 +56,7 @@ services:
     networks:
       - gfedntm_network
     volumes:
-      - ./static/output_models:/workspace/static/output_models/client2
+      - ./static/output_models/client2:/workspace/static/output_models/client2
   
   gfedntm-client3:
     image: nemesis1303/gfedntm

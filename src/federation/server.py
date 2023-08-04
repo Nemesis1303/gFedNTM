@@ -12,7 +12,6 @@ Last updated on Jul 29, 2023
 
 import time
 
-import torch
 import grpc
 
 import numpy as np
@@ -447,11 +446,7 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
             # Send Aggregated request to Server-Clients
             for client_pos in range(len(self._federation.federation_clients)):
                 client = self._federation.federation_clients[client_pos]
-
-                # address_to_connect = 'gfedntm-client' + \
-                #    str(client.client_id) + ":" + str(50051) + client.client_id
-                #address_to_connect = "localhost:" + \
-                #    str(50051 + client.client_id)
+                
                 address_to_connect = self._client_server_addres + str(client.client_id) + ":" + str(50051 + client.client_id)
                     
                 self._logger.info(f"Client id {str(client.client_id)}")
