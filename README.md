@@ -12,8 +12,6 @@
   - [Overview](#overview)
   - [Available NTMs](#available-ntms)
   - [Usage](#usage)
-    - [Running the code through the main file](#running-the-code-through-the-main-file)
-    - [Running the code through Docker-compose (``preferred``)](#running-the-code-through-docker-compose-preferred)
   - [Preprocessing](#preprocessing)
   - [Dataset format](#dataset-format)
     - [Synthetic datasets](#synthetic-datasets)
@@ -26,7 +24,7 @@
 
 In our method, training takes place in two differentiated sequential stages (illustrated below):
 
-1. **Vocabulary consensus**, in which the server waits until the vocabulary of all nodes has been received and then merges them into one common one used to initialize the global model.
+1. **Vocabulary consensus**. The server waits until the vocabulary of all nodes has been received and then merges them into one common one used to initialize the global model.
 
 2. **Federated training**.  It begins after the clients have received back the latter two from the server. Then, at each mini-batch step, the server waits for all the clients to send their gradients, aggregates them, and sends the updated global model parameters back to the clients. This process is repeated until some convergence criterion is met.
 
@@ -44,70 +42,49 @@ It currently supports **implementations for three existing state-of-the-art NTMs
 
 ## Usage
 
-To use this project, you can follow two distinct alternatives, running the code through the **main file** or through **Docker-compose** (``preferred``).
+This project has been prepared to run through **Docker-compose**, where each node (i.e., client) or server is considered a "service". Alternatively, you can start each service independently.
 
-### Running the code through the main file
-
-To **start the server**, run:
-
-```python
-python main.py --min_clients_federation <min_num_clients> --model_type <model_type>
-````
-
-where:
-
-- ``<min_num_clients>`` is the minimum number of clients required for the federation to begin
-- ``<model_type>`` is the underlying topic modeling algorithm with which the federated topic model is constructed.
-
-To **start a client**, run:
-
-```python
-python main.py start_client --id <id_client> --source <sourceFile> --data_type <data_type> --fos <fos>
-
-```
-
-where:
-
-- ``<id_client>`` is the client's identifier (it must start from 1 on since 0 is the identifier of the server by default)
-- ``<source>`` is the path to the data that is going to be used by the client for the training
-- ``<data_type>`` is the type of data that will be used by the client for training (synthetic or real).
-- ``<fos>`` is the category or label describing the data in the source belonging to each client.
-
-The **training parameters** for underlying algorithms can be adjusted in the ``fixed_parameters`` and ``tuned_parameters`` dictionaries in ``main.py``.
-
-> *Note that to execute following this alternative, the client starting the phase must connect to the ``localhost``(lines 138-139 in the ``main.py``), so **you must modify this lines**, as by default it is set to ``gfedntm-server`` (the one required by the Docker-compose usage):*
-
-```python
-with grpc.insecure_channel('localhost:50051', options=options) as channel:
-    stub = federated_pb2_grpc.FederationStub(channel)
-```
-
-### Running the code through Docker-compose (``preferred``)
-
-The [``docker-compose``](https://github.com/Nemesis1303/gFedNTM/blob/main/docker-compose.yaml) file allows you to easily spin up multiple instances of the gFedNTM server and clients using Docker Compose.
+The [``docker-compose``](https://github.com/Nemesis1303/gFedNTM/blob/main/docker-compose.yaml) file allows you to easily spin up multiple instances of the gFedNTM server and clients.
 
 For this, it is first necessary to:
 
-1. Build the [``Dockerfile``](https://github.com/Nemesis1303/gFedNTM/blob/main/Dockerfile) image :
+1. If desired, configure the topic modeling hyperparameters, as well as some settings for the federation (waiting time, server port, etc.) by modifying the settings available at the [config file](https://github.com/Nemesis1303/gFedNTM/blob/main/config/dft_params.cf).
+
+2. Build the [``Dockerfile``](https://github.com/Nemesis1303/gFedNTM/blob/main/Dockerfile) image :
 
     ```bash
     docker build .  -t nemesis1303/gfedntm:latest
     ```
 
-2. Modify the ``docker-compose`` to define your needs. In any case, it should always contain **one server** and **as many clients as you desire to have in your federation**. By default, the docker-compose includes the following services:
+3. Modify the ``docker-compose`` to define your needs. In any case, it should always contain **one server** and **as many clients as you desire to have in your federation**. By default, the docker-compose includes the following services:
 
    - ``gfedntm-dev:`` This service is used for development purposes and is not required to run the server or clients.
-   - ``gfedntm-server:`` This service runs the gFedNTM server and exposes it on port 8888. The command section allows you to pass in arguments to the ``main.py`` script to configure the server, as defined in [Running the code through the main file](#running-the-code-through-the-main-file).
-   - ``gfedntm-client1 to gfedntm-client5:`` These services run the gFedNTM clients and expose them on different ports. The command section allows you to pass in arguments to the ``main.py`` script to set up the clients, as defined in [Running the code through the main file](#running-the-code-through-the-main-file).
+   - ``gfedntm-server:`` This service runs the gFedNTM server and exposes it on port 8888. The command section allows you to pass in arguments to the ``main.py`` script to configure the server, as defined below:
+
+      ```bash
+      command: python3 workspace/main.py --min_clients_federation <min_num_clients> --model_type <model_type> --max_iters <max_iters>
+      ```
+
+      where:
+
+      - ``<min_num_clients>`` is the minimum number of clients required for the federation to begin
+      - ``<model_type>`` is the underlying topic modeling algorithm with which the federated topic model is constructed.
+      - ``<model_tymax_iterspe>`` is the maximum number of global iterations to train the federated topic model.
+
+   - ``gfedntm-client1 to gfedntm-client5:`` These services run the gFedNTM clients and expose them on different ports. The command section allows you to pass in arguments to the ``main.py`` script to set up the clients, as defined below:
+
+      ```bash
+      command: python3 workspace/main.py start_client --id <id_client> --source <sourceFile> --data_type <data_type> --fos <fos>
+      ```
+
+      where:
+
+      - ``<id_client>`` is the client's identifier (it must start from 1 on since 0 is the identifier of the server by default)
+      - ``<source>`` is the path to the data that is going to be used by the client for the training
+      - ``<data_type>`` is the type of data that will be used by the client for training (synthetic or real).
+      - ``<fos>`` is the category or label describing the data in the source belonging to each client.
   
-    All services are mounted to the ``./static/output_models`` where the resulting trained models are saved.
-
-> *Note that in the client starting the phase, they connect to the server service defined by the docker-compose (lines 138-139 in the ``main.py``):*
-
-```python
-with grpc.insecure_channel('gfedntm-server:50051', options=options) as channel:
-    stub = federated_pb2_grpc.FederationStub(channel)
-```
+    All client services are mounted to the ``./static/output_models/client<id_client>`` and ``./static/logs/client<id_client>`` directories, where the resulting trained models and logs generated during the process are saved. For the server the paths to these directories are ``./static/output_models/server`` and ``./static/logs/server``, respectively.
 
 ## Preprocessing
 
@@ -155,7 +132,9 @@ The repository is organized as follows:
 gFedNTM/
 ├── docker-compose.yaml
 ├── Dockerfile
+├── config/
 ├── experiments_centralized/
+│   ├── dft_params.cf
 ├── LICENSE
 ├── main.py
 ├── notebooks/
@@ -167,7 +146,6 @@ gFedNTM/
 │   ├── federation/
 │   │   ├── __init__.py
 │   │   ├── client.py
-│   │   ├── federated_trainer_manager.py
 │   │   ├── federation.py
 │   │   ├── federation_client.py
 │   │   └── server.py
