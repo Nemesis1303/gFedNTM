@@ -1,0 +1,3 @@
+[submodule "src/preprocessing/topicmodeler"]
+	path = src/preprocessing/topicmodeler
+	url = https://github.com/IntelCompH2020/topicmodeler.git

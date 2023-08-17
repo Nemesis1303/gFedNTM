@@ -88,19 +88,14 @@ For this, it is first necessary to:
 
 ## Preprocessing
 
-The ``main.py`` script also supports simple preprocessing tasks (it is not a complete NLP pipeline) and prepares a training file in the format required by the library.
+Preparing your training files in the required format for the library is easy with the help of the [``text_preproc.py``](https://github.com/Nemesis1303/gFedNTM/blob/main/src/preprocessing/text_preproc.py) script. This script handles simple preprocessing tasks, ensuring your data is ready for training.
 
-The preprocessing can be carried out either through Spark (to do so, a Spark cluster is required) or via Gensim accelerated with Dask.
+To start the preprocessing, you have two options:
 
-To start the preprocessing, you must invoke the following command:
+- Utilize Spark: If you choose this route, make sure you have a Spark cluster available.
+- Use Gensim with Dask acceleration: This option provides efficient preprocessing.
 
-```python
-python main.py --preproc --spark <spark> --nw <nw> --config <configFile>
-````
-
-- ``spark:`` A boolean flag indicating whether to use Spark for corpus preprocessing. If Spart is chosen, the paths in lines 162-163 need to be updated to point to the Spark script.
-- ``nw:`` An integer indicating the number of workers to use when preprocessing data with Dask. Use 0 to use Dask default.
-- ``configFile:`` Path to the configuration file, with all the information required for carrying out the preprocessing. You have an example of a configuration file at ``static/preprocessing_example/config.json``, as well as an unpreprocessed corpus (``static/datasets/s2cs_tiny.parquet``).
+The script leverages the [topicmodeler](https://github.com/IntelCompH2020/topicmodeler) GitHub project., streamlining the preprocessing process. Please note that your familiarity with this project might impact your preprocessing choices.
 
 ## Dataset format
 

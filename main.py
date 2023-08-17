@@ -8,11 +8,9 @@ Created on Feb 4, 2022
 
 import argparse
 import configparser
-import multiprocessing as mp
 import os
 import pathlib
 from concurrent import futures
-from subprocess import check_output
 import datetime as DT
 import grpc
 import numpy as np
@@ -155,38 +153,6 @@ def start_client(id_client:int,
                    save_client=save_client,
                    logs_client=logs_client)
 
-def preproc(spark: bool, nw: int, configFile: pathlib.Path):
-    """Carries out simple preprocessing tasks and prepare a training file in the format required by the federation.
-    """
-    if spark:
-        # Run command for corpus preprocessing using Spark
-        script_spark = "/export/usuarios_ml4ds/lbartolome/spark/script-spark"
-        token_spark = "/export/usuarios_ml4ds/lbartolome/spark/tokencluster.json"
-        script_path = './src/preprocessing/text_preproc.py'
-        machines = str(10)
-        cores = str(4)
-        options = '"--spark --config ' + configFile.resolve().as_posix() + '"'
-        cmd = script_spark + ' -C ' + token_spark + \
-            ' -c ' + cores + ' -N ' + machines + ' -S ' + script_path + ' -P ' + options
-        print(cmd)
-        try:
-            print(f'-- -- Running command {cmd}')
-            output = check_output(args=cmd, shell=True)
-        except:
-            print('-- -- Execution of script failed')
-    else:
-        # Run command for corpus preprocessing using gensim
-        # Preprocessing will be accelerated with Dask using the number of
-        # workers indicated in the configuration file for the project
-        cmd = f'python src/preprocessing/text_preproc.py --config {configFile.as_posix()} --nw {nw}'
-
-        try:
-            print(f'-- -- Running command {cmd}')
-            output = check_output(args=cmd, shell=True)
-        except:
-            print('-- -- Execution of script failed')
-
-
 def main():
     parser = argparse.ArgumentParser()
 
@@ -215,20 +181,6 @@ def main():
                         help="Underlying model type: avitm/ctm.")
     parser.add_argument('--max_iters', type=int, default=100,
                         help="Maximum number of global iterations to train the federated topic model.")
-
-    # ========================================================================
-    # Parameters for preprocessing
-    # ========================================================================
-    parser.add_argument('--preproc', action='store_true', default=False,
-                        help="Selects preprocessing mode.")
-    parser.add_argument('--spark', action='store_true', default=False,
-                        help='Indicate that spark cluster is available',
-                        required=False)
-    parser.add_argument('--nw', type=int, required=False, default=0,
-                        help="Number of workers when preprocessing data with Dask. Use 0 to use Dask default")
-    parser.add_argument('--config', type=str, default=None,
-                        help="path to configuration file")
-
     args = parser.parse_args()
     
     # Read default training parameters
@@ -276,11 +228,7 @@ def main():
         ("grpc.keepalive_permit_without_calls", True if config.get("grpc", "keepalive_permit_without_calls") == "True" else False),
         ("grpc.http2.max_ping_strikes", int(config.get("grpc", "max_ping_strikes")))]
 
-    if args.preproc:
-        print("Preprocessing data")
-        preproc(spark=args.spark, nw=args.nw,
-                configFile=pathlib.Path(args.config))
-    elif args.id == 0:
+    if args.id == 0:
         print("Starting server with", args.min_clients_federation,
               "as minimum number of clients to start the federation.")
         start_server(
