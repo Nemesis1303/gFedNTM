@@ -10,6 +10,7 @@ Last updated on Jul 29, 2023
 @author: L. Calvo-Bartolomé (lcalvo@pa.uc3m.es)
 """
 
+import sys
 import time
 
 import grpc
@@ -54,6 +55,7 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
                  max_iters:int,
                  opts_client:dict,
                  save_server:str,
+                 logs_server:str,
                  client_server_addres:str="gfedntm-client",
                  logger:logging.Logger=None):
         
@@ -65,15 +67,24 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
         self._opts_client = opts_client
         self._client_server_addres = client_server_addres
         self._save_server = save_server
+        self._logs_server = logs_server
 
         # Create logger object
         if logger:
             self._logger = logger
         else:
-            FMT = '[%(asctime)-15s] [%(filename)s] [%(levelname)s] %(message)s'
-            logging.basicConfig(format=FMT, level='DEBUG')
-            self._logger = logging.getLogger('Server')
+            FMT = logging.Formatter("%(asctime)s [%(threadName)-12.12s] [%(levelname)-5.5s]  %(message)s")
+            
+            self._logger = logging.getLogger('Client')
             self._logger.setLevel(logging.DEBUG)
+            
+            fileHandler = logging.FileHandler(filename=logs_server)
+            fileHandler.setFormatter(FMT)
+            self._logger.addHandler(fileHandler)
+            
+            consoleHandler = logging.StreamHandler(sys.stdout)
+            consoleHandler.setFormatter(FMT)
+            self._logger.addHandler(consoleHandler)
             
         # Define additional attributes
         self._id_server = "IDS" + "_" + str(round(time.time()))
@@ -424,14 +435,12 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
             modelUpdate_ = \
                 modelStateDict_to_proto(
                     self._global_model.model.state_dict(), -1, self._model_type)
-            optUpdate_ = \
-                optStateDict_to_proto(
-                    self._global_model.optimizer.state_dict())
-            if modelUpdate_ is None or optUpdate_ is None:
-                print("NONE Objects here")
+            #optUpdate_ = \
+            #    optStateDict_to_proto(
+            #        self._global_model.optimizer.state_dict())
             nNUpdate = federated_pb2.NNUpdate(
                 modelUpdate=modelUpdate_,
-                optUpdate=optUpdate_
+                #optUpdate=optUpdate_
             )
 
             # Send Aggregated request to Server-Clients

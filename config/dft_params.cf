@@ -37,6 +37,12 @@ keepalive_timeout_ms = 5000
 keepalive_permit_without_calls = True
 max_ping_strikes = 0
 
+[federation]
+time_termination = 1200
+server_port = 50051
+
 [save_dir]
 save_client = /workspace/static/output_models/client
 save_server = /workspace/static/output_models/server
+logs_client = /workspace/static/logs/client
+logs_server = /workspace/static/logs/server

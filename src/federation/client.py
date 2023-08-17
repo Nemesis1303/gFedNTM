@@ -10,6 +10,7 @@ Created on Feb 1, 2022
 Last updated on Jul 29, 2023
 @author: L. Calvo-Bartolomé (lcalvo@pa.uc3m.es)
 """
+import sys
 import time
 from typing import Union
 import threading
@@ -36,10 +37,8 @@ GRPC_TRACE=all
 # ======================================================
 # CLIENT-SERVER
 # ======================================================
-
-
 class FederatedClientServer(federated_pb2_grpc.FederationServerServicer):
-    """Class that describes the behaviour to be followed by the client when it acts as a 'client-server' to process the server petitions.
+    """Class that describes the behavior to be followed by the client when it acts as a 'client-server' to process the server petitions.
     """
 
     def __init__(self,
@@ -52,6 +51,7 @@ class FederatedClientServer(federated_pb2_grpc.FederationServerServicer):
         self._local_model = local_model
         self.id = id
         self._save_client = save_client
+        
         # Initialize all parameters needed for the training of the local model
         self._local_model.preFit(train_data)
         
@@ -85,14 +85,15 @@ class FederatedClientServer(federated_pb2_grpc.FederationServerServicer):
         response: federated_pb2.ClientTensorRequest
             Response with the minibatch's gradient
         """
+        
         # Get global epoch from the request
-        # TODO: See what to do with this
         self.global_epoch = request.iter
       
-        # Generate gradient update (train one mb of local model)
+        # Generate gradient update (train one minibatch of local model)
         gr_upt = self._local_model.train_mb_delta()
         gradients_ = []
         for key in gr_upt.keys():
+            # Get gradients i.e., keys "prior_mean", "prior_variance" and "beta"
             if key not in ["current_mb", "current_epoch", "num_epochs"]:
                 gradients_.append([key, gr_upt[key].grad.detach()])
 
@@ -110,7 +111,7 @@ class FederatedClientServer(federated_pb2_grpc.FederationServerServicer):
                 num_max_epochs=gr_upt["num_epochs"],
                 id_machine=int(self.id))
 
-        # Generate Protos Updates
+        # Generate Protos Update with the gradients
         updates_ = []
         for gradient in gradients_:
             tensor_protos = serializeTensor(gradient[1])
@@ -132,7 +133,7 @@ class FederatedClientServer(federated_pb2_grpc.FederationServerServicer):
     def sendAggregatedTensor(self,
                              request: federated_pb2.ServerAggregatedTensorRequest,
                              context: grpc.AuthMetadataContext) -> federated_pb2.ClientReceivedResponse:
-        """Process the receival of the aggregated tensor from the server and generates and ACK message.
+        """Process the receival of the aggregated tensor from the server and generates an ACK message.
 
         Parameters
         ----------
@@ -151,8 +152,7 @@ class FederatedClientServer(federated_pb2_grpc.FederationServerServicer):
         modelStateDict = proto_to_modelStateDict(
             request.nndata.modelUpdate)
 
-        # TODO: Check if this is needed
-        optStateDict = proto_to_optStateDict(request.nndata.optUpdate)
+        #optStateDict = proto_to_optStateDict(request.nndata.optUpdate)
         
         # Update local model with server's weights
         self._local_model.deltaUpdateFit(
@@ -162,7 +162,7 @@ class FederatedClientServer(federated_pb2_grpc.FederationServerServicer):
         header = federated_pb2.MessageHeader(
             id_request=str(self.global_epoch),
             message_type=federated_pb2.MessageType.CLIENT_CONFIRM_RECEIVED)
-        response = federated_pb2.ClientReceivedResponse()
+        response = federated_pb2.ClientReceivedResponse(header=header)
 
         return response
 
@@ -179,7 +179,8 @@ class Client:
                  local_corpus: list,
                  data_type: str,
                  opts_server: dict,
-                 save_client:str,
+                 save_client: str,
+                 logs_client: str,
                  logger=None):
         """
         Object's initializer
@@ -198,6 +199,8 @@ class Client:
             Dictionary with the options for the GRPC client-server
         save_client : str
             Path to save the client's model
+        logs_client : str
+            Path to save the client's logs
         logger : logging.Logger, optional
             Logger object, by default None
         """
@@ -211,11 +214,19 @@ class Client:
             self._logger = logger
         else:
             import logging
-            FMT = '[%(asctime)-15s] [%(filename)s] [%(levelname)s] %(message)s'
-            logging.basicConfig(format=FMT, level='DEBUG')
+            FMT = logging.Formatter("%(asctime)s [%(threadName)-12.12s] [%(levelname)-5.5s]  %(message)s")
+
             self._logger = logging.getLogger('Client')
             self._logger.setLevel(logging.DEBUG)
-        
+            
+            fileHandler = logging.FileHandler(filename=logs_client)
+            fileHandler.setFormatter(FMT)
+            self._logger.addHandler(fileHandler)
+            
+            consoleHandler = logging.StreamHandler(sys.stdout)
+            consoleHandler.setFormatter(FMT)
+            self._logger.addHandler(consoleHandler)
+                    
         # Get local corpus and embeddings (if CTM)
         self._local_corpus, self._local_embeddings = \
             self.__get_local_corpus(data_type, local_corpus)

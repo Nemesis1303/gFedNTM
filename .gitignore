@@ -129,10 +129,10 @@ dmypy.json
 .pyre/
 
 static/output_models
+static/logs
 static/datasets/synthetic2.npz
 static/datasets/corpus.parquet
 
-logs_client.txt
 
 .vscode
 

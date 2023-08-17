@@ -30,7 +30,10 @@ def start_server(min_num_clients:int,
                  opts_client:list,
                  address:str,
                  training_params:dict,
-                 save_server:str):
+                 save_server:str,
+                 logs_server:str,
+                 server_port:int=50051,
+                 time_termination:int=1200):
     """Initializes the server that is going to orchestrates the federated training.
 
     Parameters
@@ -51,6 +54,12 @@ def start_server(min_num_clients:int,
         Dictionary with the parameters for the training of the federated topic model
     save_server: str
         Path to save the global model of the federated topic model
+    logs_server: str
+        Path to save the logs of the server
+    server_port: int
+        Port where the server is going to be listening
+    time_termination : int
+        Time in seconds after which the server is going to be terminated if no client has connected to it
     """
     
     client_server_addres = \
@@ -58,6 +67,7 @@ def start_server(min_num_clients:int,
     print(client_server_addres)
     
     save_server += f"/global_model_{DT.datetime.now().strftime('%Y%m%d')}"
+    logs_server += f"/logs_{DT.datetime.now().strftime('%Y%m%d')}.txt"
     server = grpc.server(futures.ThreadPoolExecutor(), options=opts_server)
     federated_server = FederatedServer(
                             min_num_clients=min_num_clients,
@@ -66,13 +76,15 @@ def start_server(min_num_clients:int,
                             max_iters=max_iters,
                             opts_client=opts_client,
                             save_server=save_server,
+                            logs_server=logs_server,
                             client_server_addres=client_server_addres)
 
     federated_pb2_grpc.add_FederationServicer_to_server(
         federated_server, server)
-    server.add_insecure_port('[::]:50051')
+    server_port = '[::]:' + str(server_port)
+    server.add_insecure_port(server_port)
     server.start()
-    server.wait_for_termination(1200) # TODO: add to config file
+    server.wait_for_termination(time_termination)
 
 def start_client(id_client:int,
                  data_type:str,
@@ -81,7 +93,8 @@ def start_client(id_client:int,
                  address:str,
                  opts_client:list,
                  opts_server:list,
-                 save_client:str):
+                 save_client:str,
+                 logs_client:str):
     """Initialize a client that is going to contribute to the training of a federated topic model.
 
     Parameters
@@ -102,6 +115,8 @@ def start_client(id_client:int,
         List of options for the 'client-server'
     save_client: str
         Path to the folder where the client is going to save the results of the training
+    logs_client: str
+        Path to the file where the client is going to save the logs of the training
     """
 
     if data_type == "synthetic":
@@ -124,6 +139,7 @@ def start_client(id_client:int,
         print("Specified data type not supported")
         
     save_client += f"{id_client}/model_{id_client}_{DT.datetime.now().strftime('%Y%m%d')}"
+    logs_client += f"{id_client}/logs_{DT.datetime.now().strftime('%Y%m%d')}.txt"
 
     # START CLIENT
     # Open channel for communication with the server
@@ -136,7 +152,8 @@ def start_client(id_client:int,
                    local_corpus=corpus,
                    data_type=data_type,
                    opts_server=opts_server,
-                   save_client=save_client)
+                   save_client=save_client,
+                   logs_client=logs_client)
 
 def preproc(spark: bool, nw: int, configFile: pathlib.Path):
     """Carries out simple preprocessing tasks and prepare a training file in the format required by the federation.
@@ -232,6 +249,12 @@ def main():
     # Define directories to save results
     save_client = config.get("save_dir", "save_client")
     save_server = config.get("save_dir", "save_server")
+    logs_client = config.get("save_dir","logs_client")
+    logs_server = config.get("save_dir", "logs_server")
+    
+    # Ger federation settings
+    time_termination = int(config.get("federation", "time_termination"))
+    server_port = int(config.get("federation", "server_port"))
         
     # Define 'client' options for GRPC communication (80*1024*1024)
     MAX_MESSAGE_LENGTH = int(config.get("grpc", "max_message_length")) 
@@ -268,7 +291,10 @@ def main():
             opts_client=opts_client,
             address=address,
             training_params=training_params,
-            save_server=save_server)
+            save_server=save_server,
+            logs_server=logs_server,
+            server_port=server_port,
+            time_termination=time_termination)
     else:
         print("Starting client with id ", args.id)
         start_client(
@@ -279,7 +305,8 @@ def main():
             address=address,
             opts_client=opts_client,
             opts_server=opts_server,
-            save_client=save_client)
+            save_client=save_client,
+            logs_client=logs_client)
 
 if __name__ == "__main__":
     main()
