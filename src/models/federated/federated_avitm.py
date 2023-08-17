@@ -49,60 +49,9 @@ class FederatedAVITM(AVITM, FederatedModel):
             num_data_loader_workers=tm_params["num_data_loader_workers"],
             verbose=tm_params["verbose"])
 
-        # Parameters for tracking federated model
-        self.model_dir = None
-        self.train_data = None
-        self.current_mb = -1
-        self.current_epoch = -1
-        self.samples_processed = -1
-        self.train_loader_iter = None
-        self.current_batch_sample = None
-
-        # Post-training parameters
-        self.topics = None
-        self.thetas = None
-        self.betas = None
-
     # ======================================================
     # Client-side training
     # ======================================================
-    def preFit(self, train_data: BOWDataset, save_dir=None) -> None:
-        """Carries out the initialization of all parameters needed for training of a local model.
-
-        Parameters
-        ----------
-        train_data: BOWDataset
-            Training dataset.
-        save_dir: str, optional
-            Directory to save checkpoint models to, defaults to None.
-        """
-
-        self.model_dir = save_dir
-        self.train_data = train_data
-
-        # Initialize training variables before the training loop
-        self.current_mb = 0
-        self.current_epoch = 0
-        self.samples_processed = 0
-        self.train_loss = 0
-
-        # Initialize train dataLoader and get first sample
-        self.train_loader = DataLoader(
-            self.train_data,
-            batch_size=self.batch_size,
-            shuffle=True,
-            num_workers=self.num_data_loader_workers)
-        self.train_loader_iter = iter(self.train_loader)
-        self.current_batch_sample = next(self.train_loader_iter)
-
-        # Set the model to train mode before starting the first epoch
-        # This should be done at the beginning of each epoch
-        self.model.train()
-
-        # Training of the local model starts ->>>
-
-        return
-
     def train_mb_delta(self) -> dict:
         """Generates gradient update for a minibatch of samples.
 
@@ -182,10 +131,6 @@ class FederatedAVITM(AVITM, FederatedModel):
             if self.train_loss < self.best_loss_train:
                 self.best_components = self.model.beta
                 self.best_loss_train = self.train_loss
-
-                # TODO_ Remove comments
-                #if self.save_dir is not None:
-                #    self.save(self.save_dir)
 
             # Reset iterator and get first
             self.train_loader_iter = iter(self.train_loader)

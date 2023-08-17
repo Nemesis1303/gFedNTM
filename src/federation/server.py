@@ -258,7 +258,7 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
             self._logger.info("AVITM model initialized")
         elif self._model_type == "ctm":
             self._global_model = \
-                FederatedCTM(self._model_parameters, self, self._logger)
+                FederatedCTM(self._model_parameters, self._logger)
             self._logger.info("CTM model initialized")
         else:
             self._logger.error("Provided underlying model not supported")
@@ -364,15 +364,11 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
         for i in range(self._max_iters):
 
             # Ask for the gradient to clients
-            print(f"NUMBER OF CLIENTS: {len(self._federation.federation_clients)}")
             for client_pos in range(len(self._federation.federation_clients)):
 
                 client = self._federation.federation_clients[client_pos]
 
                 address_to_connect = self._client_server_addres + str(client.client_id) + ":" + str(50051 + client.client_id)
-
-                #address_to_connect = "localhost:" + \
-                #    str(50051 + client.client_id)
 
                 self._logger.info(f"Client id {str(client.client_id)}")
                 self._logger.info(f"Server connecting to {address_to_connect}")
@@ -398,17 +394,12 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
                             gradients,
                             client_tensor_req.metadata.current_mb,
                             client_tensor_req.metadata.current_epoch, client_tensor_req.header.id_request)
-                        print(f"Connecting to {address_to_connect} worked as expected")
+                        self._logger.info(f"Connecting to {address_to_connect} worked as expected")
                 
                 self._logger.info(f"Entering into sleep")
                 time.sleep(3)
 
             # Aggregate gradients from clients
-            # Aquí tengo mandar el agregado de vuelta al cliente pero ya he salido del insecure_channel...
-            # Y esto se tendría que hacer para cada update, pero desde aquí no puedo emepzar el bucle
-
-            # Calculate average for each tensor
-            # Get dict of tensor, of entry per update
             keys = client.tensors.keys()
             averages = {}
             for key in keys:
@@ -457,8 +448,6 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
                     str(client.client_id) + " for the iteration " + \
                     str(i)
 
-                print(update_name)
-
                 header = federated_pb2.MessageHeader(
                     id_response=str(self._id_server),
                     message_type=federated_pb2.MessageType.SERVER_AGGREGATED_TENSOR_SEND)
@@ -473,10 +462,9 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
                         # get ack confirming received ok
                         ack = stub.sendAggregatedTensor(agg_request)
                 self._logger.info(f"ACK received for iter {i}")     
-        print(f"This is the save dir {self._save_server}")
         self._global_model.get_topics_in_server(self._save_server)
         
-        print(f"Server {self._id_server} finished training. Waiting for saving")
+        self._logger.info(f"Server {self._id_server} finished training. Waiting for saving")
         time.sleep(10)
 
         return federated_pb2.Empty()

@@ -16,7 +16,8 @@ RUN apt-get update && \
     build-essential \
     gcc \
     python3-dev \
-    python-is-python3
+    python-is-python3 \
+    google-perftools
 
 # Clean up the package cache
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*

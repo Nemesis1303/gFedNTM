@@ -4,6 +4,10 @@ Created on Feb 1, 2022
 @author: L. Calvo-Bartolomé (lcalvo@pa.uc3m.es)
 """
 from abc import abstractmethod
+from typing import Union
+from torch.utils.data import DataLoader
+from src.models.base.pytorchavitm.datasets.bow_dataset import BOWDataset
+from src.models.base.contextualized_topic_models.datasets.dataset import CTMDataset
 
 class FederatedModel(object):
     """
@@ -12,7 +16,6 @@ class FederatedModel(object):
 
     def __init__(self,
                  tm_params: dict,
-                 #client: Client,
                  logger=None) -> None:
 
         self.tm_params = tm_params
@@ -23,16 +26,62 @@ class FederatedModel(object):
             import logging
             logging.basicConfig(level='INFO')
             self.logger = logging.getLogger('FederatedModel')
+        
+        # Parameters for tracking federated model
+        self.model_dir = None
+        self.train_data = None
+        self.current_mb = -1
+        self.current_epoch = -1
+        self.samples_processed = -1
+        self.train_loader_iter = None
+        self.current_batch_sample = None
 
-        #self.fedTrManager = FederatedTrainerManager(client=client,
-        #                                           logger=self.logger)
+        # Post-training parameters
+        self.topics = None
+        self.thetas = None
+        self.betas = None
 
     # ======================================================
     # Client-side training
     # ======================================================
-    @abstractmethod
-    def preFit(self):
-        pass
+    def preFit(self,
+               train_data: Union[BOWDataset,CTMDataset],
+               save_dir=None) -> None:
+        """Carries out the initialization of all parameters needed for training of a local model.
+
+        Parameters
+        ----------
+        train_data: Union[BOWDataset,CTMDataset]
+            Training dataset.
+        save_dir: str, optional
+            Directory to save checkpoint models to, defaults to None.
+        """
+
+        self.model_dir = save_dir
+        self.train_data = train_data
+
+        # Initialize training variables before the training loop
+        self.current_mb = 0
+        self.current_epoch = 0
+        self.samples_processed = 0
+        self.train_loss = 0
+
+        # Initialize train dataLoader and get first sample
+        self.train_loader = DataLoader(
+            self.train_data,
+            batch_size=self.batch_size,
+            shuffle=True,
+            num_workers=self.num_data_loader_workers)
+        self.train_loader_iter = iter(self.train_loader)
+        self.current_batch_sample = next(self.train_loader_iter)
+
+        # Set the model to train mode before starting the first epoch
+        # This should be done at the beginning of each epoch
+        self.model.train()
+
+        # Training of the local model starts ->>>
+
+        return
 
     @abstractmethod
     def train_mb_delta(self):

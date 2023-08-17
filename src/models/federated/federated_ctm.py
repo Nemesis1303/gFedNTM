@@ -11,14 +11,19 @@ from sklearn.preprocessing import normalize
 from torch.utils.data import DataLoader
 
 from src.models.base.contextualized_topic_models.ctm_network.ctm import CTM
+from src.models.base.contextualized_topic_models.datasets.dataset import CTMDataset
 from src.models.federated.federated_model import FederatedModel
 from src.utils.auxiliary_functions import save_model_as_npz
 
 
 class FederatedCTM(CTM, FederatedModel):
-    def __init__(self, tm_params, client, logger):
-
-        FederatedModel.__init__(self, tm_params, client, logger)
+    """Class for the Federated CTM model.
+    """
+    def __init__(self,
+                 tm_params: dict,
+                 logger=None) -> None:
+        
+        FederatedModel.__init__(self, tm_params, logger)
 
         CTM.__init__(
             self,
@@ -42,18 +47,128 @@ class FederatedCTM(CTM, FederatedModel):
             topic_prior_variance=tm_params["topic_prior_variance"],
             num_data_loader_workers=tm_params["num_data_loader_workers"],
             verbose=tm_params["verbose"])
+    
+    # ======================================================
+    # Client-side training
+    # ======================================================
+    def train_mb_delta(self) -> dict:
+        """Generates gradient update for a minibatch of samples.
 
-        # Current epoch for tracking federated model
-        self.current_mb = -1
+        Returns
+        -------
+        params: dict
+            Dictionary containing the parameters to be sent to the server.
+        """
 
-        # Training set info parameters
-        self.train_data = None
-        self.id2token = self.tm_params["id2token"]
+        # Get samples in minibatch
+        self.X_bow = self.current_batch_sample['X_bow']
+        self.X_bow = self.X_bow.reshape(self.X_bow.shape[0], -1)
+        self.X_contextual = self.current_batch_sample['X_contextual']
+        
+        if "labels" in self.current_batch_sample.keys():
+            self.labels = self.current_batch_sample['labels']
+            self.labels = self.labels.reshape(self.labels.shape[0], -1)
+            self.labels = self.labels.to(self.device)
+        else:
+            self.labels = None
 
-        # Post-training parameters
-        self.topics = None
-        self.thetas = None
-        self.betas = None
+        if self.USE_CUDA:
+            self.X_bow = self.X_bow.cuda()
+            self.X_contextual = self.X_contextual.cuda()
+
+        # Forward pass
+        self.model.zero_grad()  # Update gradients to zero
+        prior_mean, prior_variance, \
+            posterior_mean, posterior_variance, posterior_log_variance, \
+            word_dists, estimated_labels = self.model(
+                self.X_bow, self.X_contextual, self.labels)
+
+        # Backward pass: Compute gradients
+        kl_loss, rl_loss = self._loss(self.X_bow, word_dists, prior_mean,
+                                      prior_variance, posterior_mean,
+                                      posterior_variance, posterior_log_variance)
+        self.loss = self.weights["beta"] * kl_loss + rl_loss
+        self.loss = self.loss.sum()
+        
+        if self.labels is not None:
+            target_labels = torch.argmax(self.labels, 1)
+
+            label_loss = torch.nn.CrossEntropyLoss()(estimated_labels, target_labels)
+            loss += label_loss
+            
+        self.loss.backward()
+
+        # Create gradient update to be sent to the server
+        params = {
+            "prior_mean": self.model.prior_mean,
+            "prior_variance": self.model.prior_variance,
+            "beta": self.model.beta,
+            "current_mb": self.current_mb,
+            "current_epoch": self.current_mb,
+            "num_epochs": self.num_epochs
+        }
+
+        return params
+    
+    def deltaUpdateFit(self, modelStateDict, save_dir, n_samples=20) -> None:
+        """Updates gradient with aggregated gradient from server and calculates loss.
+
+        Parameters
+        ----------
+        modelStateDict: dict
+            Dictionary containing the model parameters to be updated.
+        """
+        
+        # Update local model's state dict
+        localStateDict = self.model.state_dict()
+        localStateDict["prior_mean"] = modelStateDict["prior_mean"]
+        localStateDict["prior_variance"] = modelStateDict["prior_variance"]
+        localStateDict["beta"] = modelStateDict["beta"]
+        self.model.load_state_dict(localStateDict)
+
+        # Calculate minibatch's train loss and samples processed
+        self.samples_processed += self.X_bow.size()[0]
+        self.train_loss += self.loss.item()
+
+        # Minitbatch ends
+        self.current_mb += 1
+
+        try:
+            # Get next minibatch
+            self.current_batch_sample = next(self.train_loader_iter)  # !!!!!!
+        except StopIteration as ex:
+            # If there is no next minibatch, the epoch has ended, so we report, reset the iterator and get the first one
+            
+            self.train_loss /= self.samples_processed
+            
+            print("Epoch: [{}/{}]\tSamples: [{}/{}]\tTrain Loss: {}\tTime: {}".format(
+                self.current_epoch+1, self.num_epochs, self.samples_processed,
+                len(self.train_data)*self.num_epochs, self.train_loss, datetime.datetime.now()))
+
+            # Save best epoch results
+            if self.current_epoch == 0:
+                self.best_components = self.model.beta
+            if self.train_loss < self.best_loss_train:
+                self.best_components = self.model.beta
+                self.best_loss_train = self.train_loss
+
+            # Reset iterator and get first
+            self.train_loader_iter = iter(self.train_loader)
+            self.current_batch_sample = next(self.train_loader_iter)
+
+            # Next epoch
+            self.current_epoch += 1
+
+        # Epoch end reached
+        if self.current_epoch >= self.num_epochs:
+            print("Epoch end reached")
+            self.training_doc_topic_distributions = self.get_doc_topic_distribution(
+                self.train_data, n_samples)
+            self.get_results_model(save_dir)
+
+        return
+    
+    
 
     def _train_minibatch(self, X_bow, X_contextual, labels, train_loss, samples_processed):
 
@@ -87,6 +202,10 @@ class FederatedCTM(CTM, FederatedModel):
         return loss, train_loss, samples_processed
 
     def optimize_on_minibatch_from_server(self, updates):
+        
+        # Update model's parameters from the forward pass carried at client's side
+        self.model.topic_word_matrix = self.model.beta
+        self.best_components = self.model.beta
 
         # Upadate gradients
         self.model.prior_mean.grad = torch.Tensor(updates["prior_mean"])
@@ -247,7 +366,14 @@ class FederatedCTM(CTM, FederatedModel):
                 if save_dir is not None:
                     self.save(save_dir)
 
-    def get_results_model(self):
+    def get_results_model(self, save_dir:str) -> None:
+        """Gets the results of the model after training at the CLIENT side.
+        
+        Parameters
+        ----------
+        save_dir: str
+            Directory where the model will be saved.
+        """
 
         # Get topics
         self.topics = self.get_topics()
@@ -262,13 +388,20 @@ class FederatedCTM(CTM, FederatedModel):
         # Get word-topic distribution
         self.betas = self.get_topic_word_distribution()
 
-        file_save = \
-            "workspace/static/output_models/model_client_" + \
-            str(self.fedTrManager.client.id) + ".npz"
+        #file_save = \
+        #    "workspace/static/output_models/model_client_" + \
+        #    str(self.fedTrManager.client.id) + ".npz"
 
-        save_model_as_npz(file_save, self)
+        print("Saving model at: ", save_dir)
+        save_model_as_npz(save_dir, self)
 
-    def get_topics_in_server(self):
-
-        self.topics = self.get_topics()
-        print(self.topics)
+    def get_topics_in_server(self, save_dir:str):
+        
+        # TODO: fix this
+        # Get word-topic distribution
+        self.betas = self.get_topic_word_distribution()
+        print("Coge los topics in server")
+        print(self.betas)
+        
+        print("Saving global model...")
+        save_model_as_npz(save_dir, self)

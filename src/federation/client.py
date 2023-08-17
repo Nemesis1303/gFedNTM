@@ -403,7 +403,7 @@ class Client:
 
             # Initialize FederatedCTM
             self.local_model = \
-                FederatedCTM(self._model_parameters, self, self._logger)
+                FederatedCTM(self._model_parameters, self._logger)
 
         else:
             self._logger.error("Provided underlying model not supported")
@@ -437,13 +437,13 @@ class Client:
         if self._stub:
             response = self._stub.trainFederatedModel(request)
             
-            print(f"Client {self.id} finished training. Waiting for other clients to finish...")
+            self._logger.info(f"Client {self.id} finished training. Waiting for other clients to finish...")
             time.sleep(10)
         
-        print(f"Getting results at client side...")
+        self._logger.info(f"Getting results at client side...")
         self.local_model.get_results_model(self._save_client)
         
-        print(f"Client {self.id} finished training. Waiting for server...")
+        self._logger.info(f"Client {self.id} finished training. Waiting for server...")
         time.sleep(10)
 
         return

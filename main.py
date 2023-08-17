@@ -72,7 +72,7 @@ def start_server(min_num_clients:int,
         federated_server, server)
     server.add_insecure_port('[::]:50051')
     server.start()
-    server.wait_for_termination()
+    server.wait_for_termination(1200) # TODO: add to config file
 
 def start_client(id_client:int,
                  data_type:str,
