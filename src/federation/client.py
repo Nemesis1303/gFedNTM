@@ -8,7 +8,8 @@ This script contains the two classes that define the client-side part of the fed
 
 Created on Feb 1, 2022
 Last updated on Jul 29, 2023
-@author: L. Calvo-Bartolomé (lcalvo@pa.uc3m.es)
+
+.. codeauthor:: L. Calvo-Bartolomé (lcalvo@pa.uc3m.es)
 """
 import sys
 import time
@@ -148,21 +149,40 @@ class FederatedClientServer(federated_pb2_grpc.FederationServerServicer):
             ACK to the server
         """
 
-        # Process request and update local model with server's weights
-        modelStateDict = proto_to_modelStateDict(
-            request.nndata.modelUpdate)
+        if request.header.message_type == federated_pb2.MessageType.SERVER_AGGREGATED_TENSOR_SEND:
+            self._logger.info(
+                'Client server %s received aggregated tensor for global epoch %s',
+                str(self.id), self.global_epoch)
+            # Process request and update local model with server's weights
+            modelStateDict = proto_to_modelStateDict(
+                request.nndata.modelUpdate)
 
-        #optStateDict = proto_to_optStateDict(request.nndata.optUpdate)
-        
-        # Update local model with server's weights
-        self._local_model.deltaUpdateFit(
-            modelStateDict=modelStateDict,
-            save_dir=self._save_client)
+            #optStateDict = proto_to_optStateDict(request.nndata.optUpdate)
+            
+            # Update local model with server's weights
+            self._local_model.deltaUpdateFit(
+                modelStateDict=modelStateDict,
+                save_dir=self._save_client)
 
-        header = federated_pb2.MessageHeader(
-            id_request=str(self.global_epoch),
-            message_type=federated_pb2.MessageType.CLIENT_CONFIRM_RECEIVED)
-        response = federated_pb2.ClientReceivedResponse(header=header)
+            header = federated_pb2.MessageHeader(
+                id_request=str(self.global_epoch),
+                message_type=federated_pb2.MessageType.CLIENT_CONFIRM_RECEIVED)
+            response = federated_pb2.ClientReceivedResponse(header=header)
+            
+        elif request.header.message_type == federated_pb2.MessageType.SERVER_STOP_TRAINING_REQUEST:
+            self._logger.info(
+                'Client server %s received reququest for finished training',
+                str(self.id))
+            
+            header = federated_pb2.MessageHeader(
+                message_type=federated_pb2.MessageType.CLIENT_CONFIRM_RECEIVED)
+            response = federated_pb2.ClientReceivedResponse(header=header)
+            
+            self._logger.info(f"Getting results at client side...")
+            self.local_model.get_results_model(self._save_client)
+            
+            #self._logger.info(f"Client {self.id} finished training. Waiting for #server...")
+            #time.sleep(10)
 
         return response
 
@@ -448,13 +468,8 @@ class Client:
         if self._stub:
             response = self._stub.trainFederatedModel(request)
             
-            self._logger.info(f"Client {self.id} finished training. Waiting for other clients to finish...")
-            time.sleep(10)
+            #self._logger.info(f"Client {self.id} finished training. Waiting for other clients to finish...")
+            self._logger.info(f"Client {self.id} stop behaving as client. Waiting for training to finish...")
+            time.sleep(86400)
         
-        self._logger.info(f"Getting results at client side...")
-        self.local_model.get_results_model(self._save_client)
-        
-        self._logger.info(f"Client {self.id} finished training. Waiting for server...")
-        time.sleep(10)
-
         return

@@ -64,8 +64,8 @@ services:
   gfedntm-client3:
     image: nemesis1303/gfedntm
     container_name: gfedntm-client3
-    restart: always
-    command: python3 workspace/main.py --id 3 --source workspace/static/datasets/synthetic2.npz
+    #restart: always
+    command: python3 workspace/main.py --id 3 --source workspace/static/datasets/preprocessing_example/s2cs_tiny_preproc.parquet --data_type real --fos sociology #--source workspace/static/datasets/synthetic2.npz
     #command: python3 workspace/main.py --id 3 #--data_type real --fos sociology
     tty: true
     ports:
@@ -73,13 +73,14 @@ services:
     networks:
       - gfedntm_network
     volumes:
-      - ./static/output_models:/workspace/static/output_models
+      - ./static/output_models/client3:/workspace/static/output_models/client3
+      - ./static/logs/client3:/workspace/static/logs/client3
 
   gfedntm-client4:
     image: nemesis1303/gfedntm
     container_name: gfedntm-client4
     restart: always
-    command: python3 workspace/main.py --id 4 --source workspace/static/datasets/synthetic2.npz
+    command: python3 workspace/main.py --id 4 --source workspace/static/datasets/preprocessing_example/s2cs_tiny_preproc.parquet --data_type real --fos philosophy #--source workspace/static/datasets/synthetic2.npz
     #command: python3 workspace/main.py --id 4 #--data_type real --fos philosophy
     tty: true
     ports:
@@ -87,13 +88,14 @@ services:
     networks:
       - gfedntm_network
     volumes:
-      - ./static/output_models:/workspace/static/output_models
+      - ./static/output_models/client4:/workspace/static/output_models/client4
+      - ./static/logs/client4:/workspace/static/logs/client4
   
   gfedntm-client5:
     image: nemesis1303/gfedntm
     container_name: gfedntm-client5
     restart: always
-    command: python3 workspace/main.py --id 25 --source workspace/static/datasets/synthetic2.npz
+    command: python3 workspace/main.py --id 5 --source workspace/static/datasets/preprocessing_example/s2cs_tiny_preproc.parquet --data_type real --fos political_science #--source workspace/static/datasets/synthetic2.npz
     #command: python3 workspace/main.py --id 5 #--data_type real --fos political_science
     tty: true
     ports:
@@ -101,7 +103,8 @@ services:
     networks:
       - gfedntm_network
     volumes:
-      - ./static/output_models:/workspace/static/output_models
+      - ./static/output_models/client5:/workspace/static/output_models/client5
+      - ./static/logs/client5:/workspace/static/logs/client5
 
 networks:
   gfedntm_network:

@@ -2,7 +2,7 @@
 """
 Created on Feb 1, 2022
 
-@author: L. Calvo-Bartolomé (lcalvo@pa.uc3m.es)
+.. codeauthor:: L. Calvo-Bartolomé (lcalvo@pa.uc3m.es)
 """
 
 

@@ -386,7 +386,8 @@ class FederatedCTM(CTM, FederatedModel):
         self.thetas = normalize(self.thetas, axis=1, norm='l1')
 
         # Get word-topic distribution
-        self.betas = self.get_topic_word_distribution()
+        #if self.model.topic_word_matrix is not None:
+        #   self.betas = self.get_topic_word_distribution()
 
         #file_save = \
         #    "workspace/static/output_models/model_client_" + \
