@@ -141,3 +141,6 @@ static/datasets/corpus.parquet
 
 experiments/centralized/results/models_
 experiments/centralized/results/models_v2
+
+.venv_kumo
+.venv_kumo1
