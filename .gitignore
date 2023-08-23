@@ -140,3 +140,4 @@ static/datasets/corpus.parquet
 ._.DS_Store
 
 experiments/centralized/results/models_
+experiments/centralized/results/models_v2
