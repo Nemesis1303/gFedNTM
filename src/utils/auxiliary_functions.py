@@ -1,16 +1,18 @@
 # -*- coding: utf-8 -*-
 """
 Created on Feb 1, 2022
+Last updated on Aug 24, 2023
 
-@author: L. Calvo-Bartolomé (lcalvo@pa.uc3m.es)
+.. codeauthor:: L. Calvo-Bartolomé (lcalvo@pa.uc3m.es)
 """
 import configparser
 import pickle
-
-import numpy as np
 import torch
 from scipy import sparse
-
+from typing import Union
+import numpy as np
+from scipy import sparse
+from sklearn.preprocessing import normalize
 from src.protos import federated_pb2
 
 ##############################################################################
@@ -60,12 +62,18 @@ def pickler(file: str, ob):
     return
 
 
-def save_model_as_npz(npzfile, federated_model):
+def save_model_as_npz(
+        npzfile,
+        federated_model,
+    ) -> None:
     """Saves the matrixes that characterize a topic model in a numpy npz filel.
 
-    Args:
-        npzfile (str): Name of the file in which the model will be saved
-        client (): 
+    Parameters
+    ----------
+    npzfile: str
+        Name of the file in which the model will be saved
+    federated_model: Union[FederatedCTM,FederatedAVITM]
+        Federated model to be saved
     """
 
     if isinstance(federated_model.thetas, sparse.csr_matrix):
@@ -87,9 +95,22 @@ def save_model_as_npz(npzfile, federated_model):
             ntopics=federated_model.n_components,
             topics=federated_model.topics
         )
+    return
 
 
-def serializeTensor(tensor) -> federated_pb2.Tensor:
+def serializeTensor(tensor:torch.Tensor) -> federated_pb2.Tensor:
+    """Serializes a tensor into a protobuf message.
+    
+    Parameters
+    ----------
+    tensor: torch.Tensor
+        Tensor to be serialized.
+    
+    Returns
+    -------
+    serializedTensor: federated_pb2.Tensor
+        Protobuf message containing the serialized tensor.
+    """
 
     if tensor.requires_grad == True:
         tensor = tensor.detatch()
@@ -109,6 +130,18 @@ def serializeTensor(tensor) -> federated_pb2.Tensor:
 
 
 def deserializeTensor(protoTensor: federated_pb2.Tensor) -> torch.Tensor:
+    """Deserializes a protobuf message into a tensor.
+    
+    Parameters
+    ----------
+    protoTensor: federated_pb2.Tensor
+        Protobuf message containing the serialized tensor.
+    
+    Returns
+    -------
+    deserialized_tensor: torch.Tensor
+        Tensor deserialized from the protobuf message.
+    """
 
     deserialized_numpy = deserializeNumpy(protoTensor)
     deserialized_tensor = torch.Tensor(deserialized_numpy)
@@ -117,6 +150,18 @@ def deserializeTensor(protoTensor: federated_pb2.Tensor) -> torch.Tensor:
 
 
 def deserializeNumpy(protoTensor: federated_pb2.Tensor) -> np.ndarray:
+    """Deserializes a protobuf message into a numpy array.
+    
+    Parameters
+    ----------
+    protoTensor: federated_pb2.Tensor
+        Protobuf message containing the serialized tensor.
+    
+    Returns
+    -------
+    deserialized_numpy: np.ndarray
+        Numpy array deserialized from the protobuf message.
+    """
 
     dims = tuple(
         [dim.size for dim in protoTensor.tensor_shape.dim])
@@ -129,7 +174,19 @@ def deserializeNumpy(protoTensor: federated_pb2.Tensor) -> np.ndarray:
     return deserialized_numpy
 
 
-def optStateDict_to_proto(optStateDict) -> federated_pb2.OptUpdate:
+def optStateDict_to_proto(optStateDict:dict) -> federated_pb2.OptUpdate:
+    """Converts a dictionary containing the optimizer state into a protobuf message.
+
+    Parameters
+    ----------
+    optStateDict: dict
+        Dictionary containing the optimizer state.
+
+    Returns
+    -------
+    optUpdate: federated_pb2.OptUpdate
+        Protobuf message containing the optimizer state.
+    """
 
     for i in optStateDict.keys():
         if i == "state":
@@ -199,11 +256,24 @@ def optStateDict_to_proto(optStateDict) -> federated_pb2.OptUpdate:
     return federated_pb2.OptUpdate(adamUpdate=adamUpdate_)
 
 
-def proto_to_optStateDict(modelUpdate: federated_pb2.OptUpdate) -> dict:
+def proto_to_optStateDict(optUpdate: federated_pb2.OptUpdate) -> dict:
+    """Converts a protobuf message containing the optimizer state into a dictionary.
+    
+    NOTE: Currently only works for Adam optimizer.
 
-    # TODO: Update for more optimizers
-    state = modelUpdate.adamUpdate.state
-    paramGroups = modelUpdate.adamUpdate.paramGroups
+    Parameters
+    ----------
+    optUpdate: federated_pb2.OptUpdate
+        Protobuf message containing the optimizer state.
+    
+    Returns
+    -------
+    optStateDict: dict
+        Dictionary containing the optimizer state.
+    """
+
+    state = optUpdate.adamUpdate.state
+    paramGroups = optUpdate.adamUpdate.paramGroups
 
     stateDict = {}
     for cs in state.contentState:
@@ -229,7 +299,25 @@ def proto_to_optStateDict(modelUpdate: federated_pb2.OptUpdate) -> dict:
     return optStateDict
 
 
-def modelStateDict_to_proto(modelStateDict, current_epoch, model_type) -> federated_pb2.ModelUpdate:
+def modelStateDict_to_proto(
+        modelStateDict: dict,
+        current_epoch: int, 
+        model_type
+    ) -> federated_pb2.ModelUpdate:
+    """Transforms a dictionary containing the model state of a certain epoch into a protobuf message.
+    
+    Parameters
+    ----------
+    modelStateDict: dict
+        Dictionary containing the model state.
+    current_epoch: int
+        Current epoch of the model.
+    
+    Returns
+    -------
+    modelUpdate: federated_pb2.ModelUpdate
+        Protobuf message containing the model state.
+    """
 
     if model_type == "ctm":
         modelUpdate = federated_pb2.ModelUpdate(
@@ -320,8 +408,19 @@ def modelStateDict_to_proto(modelStateDict, current_epoch, model_type) -> federa
 
 
 def proto_to_modelStateDict(modelUpdate: federated_pb2.ModelUpdate) -> dict:
+    """Transforms a protobuf message containing the model state into a dictionary.
+    
+    Parameters
+    ----------
+    modelUpdate: federated_pb2.ModelUpdate
+        Protobuf message containing the model state.
+    
+    Returns
+    -------
+    modelStateDict: dict
+        Dictionary containing the model state.
+    """
 
-    aux = modelUpdate
     inf_net_f_mu_batchnorm_num_batches_tracked = \
         deserializeTensor(
             modelUpdate.inf_net_f_mu_batchnorm_num_batches_tracked)
@@ -381,6 +480,20 @@ def proto_to_modelStateDict(modelUpdate: federated_pb2.ModelUpdate) -> dict:
     return modelStateDict
 
 def read_config_experiments(file_path, skip=[]):
+    """Reads the configuration file of the experiments.
+    
+    Parameters
+    ----------
+    file_path: str
+        Path to the configuration file.
+    skip: list
+        List of sections to skip.
+    
+    Returns
+    -------
+    config_dict: dict
+        Dictionary containing the configuration parameters.
+    """
     config = configparser.ConfigParser()
     config.read(file_path)
 
@@ -417,3 +530,47 @@ def read_config_experiments(file_path, skip=[]):
                     config_dict[option] = value
             
     return config_dict
+
+def convert_topic_word_to_init_size(vocab_size:int,
+                                    model,
+                                    model_type:str,
+                                    ntopics:int,
+                                    id2token:list[tuple],
+                                    all_words:list[str]):
+    """It converts the topic-word distribution matrix obtained from the training of a model into a matrix with the dimensions of the original topic-word distribution, assigning zeros to those words that are not present in the corpus. 
+    It is only of use in case we are training a model over a synthetic dataset, so as to later compare the performance of the attained model in what regards to the similarity between the original and the trained model.
+    
+    Parameters
+    ----------
+    vocab_size: int
+        Size of the synethic'data vocabulary
+    model: 
+        Model whose topic-word matrix is being transformed
+    model_type: str
+        Type of the trained model (e.g. AVITM)
+    ntopics: int
+        Number of topics of the trained model
+    id2token: List[tuple]
+        Mappings with the content of the document-term matrix
+    all_words: List[str]
+        List of all the words of the vocabulary of size vocab_size
+    
+    Returns
+    -------
+    np.ndarray: Topic-word distribution matrix of the trained model with the dimensions of the original topic-word distribution
+    """
+
+    if model_type == "avitm":
+        w_t_distrib = np.zeros((ntopics, vocab_size), dtype=np.float64)
+        wd = model.get_topic_word_distribution()
+        for i in np.arange(ntopics):
+            for idx, word in id2token.items():
+                for j in np.arange(len(all_words)):
+                    if all_words[j] == word: #word.split("__")[1]: # word
+                        w_t_distrib[i, j] = wd[i][idx]
+                        break
+        normalized_array = normalize(w_t_distrib,axis=1,norm='l1')
+        return normalized_array
+    else:
+        print("Method not impleemnted for the selected model type")
+        return None

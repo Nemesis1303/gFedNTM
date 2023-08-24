@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 """
 Created on Feb 1, 2022
+Last updated on Aug 24, 2023
 
 .. codeauthor:: L. Calvo-Bartolomé (lcalvo@pa.uc3m.es)
 """
 
 
 import threading
-
 from src.federation.federation_client import FederationClient
 
 
@@ -15,7 +15,10 @@ class Federation:
     """Class to describe the set of clients that compose a federation.
     """
 
-    def __init__(self, logger=None):
+    def __init__(
+            self,
+            logger=None
+        ) -> None:
         self.federation_lock = threading.RLock()
         self.federation = {}
         self.federation_clients = []
@@ -27,7 +30,10 @@ class Federation:
             logging.basicConfig(level='INFO')
             self.logger = logging.getLogger('Federation')
 
-    def connect_consensus(self, client):
+    def connect_consensus(
+            self,
+            client: str
+        ) -> None:
         """
         Class to register the connection of a client in the federation for the first time, i.e. for the agreement of a common vocabulary. 
 
@@ -49,7 +55,15 @@ class Federation:
             else:
                 self.federation[client] += 1
 
-    def connect_update(self, client, gradients, current_mb, current_epoch, current_id_msg, max_iter):
+    def connect_update(
+            self,
+            client: str,
+            gradients: list,
+            current_mb: int,
+            current_epoch: int,
+            current_id_msg: str,
+            max_iter: int
+        ) -> None:
         """
         Class to register the connection of a client in the federation for an update. 
 
@@ -81,7 +95,11 @@ class Federation:
                 self.federation_clients[id_client].update_client_state(
                     gradients, current_mb, current_epoch, current_id_msg)
 
-    def connect_waiting_or_consensus(self, client, waiting):
+    def connect_waiting_or_consensus(
+            self,
+            client: str,
+            waiting: bool
+        ) -> None:
         """
         Class to register the connection of a client in the federation when it is waiting until all the clients in the federation have sent their local corpus so the server can send the consensed vocabulary, or when the server is sending the consensed vocabulary
 
@@ -104,7 +122,10 @@ class Federation:
             self.logger.info(
                 "Client {} connected for vocabulary consensus".format(client))
 
-    def disconnect(self, client):
+    def disconnect(
+            self,
+            client: str
+        ) -> None:
         """
         Method to unregister a client from the federation. 
 
@@ -134,13 +155,13 @@ class Federation:
                 if self.federation_clients[client_to_remove].current_epoch == self.federation_clients[client_to_remove].current_id_msg:
                     del self.federation_clients[client_to_remove]
 
-    def getClients(self):
+    def getClients(self) -> list:
         """
         Get keys of the clients that are connected to the federation.
 
         Returns
         -------
-        clients_info:
+        clients_info: list
             Client idenfications from all the clients connected to the federation obtained from the context that provides information on the RPC
         """
 

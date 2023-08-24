@@ -1,6 +1,22 @@
 import numpy as np
 
-def rotateArray(arr, n, d):
+def rotateArray(arr: np.ndarray, n: int, d: int) -> np.ndarray:
+    """Rotates an array of size n by d elements. 
+    
+    Parameters
+    ----------
+    arr: np.ndarray
+        Array to rotate
+    n: int
+        Size of the array
+    d: int 
+        Number of positions to rotate the array
+    
+    Returns
+    --------
+    np.ndarray: The rotated array
+    """
+    
     temp = []
     i = 0
     while (i < d):

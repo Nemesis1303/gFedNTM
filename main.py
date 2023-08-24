@@ -21,6 +21,8 @@ from src.federation.server import FederatedServer
 from src.protos import federated_pb2_grpc
 from src.utils.auxiliary_functions import read_config_experiments
 
+WORKDIR = "/workspace"
+
 def start_server(min_num_clients:int,
                  model_type:str,
                  max_iters:int,
@@ -31,7 +33,8 @@ def start_server(min_num_clients:int,
                  save_server:str,
                  logs_server:str,
                  server_port:int=50051,
-                 time_termination:int=1200):
+                 time_termination:int=1200,
+                 base_port:int=50051):
     """Initializes the server that is going to orchestrates the federated training.
 
     Parameters
@@ -58,6 +61,8 @@ def start_server(min_num_clients:int,
         Port where the server is going to be listening
     time_termination : int
         Time in seconds after which the server is going to be terminated if no client has connected to it
+    base_port : int
+            Base port to use for the client-server, which will be generated as follows: str(base_port + id)
     """
     
     client_server_addres = \
@@ -75,7 +80,8 @@ def start_server(min_num_clients:int,
                             opts_client=opts_client,
                             save_server=save_server,
                             logs_server=logs_server,
-                            client_server_addres=client_server_addres)
+                            client_server_addres=client_server_addres,
+                            base_port=base_port)
 
     federated_pb2_grpc.add_FederationServicer_to_server(
         federated_server, server)
@@ -92,7 +98,9 @@ def start_client(id_client:int,
                  opts_client:list,
                  opts_server:list,
                  save_client:str,
-                 logs_client:str):
+                 logs_client:str,
+                 client_sleep_time:int,
+                 base_port:int=50051):
     """Initialize a client that is going to contribute to the training of a federated topic model.
 
     Parameters
@@ -115,6 +123,10 @@ def start_client(id_client:int,
         Path to the folder where the client is going to save the results of the training
     logs_client: str
         Path to the file where the client is going to save the logs of the training
+    client_sleep_time: int
+        Time in seconds that the client is going to wait before disconnecting from the server
+    base_port : int
+            Base port to use for the client-server, which will be generated as follows: str(base_port + id)
     """
 
     if data_type == "synthetic":
@@ -151,7 +163,9 @@ def start_client(id_client:int,
                    data_type=data_type,
                    opts_server=opts_server,
                    save_client=save_client,
-                   logs_client=logs_client)
+                   logs_client=logs_client,
+                   sleep_time=client_sleep_time,
+                   base_port=base_port)
 
 def main():
     parser = argparse.ArgumentParser()
@@ -184,29 +198,15 @@ def main():
     args = parser.parse_args()
     
     # Read default training parameters
-    #workdir =  os.path.dirname(os.path.dirname(os.getcwd()))
-    workdir = "/workspace" # TODO: Configure
-    configFile = os.path.join(workdir, "config/dft_params.cf")
+    configFile = os.path.join(WORKDIR, "config/dft_params.cf")
     training_params = read_config_experiments(configFile)
 
     # Define address for communication between client and server
     config = configparser.ConfigParser()
     config.read(configFile)
-    if workdir.startswith("/workspace/gFedNTM/") or not workdir.startswith("/workspace"):
-        address = config.get("addresses", "local")
-    else:
-        address = config.get("addresses", "docker")
-    print(address)
-    
-    # Define directories to save results
-    save_client = config.get("save_dir", "save_client")
-    save_server = config.get("save_dir", "save_server")
-    logs_client = config.get("save_dir","logs_client")
-    logs_server = config.get("save_dir", "logs_server")
-    
-    # Ger federation settings
-    time_termination = int(config.get("federation", "time_termination"))
-    server_port = int(config.get("federation", "server_port"))
+    address = config.get("addresses", "docker")
+    base_port = int(config.get("addresses", "base_port"))
+
         
     # Define 'client' options for GRPC communication (80*1024*1024)
     MAX_MESSAGE_LENGTH = int(config.get("grpc", "max_message_length")) 
@@ -229,6 +229,14 @@ def main():
         ("grpc.http2.max_ping_strikes", int(config.get("grpc", "max_ping_strikes")))]
 
     if args.id == 0:
+        # Define server options
+        time_termination = int(config.get("federation", "time_termination"))
+        server_port = int(config.get("federation", "server_port"))
+        
+        # Define directories to save results
+        save_server = config.get("save_dir", "save_server")
+        logs_server = config.get("save_dir", "logs_server")
+        
         print("Starting server with", args.min_clients_federation,
               "as minimum number of clients to start the federation.")
         start_server(
@@ -242,8 +250,14 @@ def main():
             save_server=save_server,
             logs_server=logs_server,
             server_port=server_port,
-            time_termination=time_termination)
+            time_termination=time_termination,
+            base_port=base_port)
     else:
+        # Define client options
+        client_sleep_time = int(config.get("federation", "client_sleep_time"))
+        # Define directories to save results
+        save_client = config.get("save_dir", "save_client")
+        logs_client = config.get("save_dir","logs_client")
         print("Starting client with id ", args.id)
         start_client(
             id_client=args.id,
@@ -254,7 +268,9 @@ def main():
             opts_client=opts_client,
             opts_server=opts_server,
             save_client=save_client,
-            logs_client=logs_client)
+            logs_client=logs_client,
+            client_sleep_time=client_sleep_time,
+            base_port=base_port)
 
 if __name__ == "__main__":
     main()

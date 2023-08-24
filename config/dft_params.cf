@@ -1,6 +1,7 @@
 [addresses]
 local = localhost:50051
 docker = gfedntm-server:50051
+base_port = 50051
 
 [ntms]
 n_components = 50
@@ -40,6 +41,7 @@ max_ping_strikes = 0
 [federation]
 time_termination = 1200
 server_port = 50051
+client_sleep_time = 86400
 
 [save_dir]
 save_client = /workspace/static/output_models/client

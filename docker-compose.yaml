@@ -1,7 +1,6 @@
-version: '3.8'
+version: "3.8"
 
-x-services-volume:
-  &services-volume
+x-services-volume: &services-volume
   type: bind
   source: ./static/output_models
   target: workspace/static/output_models
@@ -22,11 +21,13 @@ services:
   gfedntm-server:
     image: nemesis1303/gfedntm
     container_name: gfedntm-server
-    #restart: always
-    command: python3 workspace/main.py --min_clients_federation 2 --model_type ctm #avitm
+    command: python3 workspace/main.py --min_clients_federation 2 --model_type ctm # for ctm
+    #command: python3 workspace/main.py --min_clients_federation 2 --model_type avitm # for avitm
     tty: true
     ports:
       - 8888:8888
+    environment:
+      WORKDIR: /workspace
     networks:
       - gfedntm_network
     volumes:
@@ -36,8 +37,8 @@ services:
   gfedntm-client1:
     image: nemesis1303/gfedntm
     container_name: gfedntm-client1
-    #restart: always
-    command: python3 workspace/main.py --id 1 --source workspace/static/datasets/preprocessing_example/s2cs_tiny_preproc.parquet --data_type real --fos computer_science # --source workspace/static/datasets/synthetic2.npz
+    command: python3 workspace/main.py --id 1 --source workspace/static/datasets/preprocessing_example/s2cs_tiny_preproc.parquet --data_type real --fos computer_science # for real data
+    #command: python3 workspace/main.py --id 1 --source workspace/static/datasets/synthetic2.npz --data_type synthetic # for synthetic data
     tty: true
     ports:
       - 8889:8889
@@ -50,8 +51,8 @@ services:
   gfedntm-client2:
     image: nemesis1303/gfedntm
     container_name: gfedntm-client2
-    #restart: always
-    command: python3 workspace/main.py --id 2 --source workspace/static/datasets/preprocessing_example/s2cs_tiny_preproc.parquet --data_type real --fos economics # --source workspace/static/datasets/synthetic2.npz
+    command: python3 workspace/main.py --id 2 --source workspace/static/datasets/preprocessing_example/s2cs_tiny_preproc.parquet --data_type real --fos economics # for real data
+    #command: python3 workspace/main.py --id 2 --source workspace/static/datasets/synthetic2.npz --data_type synthetic # for synthetic data
     tty: true
     ports:
       - 8810:8810
@@ -60,13 +61,12 @@ services:
     volumes:
       - ./static/output_models/client2:/workspace/static/output_models/client2
       - ./static/logs/client2:/workspace/static/logs/client2
-  
+
   gfedntm-client3:
     image: nemesis1303/gfedntm
     container_name: gfedntm-client3
-    #restart: always
-    command: python3 workspace/main.py --id 3 --source workspace/static/datasets/preprocessing_example/s2cs_tiny_preproc.parquet --data_type real --fos sociology #--source workspace/static/datasets/synthetic2.npz
-    #command: python3 workspace/main.py --id 3 #--data_type real --fos sociology
+    command: python3 workspace/main.py --id 3 --source workspace/static/datasets/preprocessing_example/s2cs_tiny_preproc.parquet --data_type real --fos sociology # for real data
+    #command: python3 workspace/main.py --id 3 --source workspace/static/datasets/synthetic2.npz --data_type synthetic # for synthetic data
     tty: true
     ports:
       - 8811:8811
@@ -80,8 +80,8 @@ services:
     image: nemesis1303/gfedntm
     container_name: gfedntm-client4
     restart: always
-    command: python3 workspace/main.py --id 4 --source workspace/static/datasets/preprocessing_example/s2cs_tiny_preproc.parquet --data_type real --fos philosophy #--source workspace/static/datasets/synthetic2.npz
-    #command: python3 workspace/main.py --id 4 #--data_type real --fos philosophy
+    command: python3 workspace/main.py --id 4 --source workspace/static/datasets/preprocessing_example/s2cs_tiny_preproc.parquet --data_type real --fos philosophy # for real data
+    #command: python3 workspace/main.py --id 4 --source workspace/static/datasets/synthetic2.npz --data_type synthetic # for synthetic data
     tty: true
     ports:
       - 8812:8812
@@ -90,13 +90,13 @@ services:
     volumes:
       - ./static/output_models/client4:/workspace/static/output_models/client4
       - ./static/logs/client4:/workspace/static/logs/client4
-  
+
   gfedntm-client5:
     image: nemesis1303/gfedntm
     container_name: gfedntm-client5
     restart: always
-    command: python3 workspace/main.py --id 5 --source workspace/static/datasets/preprocessing_example/s2cs_tiny_preproc.parquet --data_type real --fos political_science #--source workspace/static/datasets/synthetic2.npz
-    #command: python3 workspace/main.py --id 5 #--data_type real --fos political_science
+    command: python3 workspace/main.py --id 5 --source workspace/static/datasets/preprocessing_example/s2cs_tiny_preproc.parquet --data_type real --fos political_science # for real data
+    #command: python3 workspace/main.py --id 5 --source workspace/static/datasets/synthetic2.npz --data_type synthetic # for synthetic data
     tty: true
     ports:
       - 8813:8813

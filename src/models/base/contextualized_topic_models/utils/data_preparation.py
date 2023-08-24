@@ -240,7 +240,7 @@ class TopicModelDataPreparation:
             raise Exception(
                 "A contextualized model or contextualized embeddings must be defined")
 
-        # TODO: this count vectorizer removes tokens that have len = 1, might be unexpected for the users
+        # @TODO: this count vectorizer removes tokens that have len = 1, might be unexpected for the users
         self.vectorizer = CountVectorizer()
 
         train_bow_embeddings = self.vectorizer.fit_transform(text_for_bow)

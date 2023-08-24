@@ -1,29 +1,25 @@
 """
 Created on Feb 1, 2022
+Last updated on Aug 24, 2023
 
-@author: L. Calvo-Bartolomé (lcalvo@pa.uc3m.es)
+.. codeauthor:: L. Calvo-Bartolomé (lcalvo@pa.uc3m.es)
 """
 import datetime
-
 import numpy as np
 import torch
-from sklearn.preprocessing import normalize
-from torch.utils.data import DataLoader
-
 from src.models.base.pytorchavitm.avitm_network.avitm import AVITM
-from src.models.base.pytorchavitm.datasets.bow_dataset import BOWDataset
 from src.models.federated.federated_model import FederatedModel
-from src.utils.auxiliary_functions import save_model_as_npz
-from src.utils.utils_postprocessing import convert_topic_word_to_init_size
-
+from src.utils.auxiliary_functions import convert_topic_word_to_init_size
 
 class FederatedAVITM(AVITM, FederatedModel):
     """Class for the Federated AVITM model.
     """
 
-    def __init__(self,
-                 tm_params: dict,
-                 logger=None) -> None:
+    def __init__(
+            self,
+            tm_params: dict,
+            logger=None
+        ) -> None:
 
         FederatedModel.__init__(self, tm_params, logger)
 
@@ -90,13 +86,22 @@ class FederatedAVITM(AVITM, FederatedModel):
 
         return params
 
-    def deltaUpdateFit(self, modelStateDict, save_dir, n_samples=20) -> None:
+    def deltaUpdateFit(
+            self, 
+            modelStateDict:dict, 
+            save_dir:str, 
+            n_samples:int=20
+        ) -> None:
         """Updates gradient with aggregated gradient from server and calculates loss.
 
         Parameters
         ----------
         modelStateDict: dict
             Dictionary containing the model parameters to be updated.
+        save_dir: str
+            Directory where the model will be saved.
+        n_samples: int
+            Number of samples to be used for inference.
         """
 
         # Update local model's state dict
@@ -115,7 +120,7 @@ class FederatedAVITM(AVITM, FederatedModel):
 
         try:
             # Get next minibatch
-            self.current_batch_sample = next(self.train_loader_iter)  # !!!!!!
+            self.current_batch_sample = next(self.train_loader_iter)
         except StopIteration as ex:
             # If there is no next minibatch, the epoch has ended, so we report, reset the iterator and get the first one
             
@@ -151,7 +156,10 @@ class FederatedAVITM(AVITM, FederatedModel):
     # ======================================================
     # Server-side training
     # ======================================================
-    def optimize_on_minibatch_from_server(self, updates) -> None:
+    def optimize_on_minibatch_from_server(
+            self,
+            updates: dict
+        ) -> None:
         """Updates the gradients of the local model after aggregating the gradients from the clients.
 
         Parameters
@@ -160,18 +168,11 @@ class FederatedAVITM(AVITM, FederatedModel):
             Dictionary with the gradients to be updated.
         """
 
-        # Update model's parameters from the forward pass carried at client's side
+        # Update model's parameters from the client's side' forward pass 
         self.model.topic_word_matrix = self.model.beta
         self.best_components = self.model.beta
         
-        # Upadate gradients after averaging from the clients'
-        # Parameter0 = prior_mean
-        # Parameter1 = prior_variance
-        # Parameter2 = beta
-        # self.model.prior_mean.grad = update
-        # self.model.prior_variance = updates[0]
-        # self.model.prior_variance = updates[1]
-        # self.model.beta.grad = updates[2]
+        # Upadate gradients after averaging from the clients' gradients
         self.model.prior_mean.grad = torch.Tensor(updates["prior_mean"])
         self.model.prior_variance.grad = torch.Tensor(
             updates["prior_variance"])
@@ -185,42 +186,30 @@ class FederatedAVITM(AVITM, FederatedModel):
     # ======================================================
     # Evaluation
     # ======================================================
-    def get_results_model(self, save_dir:str) -> None:
-        """Gets the results of the model after training at the CLIENT side.
+    def evaluate_synthetic_model(
+            self,
+            vocab_size: int,
+            gt_thetas: np.array,
+            gt_betas: np.array
+        ) -> None:
+        """Evaluates the model with the synthetic data.
         
         Parameters
         ----------
-        save_dir: str
-            Directory where the model will be saved.
+        vocab_size: int
+            Size of the vocabulary.
+        gt_thetas: np.array
+            Ground truth doc-topic distribution.
+        gt_betas: np.array
+            Ground truth word-topic distribution.
         """
 
-        # Get topics
-        self.topics = self.get_topics()
-        
-        # Get doc-topic distribution
-        self.thetas = \
-            np.asarray(self.get_doc_topic_distribution(self.train_data))
-        self.thetas[self.thetas < 3e-3] = 0
-        self.thetas = normalize(self.thetas, axis=1, norm='l1')
-
-        # Get word-topic distribution
-        self.betas = self.get_topic_word_distribution()
-
-        #file_save = \
-        #     "workspace/static/output_models/model_client_" + \
-        #     str(self.fedTrManager.client.id) + ".npz"
-
-        print("Saving model at: ", save_dir)
-        save_model_as_npz(save_dir, self)
-        
-        return
-
-    def evaluate_synthetic_model(self, vocab_size, gt_thetas, gt_betas):
-
+        # Get all vocabulary words (word1, word2, word3, etc.)
         all_words = \
             ['wd'+str(word) for word in np.arange(vocab_size+1)
-             if word > 0]
-
+             if word > 0] 
+        
+        # Convert word-topic distribution to the size of global vocabulary
         self.betas = convert_topic_word_to_init_size(
             vocab_size=vocab_size,
             model=self,
@@ -228,26 +217,14 @@ class FederatedAVITM(AVITM, FederatedModel):
             ntopics=self.n_components,
             id2token=self.tm_params["id2token"],
             all_words=all_words)
-        print('Tópicos (equivalentes) evaluados correctamente:', np.sum(
-            np.max(np.sqrt(self.betas).dot(np.sqrt(gt_betas.T)), axis=0)))
+        
+        self.logger.info(
+            f"-- -- Tópicos (equivalentes) evaluados correctamente: {np.sum(np.max(np.sqrt(self.betas).dot(np.sqrt(gt_betas.T)), axis=0))}")
 
         sim_mat_theoretical = \
             np.sqrt(gt_thetas[0]).dot(np.sqrt(gt_thetas[0].T))
         sim_mat_actual = np.sqrt(self.thetas).dot(np.sqrt(self.thetas.T))
-        print('Difference in evaluation of doc similarity:', np.sum(
-            np.abs(sim_mat_theoretical - sim_mat_actual))/len(gt_thetas))
-
-    def get_topics_in_server(self, save_dir:str):
-        """Gets the topics of the model after training at the SERVER side.
-        The topics' chemical description cannot be inferred since the server does not have access to the training corpus. Inference is required in order to get the topic distribution.
-        """
+        self.logger.info(
+            f"-- -- Difference in evaluation of doc similarity: {np.sum(np.abs(sim_mat_theoretical - sim_mat_actual))/len(gt_thetas)}")
         
-        # TODO: fix this
-        # Get word-topic distribution
-        self.betas = self.get_topic_word_distribution()
-        print("Coge los topics in server")
-        print(self.betas)
-        
-        print("Saving global model...")
-        save_model_as_npz(save_dir, self)
-        
+        return
