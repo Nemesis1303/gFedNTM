@@ -1,0 +1,3 @@
+[submodule "src/aux_modules/topicmodeler"]
+	path = src/aux_modules/topicmodeler
+	url = https://github.com/IntelCompH2020/topicmodeler.git

@@ -88,7 +88,7 @@ For this, it is first necessary to:
 
 ## Preprocessing
 
-Preparing your training files in the required format for the library is easy with the help of the [``text_preproc.py``](https://github.com/Nemesis1303/gFedNTM/blob/main/src/preprocessing/text_preproc.py) script. This script handles simple preprocessing tasks, ensuring your data is ready for training.
+Preparing your training files in the required format for the library is easy with the help of the [``text_preproc.py``](https://github.com/Nemesis1303/gFedNTM/blob/main/src/aux_modules/preprocessing/text_preproc.py) script. This script handles simple preprocessing tasks, ensuring your data is ready for training.
 
 To start the preprocessing, you have two options:
 
