@@ -9,9 +9,8 @@ import numpy as np
 
 import pandas as pd
 
-from src.topicmodeler.src.topicmodeling.manageModels import TMmodel
-from src.utils.misc import mallet_corpus_to_df
-
+from src.aux_modules.utils.misc import mallet_corpus_to_df
+from src.aux_modules.topicmodeler.src.topicmodeling.manageModels import TMmodel
 
 class TMWrapper(object):
 
@@ -23,10 +22,11 @@ class TMWrapper(object):
             logging.basicConfig(level=logging.INFO)
             self._logger = logging.getLogger("TMWrapper")
 
-        if os.path.dirname(os.path.dirname(os.getcwd())).endswith('UserInLoopHTM'):
+        if os.path.dirname(os.path.dirname(os.getcwd())).endswith('gFedNTM'):
             self._path_topic_modeler = os.path.join(
                 os.path.dirname(os.path.dirname(os.getcwd())),
                 'src',
+                'aux_modules',
                 'topicmodeler',
                 'src',
                 'topicmodeling',
@@ -35,8 +35,9 @@ class TMWrapper(object):
         else:
             self._path_topic_modeler = os.path.join(
                 os.path.dirname(os.path.dirname(os.getcwd())),
-                'UserInLoopHTM',
+                'gFedNTM',
                 'src',
+                'aux_modules',
                 'topicmodeler',
                 'src',
                 'topicmodeling',

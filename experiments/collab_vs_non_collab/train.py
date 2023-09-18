@@ -13,7 +13,7 @@ import pandas as pd
 # Add src to path and make imports
 sys.path.append('../..')
 from src.aux_modules.tmWrapper.tm_wrapper import TMWrapper
-from src.utils.auxiliary_functions import read_config_experiments
+from src.aux_modules.utils.misc import read_config_experiments
 
 ################### LOGGER #################
 logger = logging.getLogger()
@@ -90,6 +90,9 @@ def train(path_corpus: str,
                 trainer=trainer,
                 training_params=training_params,
             )
+            
+            # Remove training corpus file
+            shutil.rmtree(path_node_corpus)
             
             # Calculate RBO and TD
             tm_wrapper.calculate_rbo(model_path)
