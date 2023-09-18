@@ -76,7 +76,8 @@ def train(path_corpus: str,
             
             # Save node corpus to file
             df_f = df[df[fos_name] == f]
-            path_node_corpus = path_corpus.parent.joinpath(f"{f}.parquet")
+            path_node_corpus = models_folder.joinpath("tmp").joinpath(f"{f}.parquet")
+            print(path_node_corpus)
             df_f.to_parquet(path_node_corpus)
             
             # Train non-collaborative model
@@ -129,7 +130,6 @@ def main():
     if config_file.endswith("gFedNTM"):
         config_file = os.path.join(
                 config_file,
-                'experiments',
                 'config',
                 'dft_params.cf',
             )
@@ -137,7 +137,6 @@ def main():
         config_file = os.path.join(
                 config_file,
                 'gFedNTM',
-                'experiments',
                 'config',
                 'dft_params.cf',
             )
