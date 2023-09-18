@@ -1,13 +1,9 @@
 import argparse
 import datetime as DT
 import logging
-import multiprocessing as mp
 import os
 import pathlib
-import shutil
 import sys
-from distutils.dir_util import copy_tree
-import numpy as np
 import pandas as pd
 
 # Add src to path and make imports
@@ -76,7 +72,7 @@ def train(path_corpus: str,
             
             # Save node corpus to file
             df_f = df[df[fos_name] == f]
-            path_node_corpus = models_folder.joinpath("tmp").joinpath(f"{f}.parquet")
+            path_node_corpus = pathlib.Path(models_folder).joinpath(f"{f}.parquet")
             print(path_node_corpus)
             df_f.to_parquet(path_node_corpus)
             
@@ -94,7 +90,7 @@ def train(path_corpus: str,
             )
             
             # Remove training corpus file
-            shutil.rmtree(path_node_corpus)
+            os.remove(path_node_corpus)
             
             # Calculate RBO and TD
             tm_wrapper.calculate_rbo(model_path)
