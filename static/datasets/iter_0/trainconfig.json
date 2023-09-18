@@ -1,0 +1,23 @@
+{
+  "name": "s2cs_tiny",
+  "description": "",
+  "visibility": "Public",
+  "trainer": "ctm",
+  "Preproc": {
+    "min_lemas": 15,
+    "no_below": 15,
+    "no_above": 0.4,
+    "keep_n": 100000,
+    "stopwords": [
+      "wordlists/S2_stopwords.json"
+    ],
+    "equivalences": [
+      "wordlists/S2CS_equivalences.json"
+    ]
+  },
+  "TMparam": {},
+  "creation_date": "2023-09-18 12:42:05.852359",
+  "hierarchy-level": 0,
+  "htm-version": null,
+  "TrDtSet": "/export/usuarios_ml4ds/lbartolome/Repos/my_repos/gFedNTM/static/datasets/iter_0/s2cs_tiny"
+}

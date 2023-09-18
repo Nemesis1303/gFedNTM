@@ -6,9 +6,11 @@ import datetime as DT
 import os
 import pathlib
 import warnings
+import sys
 
 warnings.filterwarnings(action="ignore")
-from src.tmWrapper import TMWrapper
+sys.path.append('../..')
+from src.aux_modules.tmWrapper.tm_wrapper import TMWrapper
 
 def select_file_from_directory(directory_path: str):
     """Prints the files in a directory and prompts the user to select one of them.
@@ -154,7 +156,7 @@ if __name__ == "__main__":
     parser.add_argument('--iter_', type=int, required=False, default=0,
                         help="Preprocessing number of this file.")
     parser.add_argument('--pathWordlists', type=str, required=False,    
-                        default="src/preprocessing/wordlists",
+                        default="wordlists",
                         help="Path to wordlists folder.")
 
     args = parser.parse_args()

@@ -108,7 +108,8 @@ class TMWrapper(object):
                       "topic_prior_mean",
                       "topic_prior_variance",
                       "num_samples",
-                      "num_data_loader_workers"]
+                      "num_data_loader_workers",
+                      "contextual_size"]
 
         params = {"trainer": trainer,
                   "TMparam": {t: TMparam[t] for t in fields},
@@ -382,7 +383,7 @@ class TMWrapper(object):
                 
         return
     
-    def calculate_rbo(model_path):
+    def calculate_rbo(self, model_path):
         tm = TMmodel(model_path.joinpath("TMmodel"))
         rbo = tm.calculate_rbo()
         
@@ -390,7 +391,7 @@ class TMWrapper(object):
                 'rbo.npy'), rbo)
         return
 
-    def calculate_td(model_path):
+    def calculate_td(self, model_path):
         tm = TMmodel(model_path.joinpath("TMmodel"))
         td = tm.calculate_topic_diversity()
         

@@ -31,3 +31,4 @@ ctm_model_type = CombinedTM
 model_type = prodLDA
 num_epochs = 100
 num_samples = 20
+contextual_size = 192

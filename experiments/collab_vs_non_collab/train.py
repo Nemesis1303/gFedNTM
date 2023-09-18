@@ -42,10 +42,11 @@ def train(path_corpus: str,
         logger.info(f"-- -- Iteration {iter_}")
     
         # Train centralized models
-        logger.info(f"{'*'*20}")
+        logger.info(f"{'*'*40}")
         logger.info("-- -- Training centralized models...")
-        logger.info(f"{'*'*20}")
+        logger.info(f"{'*'*40}")
         
+        ntopics_centralized = [int(x) for x in ntopics_centralized.split(",")]
         for ntopic_centr in ntopics_centralized:
             name = f"centralied_{str(ntopic_centr)}_{str(iter_)}_{DT.datetime.now().strftime('%Y%m%d')}"
             logger.info("-- -- Training centralized model: " + name)
@@ -64,9 +65,9 @@ def train(path_corpus: str,
             tm_wrapper.calculate_td(model_path)
         
         # Train non-collaborative models
-        logger.info(f"{'*'*20}")
+        logger.info(f"{'*'*40}")
         logger.info("-- -- Training non-collaborative models...")
-        logger.info(f"{'*'*20}")
+        logger.info(f"{'*'*400}")
 
         # Read path_corpus to get nodes' corpus by fos and save to file
         df = pd.read_parquet(path_corpus)
@@ -149,7 +150,7 @@ def main():
           start=args.start,
           training_params=training_params,
           ntopics_nodes=args.ntopics_nodes,
-          ntopics_centralized=args.ntopics_centralized.split(","),
+          ntopics_centralized=args.ntopics_centralized,
           fos_name=args.fos_name)
 
 

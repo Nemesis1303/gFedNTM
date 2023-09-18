@@ -1,0 +1,14 @@
+{
+  "name": "s2cs_tiny",
+  "Dtsets": [
+    {
+      "parquet": "/export/usuarios_ml4ds/lbartolome/Repos/my_repos/gFedNTM/static/datasets/s2cs_tiny.parquet",
+      "source": "s2cs_tiny",
+      "idfld": "id",
+      "lemmasfld": [
+        "lemmas"
+      ],
+      "filter": ""
+    }
+  ]
+}
