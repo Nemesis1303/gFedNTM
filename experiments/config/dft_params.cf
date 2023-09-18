@@ -1,0 +1,33 @@
+[common]
+thetas_thr = 0.003
+ntopics = 10
+
+[mallet]
+doc_topic_thr = 0.0
+mallet_path = /export/usuarios_ml4ds/lbartolome/mallet-2.0.8/bin/mallet
+token_regexp = [\p{L}\p{N}][\p{L}\p{N}\p{P}]*\p{L}
+alpha = 5.0
+num_iterations = 1000
+
+[ntms]
+activation = softplus
+batch_size = 64
+dropout_in = 0.2
+dropout_out = 0.2
+hidden_sizes = (50, 50)
+labels =
+learn_priors = True
+lr = 0.002
+momentum = 0.99
+num_data_loader_workers = 8
+num_threads = 4
+optimize_interval = 10
+reduce_on_plateau = False
+sbert_model_to_load = paraphrase-distilroberta-base-v1
+solver = adam
+topic_prior_mean = 0.0
+topic_prior_variance =
+ctm_model_type = CombinedTM
+model_type = prodLDA
+num_epochs = 100
+num_samples = 20

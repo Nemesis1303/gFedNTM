@@ -380,3 +380,19 @@ class TMWrapper(object):
             'new_topic_coherence.npy'), cohr)
                 
         return
+    
+    def calculate_rbo(model_path):
+        tm = TMmodel(model_path.joinpath("TMmodel"))
+        rbo = tm.calculate_rbo()
+        
+        np.save(model_path.joinpath("TMmodel").joinpath(
+                'rbo.npy'), rbo)
+        return
+
+    def calculate_td(model_path):
+        tm = TMmodel(model_path.joinpath("TMmodel"))
+        td = tm.calculate_topic_diversity()
+        
+        np.save(model_path.joinpath("TMmodel").joinpath(
+                'td.npy'), td)
+        return
