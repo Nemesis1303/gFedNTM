@@ -24,11 +24,11 @@ topic_prior_mean = 0.0
 topic_prior_variance =
 ctm_model_type = CombinedTM
 model_type = prodLDA
-num_epochs = 20
+num_epochs = 100
 num_samples = 20
 thetas_thr = 0.003
 verbose = True
-contextual_size = 192
+contextual_size = 768
 
 [grpc]
 max_message_length = 83886080

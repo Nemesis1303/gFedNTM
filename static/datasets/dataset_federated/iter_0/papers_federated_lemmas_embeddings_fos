@@ -1,0 +1,14 @@
+{
+  "name": "papers_federated_lemmas_embeddings_fos",
+  "Dtsets": [
+    {
+      "parquet": "/export/data_ml4ds/IntelComp/Datasets/semanticscholar/20230418/parquet/papers_federated_lemmas_embeddings_fos.parquet",
+      "source": "papers_federated_lemmas_embeddings_fos",
+      "idfld": "id",
+      "lemmasfld": [
+        "lemmas"
+      ],
+      "filter": ""
+    }
+  ]
+}
