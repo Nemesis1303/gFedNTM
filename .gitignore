@@ -132,7 +132,7 @@ static/output_models
 static/logs
 static/datasets/synthetic2.npz
 static/datasets/corpus.parquet
-
+static/datasets/dataset_federated
 
 .vscode
 
