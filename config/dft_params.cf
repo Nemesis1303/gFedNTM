@@ -7,8 +7,7 @@ base_port = 50051
 n_components = 50
 activation = softplus
 batch_size = 64
-dropout_in = 0.2
-dropout_out = 0.2
+dropout = 0.2
 hidden_sizes = (50, 50)
 labels =
 learn_priors = True
@@ -28,7 +27,11 @@ num_epochs = 100
 num_samples = 20
 thetas_thr = 0.003
 verbose = True
-contextual_size = 768
+contextual_size = 192
+
+[ntm_other]
+dropout_in = 0.2
+dropout_out = 0.2
 
 [grpc]
 max_message_length = 83886080

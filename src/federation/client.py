@@ -353,9 +353,9 @@ class Client:
             local_corpus = [' '.join(doc) for doc in df_lemas]
             if "embeddings" in list(corpus.columns.values):
                 local_embeddings = corpus["embeddings"].values
-                if isinstance(embeddings[0], str):
-                    embeddings = np.array(
-                        [np.array(el.split(), dtype=np.float32) for el in embeddings])
+                if isinstance(local_embeddings[0], str):
+                    local_embeddings = np.array(
+                        [np.array(el.split(), dtype=np.float32) for el in local_embeddings])
         return local_corpus, local_embeddings
 
     def __prepare_vocab_to_send(self) -> dict:
