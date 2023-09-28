@@ -21,7 +21,7 @@ services:
   gfedntm-server:
     image: nemesis1303/gfedntm
     container_name: gfedntm-server
-    command: python3 workspace/main.py --min_clients_federation 2 --model_type ctm # for ctm
+    command: python3 workspace/main.py --min_clients_federation 3 --model_type ctm # for ctm
     #command: python3 workspace/main.py --min_clients_federation 2 --model_type avitm # for avitm
     tty: true
     ports:
