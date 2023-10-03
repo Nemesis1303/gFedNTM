@@ -664,6 +664,12 @@ class CTM(object):
         component_dists = self.best_components
         topics = defaultdict(list)
         topics_list = []
+        print("-- -- Topic list initialized....")
+        print(f"n components: {self.n_components}")
+        if component_dists is not None:
+            print(f"component dists: {component_dists.shape}")
+        else: 
+            print(f"component dists: None")
         if self.n_components is not None and component_dists is not None:
             for i in range(self.n_components):
                 _, idxs = torch.topk(component_dists[i], k)

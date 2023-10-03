@@ -27,25 +27,25 @@ num_epochs = 100
 num_samples = 20
 thetas_thr = 0.003
 verbose = True
-contextual_size = 192
+contextual_size = 768
 
 [ntm_other]
 dropout_in = 0.2
 dropout_out = 0.2
 
 [grpc]
-max_message_length = 83886080
-max_inbound_message_size = 83886080
-max_inbound_metadata_size = 83886080
+max_message_length = 125829120
+max_inbound_message_size = 125829120
+max_inbound_metadata_size = 125829120
 keepalive_time_ms = 10000
 keepalive_timeout_ms = 5000
 keepalive_permit_without_calls = True
 max_ping_strikes = 0
 
 [federation]
-time_termination = 1200
+time_termination = 604800
 server_port = 50051
-client_sleep_time = 86400
+client_sleep_time = 604800
 
 [save_dir]
 save_client = /workspace/static/output_models/client

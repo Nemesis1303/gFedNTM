@@ -13,12 +13,13 @@ from src.models.federated.federated_model import FederatedModel
 class FederatedCTM(CTM, FederatedModel):
     """Class for the Federated CTM model.
     """
+
     def __init__(
-            self,
-            tm_params: dict,
-            logger=None
-        ) -> None:
-        
+        self,
+        tm_params: dict,
+        logger=None
+    ) -> None:
+
         FederatedModel.__init__(self, tm_params, logger)
 
         CTM.__init__(
@@ -43,7 +44,7 @@ class FederatedCTM(CTM, FederatedModel):
             topic_prior_variance=tm_params["topic_prior_variance"],
             num_data_loader_workers=tm_params["num_data_loader_workers"],
             verbose=tm_params["verbose"])
-    
+
     # ======================================================
     # Client-side training
     # ======================================================
@@ -60,7 +61,7 @@ class FederatedCTM(CTM, FederatedModel):
         self.X_bow = self.current_batch_sample['X_bow']
         self.X_bow = self.X_bow.reshape(self.X_bow.shape[0], -1)
         self.X_contextual = self.current_batch_sample['X_contextual']
-        
+
         if "labels" in self.current_batch_sample.keys():
             self.labels = self.current_batch_sample['labels']
             self.labels = self.labels.reshape(self.labels.shape[0], -1)
@@ -80,21 +81,23 @@ class FederatedCTM(CTM, FederatedModel):
                 self.X_bow, self.X_contextual, self.labels)
 
         # Backward pass: Compute gradients
+        self.logger.info("-- -- Computing gradients")
         kl_loss, rl_loss = self._loss(self.X_bow, word_dists, prior_mean,
                                       prior_variance, posterior_mean,
                                       posterior_variance, posterior_log_variance)
         self.loss = self.weights["beta"] * kl_loss + rl_loss
         self.loss = self.loss.sum()
-        
+
         if self.labels is not None:
             target_labels = torch.argmax(self.labels, 1)
 
             label_loss = torch.nn.CrossEntropyLoss()(estimated_labels, target_labels)
             loss += label_loss
-            
+
         self.loss.backward()
 
         # Create gradient update to be sent to the server
+        self.logger.info("-- -- Creating gradient update")
         params = {
             "prior_mean": self.model.prior_mean,
             "prior_variance": self.model.prior_variance,
@@ -105,13 +108,13 @@ class FederatedCTM(CTM, FederatedModel):
         }
 
         return params
-    
+
     def deltaUpdateFit(
-            self,
-            modelStateDict: dict,
-            save_dir: str,
-            n_samples:int=20
-        ) -> None:
+        self,
+        modelStateDict: dict,
+        save_dir: str,
+        n_samples: int = 20
+    ) -> None:
         """Updates gradient with aggregated gradient from server and calculates loss.
 
         Parameters
@@ -119,8 +122,10 @@ class FederatedCTM(CTM, FederatedModel):
         modelStateDict: dict
             Dictionary containing the model parameters to be updated.
         """
-        
+
         # Update local model's state dict
+        self.logger.info(
+            "--- Updating local model's state dict after receiving aggregated gradient...")
         localStateDict = self.model.state_dict()
         localStateDict["prior_mean"] = modelStateDict["prior_mean"]
         localStateDict["prior_variance"] = modelStateDict["prior_variance"]
@@ -133,25 +138,41 @@ class FederatedCTM(CTM, FederatedModel):
 
         # Minitbatch ends
         self.current_mb += 1
+        self.logger.info("-- -- Minibatch {} ended".format(self.current_mb))
 
         try:
             # Get next minibatch
             self.current_batch_sample = next(self.train_loader_iter)  # !!!!!!
         except StopIteration as ex:
             # If there is no next minibatch, the epoch has ended, so we report, reset the iterator and get the first one
-            
+
+            self.logger.info(f"-- -- Epoch {self.current_epoch+1} ended")
+
+            # TODO: remove when not needed anymore
+            try:
+                #if (self.current_epoch + 1) == 5 or (self.current_epoch + 1) == 10 or (self.current_epoch + 1) == 20 or (self.current_epoch + 1) == 30 or (self.current_epoch + 1) == 40 or (self.current_epoch + 1) == 50:
+                self.logger.info(
+                    f"-- -- Saving model at epoch {self.current_epoch+1}")
+                save_dir += f"_epoch_{self.current_epoch+1}"
+                self.get_results_model(save_dir)
+            except:
+                self.logger.info(
+                    f"-- -- Error while saving model at epoch {self.current_epoch+1}")
+
             self.train_loss /= self.samples_processed
-            
+
             print("Epoch: [{}/{}]\tSamples: [{}/{}]\tTrain Loss: {}\tTime: {}".format(
                 self.current_epoch+1, self.num_epochs, self.samples_processed,
                 len(self.train_data)*self.num_epochs, self.train_loss, datetime.datetime.now()))
 
             # Save best epoch results
-            if self.current_epoch == 0:
-                self.best_components = self.model.beta
+            # if self.current_epoch == 0:
+            #    self.best_components = self.model.beta
             if self.train_loss < self.best_loss_train:
-                self.best_components = self.model.beta
+                #    self.best_components = self.model.beta
                 self.best_loss_train = self.train_loss
+
+            self.best_components = self.model.beta
 
             # Reset iterator and get first
             self.train_loader_iter = iter(self.train_loader)
@@ -170,9 +191,9 @@ class FederatedCTM(CTM, FederatedModel):
         return
 
     def optimize_on_minibatch_from_server(
-            self,
-            updates: dict
-        ) -> None:
+        self,
+        updates: dict
+    ) -> None:
         # Update model's parameters from the forward pass carried at client's side
         self.model.topic_word_matrix = self.model.beta
         self.best_components = self.model.beta

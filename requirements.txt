@@ -29,7 +29,7 @@ fastjsonschema==2.16.3
 fonttools==4.39.3
 fqdn==1.5.1
 fsspec==2023.4.0
-gensim==4.1.2
+#gensim==4.1.2
 grpcio==1.57.0
 grpcio-tools==1.57.0
 idna==3.4

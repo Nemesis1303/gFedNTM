@@ -193,8 +193,8 @@ def main():
                         help="Minimum number of client that are necessary for starting a federation. This parameter only affects the server.")
     parser.add_argument('--model_type', type=str, default="avitm",
                         help="Underlying model type: avitm/ctm.")
-    parser.add_argument('--max_iters', type=int, default=100,
-                        help="Maximum number of global iterations to train the federated topic model.")
+    parser.add_argument('--max_iters', type=int, default=25000,
+                        help="Maximum number of global iterations to train the federated topic model.")#500000
     args = parser.parse_args()
     
     # Read default training parameters
@@ -223,6 +223,8 @@ def main():
 
     # Define 'server' options for GRPC communication
     opts_server = [
+        ('grpc.max_send_message_length', MAX_MESSAGE_LENGTH),
+        ('grpc.max_receive_message_length', MAX_MESSAGE_LENGTH),
         ("grpc.keepalive_time_ms", int(config.get("grpc", "keepalive_time_ms"))),
         ("grpc.keepalive_timeout_ms", int(config.get("grpc", "keepalive_timeout_ms"))),
         ("grpc.keepalive_permit_without_calls", True if config.get("grpc", "keepalive_permit_without_calls") == "True" else False),

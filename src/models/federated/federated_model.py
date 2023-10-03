@@ -13,6 +13,9 @@ from src.models.base.contextualized_topic_models.datasets.dataset import CTMData
 from src.utils.auxiliary_functions import save_model_as_npz
 from sklearn.preprocessing import normalize
 
+from pprint import pprint
+import inspect
+
 class FederatedModel(object):
     """
     Wrapper for a Generic Federated Topic Model. 
@@ -121,10 +124,12 @@ class FederatedModel(object):
             Directory where the model will be saved.
         """
 
+        #pprint(inspect.getmembers(self))
+        
         # Get topics
         self.topics = self.get_topics()
         print(self.topics)
-
+        
         # Get doc-topic distribution
         self.thetas = \
             np.asarray(self.get_doc_topic_distribution(self.train_data))
