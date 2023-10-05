@@ -115,8 +115,9 @@ def serializeTensor(tensor:torch.Tensor) -> federated_pb2.Tensor:
     if tensor.requires_grad == True:
         tensor = tensor.detatch()
 
-    content_bytes = tensor.numpy().tobytes()
-    content_type = str(tensor.numpy().dtype)
+    aux = tensor.cpu().detach().numpy()
+    content_bytes = aux.tobytes()
+    content_type = str(aux.dtype)
     size = federated_pb2.TensorShape()
     num_dims = len(tensor.shape)
     for i in np.arange(num_dims):

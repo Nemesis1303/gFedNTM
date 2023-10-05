@@ -33,11 +33,18 @@ services:
     volumes:
       - ./static/output_models/server:/workspace/static/output_models/server
       - ./static/logs/server:/workspace/static/logs/server
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 0
+              capabilities: [gpu]
 
   gfedntm-client1:
     image: nemesis1303/gfedntm
     container_name: gfedntm-client1
-    command: python3 workspace/main.py --id 1 --source workspace/static/datasets/dataset_federated/iter_0/corpus.parquet --data_type real --fos computer_science # for real data
+    command: python3 workspace/main.py --id 1 --source workspace/static/datasets/dataset_federated/iter_1/corpus.parquet --data_type real --fos computer_science # for real data
     #command: python3 workspace/main.py --id 1 --source workspace/static/datasets/synthetic2.npz --data_type synthetic # for synthetic data
     tty: true
     ports:
@@ -47,11 +54,18 @@ services:
     volumes:
       - ./static/output_models/client1:/workspace/static/output_models/client1
       - ./static/logs/client1:/workspace/static/logs/client1
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 0
+              capabilities: [gpu]
 
   gfedntm-client2:
     image: nemesis1303/gfedntm
     container_name: gfedntm-client2
-    command: python3 workspace/main.py --id 2 --source workspace/static/datasets/dataset_federated/iter_0/corpus.parquet --data_type real --fos economics # for real data
+    command: python3 workspace/main.py --id 2 --source workspace/static/datasets/dataset_federated/iter_1/corpus.parquet --data_type real --fos economics # for real data
     #command: python3 workspace/main.py --id 2 --source workspace/static/datasets/synthetic2.npz --data_type synthetic # for synthetic data
     tty: true
     ports:
@@ -61,11 +75,18 @@ services:
     volumes:
       - ./static/output_models/client2:/workspace/static/output_models/client2
       - ./static/logs/client2:/workspace/static/logs/client2
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
 
   gfedntm-client3:
     image: nemesis1303/gfedntm
     container_name: gfedntm-client3
-    command: python3 workspace/main.py --id 3 --source workspace/static/datasets/dataset_federated/iter_0/corpus.parquet --data_type real --fos sociology # for real data
+    command: python3 workspace/main.py --id 3 --source workspace/static/datasets/dataset_federated/iter_1/corpus.parquet --data_type real --fos sociology # for real data
     #command: python3 workspace/main.py --id 3 --source workspace/static/datasets/synthetic2.npz --data_type synthetic # for synthetic data
     tty: true
     ports:
@@ -75,12 +96,19 @@ services:
     volumes:
       - ./static/output_models/client3:/workspace/static/output_models/client3
       - ./static/logs/client3:/workspace/static/logs/client3
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 0
+              capabilities: [gpu]
 
   gfedntm-client4:
     image: nemesis1303/gfedntm
     container_name: gfedntm-client4
     restart: always
-    command: python3 workspace/main.py --id 4 --source workspace/static/datasets/dataset_federated/iter_0/corpus.parquet --data_type real --fos philosophy # for real data
+    command: python3 workspace/main.py --id 4 --source workspace/static/datasets/dataset_federated/iter_1/corpus.parquet --data_type real --fos philosophy # for real data
     #command: python3 workspace/main.py --id 4 --source workspace/static/datasets/synthetic2.npz --data_type synthetic # for synthetic data
     tty: true
     ports:
@@ -90,12 +118,19 @@ services:
     volumes:
       - ./static/output_models/client4:/workspace/static/output_models/client4
       - ./static/logs/client4:/workspace/static/logs/client4
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
 
   gfedntm-client5:
     image: nemesis1303/gfedntm
     container_name: gfedntm-client5
     restart: always
-    command: python3 workspace/main.py --id 5 --source workspace/static/datasets/dataset_federated/iter_0/corpus.parquet --data_type real --fos political_science # for real data
+    command: python3 workspace/main.py --id 5 --source workspace/static/datasets/dataset_federated/iter_1/corpus.parquet --data_type real --fos political_science # for real data
     #command: python3 workspace/main.py --id 5 --source workspace/static/datasets/synthetic2.npz --data_type synthetic # for synthetic data
     tty: true
     ports:
@@ -105,6 +140,13 @@ services:
     volumes:
       - ./static/output_models/client5:/workspace/static/output_models/client5
       - ./static/logs/client5:/workspace/static/logs/client5
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 0
+              capabilities: [gpu]
 
 networks:
   gfedntm_network:

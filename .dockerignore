@@ -1,0 +1,10 @@
+# files to ignore
+.venv
+.venv_kumo
+.venv_kumo01
+experiments
+notebooks
+aux_scripts
+static/datasets/dataset_federated/iter_0
+static/images
+static/wordlists

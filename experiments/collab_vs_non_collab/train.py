@@ -44,7 +44,7 @@ def train(path_corpus: str,
         
         ntopics_centralized = [int(x) for x in ntopics_centralized.split(",")]
         for ntopic_centr in ntopics_centralized:
-            name = f"centralied_{str(ntopic_centr)}_{str(iter_)}_{DT.datetime.now().strftime('%Y%m%d')}"
+            name = f"centralized_{str(ntopic_centr)}_{str(iter_)}_{DT.datetime.now().strftime('%Y%m%d')}"
             logger.info("-- -- Training centralized model: " + name)
             
             training_params['ntopics'] = ntopic_centr
@@ -70,36 +70,40 @@ def train(path_corpus: str,
         fos = df[fos_name].unique()
         for f in fos:
             
-            # Save node corpus to file
-            df_f = df[df[fos_name] == f]
-            path_node_corpus = pathlib.Path(models_folder).joinpath(f"{f}.parquet")
-            print(path_node_corpus)
-            df_f.to_parquet(path_node_corpus)
+            ntopics_nodes = [int(x) for x in ntopics_centralized.split(",")]
             
-            # Train non-collaborative model
-            name = f"non_collaborative_{f}_{str(iter_)}_{DT.datetime.now().strftime('%Y%m%d')}"
-            logger.info("-- -- Training non-collaborative model: " + name)
+            for ntopic_node in ntopics_nodes:
             
-            training_params['ntopics'] = ntopics_nodes
-            model_path = tm_wrapper.train_root_model(
-                models_folder=models_folder,
-                name=name,
-                path_corpus=path_node_corpus,
-                trainer=trainer,
-                training_params=training_params,
-            )
-            
-            # Remove training corpus file
-            os.remove(path_node_corpus)
-            
-            # Calculate RBO and TD
-            tm_wrapper.calculate_rbo(model_path)
-            tm_wrapper.calculate_td(model_path)
+                # Save node corpus to file
+                df_f = df[df[fos_name] == f]
+                path_node_corpus = pathlib.Path(models_folder).joinpath(f"{f}.parquet")
+                print(path_node_corpus)
+                df_f.to_parquet(path_node_corpus)
+                
+                # Train non-collaborative model
+                name = f"non_collaborative_{f}_{str(ntopic_node)}_{str(iter_)}_{DT.datetime.now().strftime('%Y%m%d')}"
+                logger.info("-- -- Training non-collaborative model: " + name)
+                
+                training_params['ntopics'] = ntopics_nodes
+                model_path = tm_wrapper.train_root_model(
+                    models_folder=models_folder,
+                    name=name,
+                    path_corpus=path_node_corpus,
+                    trainer=trainer,
+                    training_params=training_params,
+                )
+                
+                # Remove training corpus file
+                os.remove(path_node_corpus)
+                
+                # Calculate RBO and TD
+                tm_wrapper.calculate_rbo(model_path)
+                tm_wrapper.calculate_td(model_path)
             
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--path_corpus', type=str,
-                        default="/export/usuarios_ml4ds/lbartolome/Datasets/CORDIS/models_preproc/iter_0/corpus.txt",
+                        default="/export/usuarios_ml4ds/lbartolome/Repos/my_repos/gFedNTM/static/datasets/dataset_federated/iter_1/corpus.parquet",
                         help="Path to the training data.")
     parser.add_argument('--models_folder', type=str,
                         default="/export/usuarios_ml4ds/lbartolome/Repos/my_repos/gFedNTM/experiments/collab_vs_non_collab/results/models",
@@ -115,7 +119,8 @@ def main():
                         help="Iter number to start the naming of the root models.")
     parser.add_argument('--ntopics_nodes', type=int, default=5,
                         help="Number of topics in the non-collaborative models.")
-    parser.add_argument('--ntopics_centralized', type=str, default="10,25",
+    parser.add_argument('--ntopics_centralized', type=str, 
+                        default="10,20,30,40,50",
                         help="Number of topics for the centralized models.")
     parser.add_argument('--fos_name', type=str, default="fos",
                     help="Name of the field of study column in the corpus.")
