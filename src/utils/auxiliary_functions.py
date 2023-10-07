@@ -31,6 +31,7 @@ def get_type_from_string(str_dtype):
         dtype = np.int64
     else:
         print("dtype not defined")
+        print(str_dtype)
     return dtype
 
 
@@ -112,10 +113,11 @@ def serializeTensor(tensor:torch.Tensor) -> federated_pb2.Tensor:
         Protobuf message containing the serialized tensor.
     """
 
-    if tensor.requires_grad == True:
-        tensor = tensor.detatch()
+    # TODO: Check if this is necessary
+    #if tensor.requires_grad == True:
+    #    tensor = tensor.detatch()
 
-    aux = tensor.cpu().detach().numpy()
+    aux = tensor.cpu().numpy()
     content_bytes = aux.tobytes()
     content_type = str(aux.dtype)
     size = federated_pb2.TensorShape()
@@ -145,8 +147,16 @@ def deserializeTensor(protoTensor: federated_pb2.Tensor) -> torch.Tensor:
     """
 
     deserialized_numpy = deserializeNumpy(protoTensor)
-    deserialized_tensor = torch.Tensor(deserialized_numpy)
-
+    print("llega aquí")
+    print(deserialized_numpy.shape)
+    print(deserialized_numpy)
+    try:
+        deserialized_tensor = torch.Tensor(deserialized_numpy)
+    except Exception as e:
+        print(e)
+        print("Error deserializing tensor")
+        return None
+        
     return deserialized_tensor
 
 
@@ -163,14 +173,17 @@ def deserializeNumpy(protoTensor: federated_pb2.Tensor) -> np.ndarray:
     deserialized_numpy: np.ndarray
         Numpy array deserialized from the protobuf message.
     """
-
+    print("Deserializing tensor")
     dims = tuple(
         [dim.size for dim in protoTensor.tensor_shape.dim])
+    print(dims)
     dtype_send = get_type_from_string(protoTensor.dtype)
     deserialized_bytes = np.frombuffer(
         protoTensor.tensor_content, dtype=dtype_send)
+    print("Deserialized bytes")
     deserialized_numpy = np.reshape(
         deserialized_bytes, newshape=dims)
+    print("Deserialized numpy")
 
     return deserialized_numpy
 
@@ -319,93 +332,20 @@ def modelStateDict_to_proto(
     modelUpdate: federated_pb2.ModelUpdate
         Protobuf message containing the model state.
     """
-
-    if model_type == "ctm":
-        modelUpdate = federated_pb2.ModelUpdate(
-            prior_mean=serializeTensor(modelStateDict['prior_mean']),
-            prior_variance=serializeTensor(modelStateDict['prior_variance']),
-            beta=serializeTensor(modelStateDict['beta']),
-            inf_net_input_layer_weight=serializeTensor(
-                modelStateDict['inf_net.input_layer.weight']),
-            inf_net_input_layer_bias=serializeTensor(
-                modelStateDict['inf_net.input_layer.bias']),
-            inf_net_hiddens_l00_weight=serializeTensor(
-                modelStateDict['inf_net.hiddens.l_0.0.weight']),
-            inf_net_hiddens_l_00_bias=serializeTensor(
-                modelStateDict['inf_net.hiddens.l_0.0.bias']),
-            inf_net_f_mu_weight=serializeTensor(
-                modelStateDict['inf_net.f_mu.weight']),
-            inf_net_f_mu_bias=serializeTensor(modelStateDict['inf_net.f_mu.bias']),
-            inf_net_f_mu_batchnorm_running_mean=serializeTensor(
-                modelStateDict['inf_net.f_mu_batchnorm.running_mean']),
-            inf_net_f_mu_batchnorm_running_var=serializeTensor(
-                modelStateDict['inf_net.f_mu_batchnorm.running_var']),
-            inf_net_f_mu_batchnorm_num_batches_tracked=serializeTensor(
-                modelStateDict['inf_net.f_mu_batchnorm.num_batches_tracked']),
-            inf_net_f_sigma_weight=serializeTensor(
-                modelStateDict['inf_net.f_sigma.weight']),
-            inf_net_f_sigma_bias=serializeTensor(
-                modelStateDict['inf_net.f_sigma.bias']),
-            inf_net_f_sigma_batchnorm_running_mean=serializeTensor(
-                modelStateDict['inf_net.f_sigma_batchnorm.running_mean']),
-            inf_net_f_sigma_batchnorm_running_var=serializeTensor(
-                modelStateDict['inf_net.f_sigma_batchnorm.running_var']),
-            inf_net_f_sigma_batchnorm_num_batches_tracked=serializeTensor(
-                modelStateDict['inf_net.f_sigma_batchnorm.num_batches_tracked']),
-            beta_batchnorm_running_mean=serializeTensor(
-                modelStateDict['beta_batchnorm.running_mean']),
-            beta_batchnorm_running_var=serializeTensor(
-                modelStateDict['beta_batchnorm.running_var']),
-            beta_batchnorm_num_batches_tracked=serializeTensor(
-                modelStateDict['beta_batchnorm.num_batches_tracked']),
-            current_epoch=current_epoch,
-            inf_net_adapt_bert_weight=serializeTensor(
-                    modelStateDict['inf_net.adapt_bert.weight']),
-            inf_net_adapt_bert_bias= serializeTensor(
-                    modelStateDict['inf_net.adapt_bert.bias'])
-        )
-    else:
-            modelUpdate = federated_pb2.ModelUpdate(
-        prior_mean=serializeTensor(modelStateDict['prior_mean']),
-        prior_variance=serializeTensor(modelStateDict['prior_variance']),
-        beta=serializeTensor(modelStateDict['beta']),
-        inf_net_input_layer_weight=serializeTensor(
-            modelStateDict['inf_net.input_layer.weight']),
-        inf_net_input_layer_bias=serializeTensor(
-            modelStateDict['inf_net.input_layer.bias']),
-        inf_net_hiddens_l00_weight=serializeTensor(
-            modelStateDict['inf_net.hiddens.l_0.0.weight']),
-        inf_net_hiddens_l_00_bias=serializeTensor(
-            modelStateDict['inf_net.hiddens.l_0.0.bias']),
-        inf_net_f_mu_weight=serializeTensor(
-            modelStateDict['inf_net.f_mu.weight']),
-        inf_net_f_mu_bias=serializeTensor(modelStateDict['inf_net.f_mu.bias']),
-        inf_net_f_mu_batchnorm_running_mean=serializeTensor(
-            modelStateDict['inf_net.f_mu_batchnorm.running_mean']),
-        inf_net_f_mu_batchnorm_running_var=serializeTensor(
-            modelStateDict['inf_net.f_mu_batchnorm.running_var']),
-        inf_net_f_mu_batchnorm_num_batches_tracked=serializeTensor(
-            modelStateDict['inf_net.f_mu_batchnorm.num_batches_tracked']),
-        inf_net_f_sigma_weight=serializeTensor(
-            modelStateDict['inf_net.f_sigma.weight']),
-        inf_net_f_sigma_bias=serializeTensor(
-            modelStateDict['inf_net.f_sigma.bias']),
-        inf_net_f_sigma_batchnorm_running_mean=serializeTensor(
-            modelStateDict['inf_net.f_sigma_batchnorm.running_mean']),
-        inf_net_f_sigma_batchnorm_running_var=serializeTensor(
-            modelStateDict['inf_net.f_sigma_batchnorm.running_var']),
-        inf_net_f_sigma_batchnorm_num_batches_tracked=serializeTensor(
-            modelStateDict['inf_net.f_sigma_batchnorm.num_batches_tracked']),
-        beta_batchnorm_running_mean=serializeTensor(
-            modelStateDict['beta_batchnorm.running_mean']),
-        beta_batchnorm_running_var=serializeTensor(
-            modelStateDict['beta_batchnorm.running_var']),
-        beta_batchnorm_num_batches_tracked=serializeTensor(
-            modelStateDict['beta_batchnorm.num_batches_tracked']),
-        current_epoch=current_epoch,
-    )
+    
+    new_dict = {}
+    new_dict["current_epoch"] = current_epoch
+    for key in list(modelStateDict.keys()):
+        if key == 'inf_net.hiddens.l_0.0.weight':
+            new_key = "inf_net_hiddens_l00_weight"
+        elif key == 'inf_net.hiddens.l_0.0.bias':
+            new_key = "inf_net_hiddens_l_00_bias"
+        else:
+            new_key = key.replace(".", "_")
+        new_dict[new_key] = serializeTensor(
+                modelStateDict[key])
         
-    return modelUpdate
+    return federated_pb2.ModelUpdate(**new_dict)    
 
 
 def proto_to_modelStateDict(modelUpdate: federated_pb2.ModelUpdate) -> dict:
@@ -477,6 +417,28 @@ def proto_to_modelStateDict(modelUpdate: federated_pb2.ModelUpdate) -> dict:
         modelStateDict["inf_net.adapt_bert.bias"] =\
             deserializeTensor(
             modelUpdate.inf_net_adapt_bert_bias)
+
+    return modelStateDict
+
+def proto_to_modelStateDict2(modelUpdate: federated_pb2.ModelUpdate) -> dict:
+    """Transforms a protobuf message containing the model state into a dictionary.
+    
+    Parameters
+    ----------
+    modelUpdate: federated_pb2.ModelUpdate
+        Protobuf message containing the model state.
+    
+    Returns
+    -------
+    modelStateDict: dict
+        Dictionary containing the model state.
+    """
+
+    modelStateDict = {
+        "prior_mean": deserializeTensor(modelUpdate.prior_mean),
+        "prior_variance": deserializeTensor(modelUpdate.prior_variance),
+        "beta":  deserializeTensor(modelUpdate.beta),
+    }
 
     return modelStateDict
 

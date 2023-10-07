@@ -11,12 +11,14 @@ Last updated on Aug 24, 2023
 .. codeauthor:: L. Calvo-Bartolomé (lcalvo@pa.uc3m.es)
 """
 
+from collections import OrderedDict
 import sys
 import threading
 import time
 
-import grpc
 
+import grpc
+import torch
 import numpy as np
 from sklearn.feature_extraction.text import CountVectorizer
 from src.federation import federation, federation_client
@@ -29,11 +31,12 @@ from src.utils.auxiliary_functions import (deserializeNumpy,
 import logging
 from waiting import wait
 
-GRPC_TRACE=all
+GRPC_TRACE = all
+
 
 class FederatedServer(federated_pb2_grpc.FederationServicer):
     """Class that describes the behaviour of the GRPC server to which several clients are connected to create a federation for the joint training of a topic model.
-    
+
     Parameters
     ----------
     min_num_clients : int
@@ -51,25 +54,25 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
     logger: logging.Logger
         Logger object to log messages
     """
-    
+
     # Lock to synchronize the start of the federated training
     _start_federated_training_lock = threading.Lock()
     _is_federated_training_started = False
 
     def __init__(
-            self,
-            min_num_clients:int,
-            model_params:dict,
-            model_type:str,
-            max_iters:int,
-            opts_client:dict,
-            save_server:str,
-            logs_server:str,
-            client_server_addres:str="gfedntm-client",
-            base_port:int=50051,
-            logger:logging.Logger=None
-        ) -> None:
-        
+        self,
+        min_num_clients: int,
+        model_params: dict,
+        model_type: str,
+        max_iters: int,
+        opts_client: dict,
+        save_server: str,
+        logs_server: str,
+        client_server_addres: str = "gfedntm-client",
+        base_port: int = 50051,
+        logger: logging.Logger = None
+    ) -> None:
+
         # Define attributes
         self._min_num_clients = min_num_clients
         self._model_parameters = model_params
@@ -85,19 +88,20 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
         if logger:
             self._logger = logger
         else:
-            FMT = logging.Formatter("%(asctime)s [%(threadName)-12.12s] [%(levelname)-5.5s]  %(message)s")
-            
+            FMT = logging.Formatter(
+                "%(asctime)s [%(threadName)-12.12s] [%(levelname)-5.5s]  %(message)s")
+
             self._logger = logging.getLogger('Client')
             self._logger.setLevel(logging.DEBUG)
-            
+
             fileHandler = logging.FileHandler(filename=logs_server)
             fileHandler.setFormatter(FMT)
             self._logger.addHandler(fileHandler)
-            
+
             consoleHandler = logging.StreamHandler(sys.stdout)
             consoleHandler.setFormatter(FMT)
             self._logger.addHandler(consoleHandler)
-            
+
         # Define additional attributes
         self._id_server = "IDS" + "_" + str(round(time.time()))
         self._dicts = []
@@ -106,10 +110,10 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
         self._federation = federation.Federation()
 
     def record_client_consensus(
-            self,
-            context:grpc.AuthMetadataContext,
-            nr_samples:int
-        ) -> None:
+        self,
+        context: grpc.AuthMetadataContext,
+        nr_samples: int
+    ) -> None:
         """
         Method to record the communication between a server and one of the clients in the federation at the time the clients first try to send its local vocabulary.
 
@@ -135,14 +139,14 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
 
         context.add_callback(unregister_client)
         self._federation.connect_consensus(context.peer())
-        
+
         return
 
     def record_client_waiting_or_consensus(
-            self,
-            context:grpc.AuthMetadataContext,
-            waiting:bool
-        ) -> None:
+        self,
+        context: grpc.AuthMetadataContext,
+        waiting: bool
+    ) -> None:
         """
         Method to record the communication between a server and one of the clients in the federation at the time the client is waiting for server to send the consensed vocabulary or during the waiting time of the consensed vocabulary sending
 
@@ -163,14 +167,14 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
 
         context.add_callback(unregister_client)
         self._federation.connect_waiting_or_consensus(context.peer(), waiting)
-        
+
         return
 
     def sendLocalDic(
-            self,
-            request:federated_pb2.ClientTensorRequest,
-            context:grpc.AuthMetadataContext
-        ) -> federated_pb2.ServerReceivedResponse:
+        self,
+        request: federated_pb2.ClientTensorRequest,
+        context: grpc.AuthMetadataContext
+    ) -> federated_pb2.ServerReceivedResponse:
         """
         Sends an ACK response to the client after receiving his local dictionary update.
 
@@ -191,9 +195,9 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
         vocab = dict([(pair.key, pair.value.ivalue)
                      for pair in request.vocab.pairs])
         self._dicts.append(vocab)
-        
+
         # Record clients waiting for the consensed request
-        self.record_client_consensus(context, request.nr_samples) 
+        self.record_client_consensus(context, request.nr_samples)
 
         # Update client's information in the federation
         federation_client.FederationClient.set_id_by_key(
@@ -204,10 +208,10 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
         return federated_pb2.Reply(length=len(vocab))
 
     def sendGlobalDicAndInitialNN(
-            self,
-            request:federated_pb2.Empty,
-            context:grpc.AuthMetadataContext
-        ) -> federated_pb2.FeatureUnion:
+        self,
+        request: federated_pb2.Empty,
+        context: grpc.AuthMetadataContext
+    ) -> federated_pb2.FeatureUnion:
         """
         Sends the common vocabulary and the initialized NN to the correspinding client based on the context of the gRPC channel.
 
@@ -275,7 +279,7 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
         # Create CountVectorizer from vocabulary dictionary
         cv_g = CountVectorizer(vocabulary=vocabulary_dict)
 
-        # Save information of input_size and id2token in model_params 
+        # Save information of input_size and id2token in model_params
         idx2token = cv_g.get_feature_names_out()
         self._model_parameters["input_size"] = len(idx2token)
         self._model_parameters["id2token"] = \
@@ -293,6 +297,11 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
             self._logger.info("CTM model initialized")
         else:
             self._logger.error("Provided underlying model not supported")
+
+        self._logger.info(f"Printing shape info of server's state dict.")
+        for param_tensor in self._global_model.model.state_dict():
+            print(param_tensor, "\t", self._global_model.model.state_dict()[
+                  param_tensor].size())
 
         modelUpdate_ = \
             modelStateDict_to_proto(
@@ -318,7 +327,7 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
             dic.pairs.extend(
                 [federated_pb2.Dictionary.Pair(key=key_, value=federated_pb2.Dictionary.Pair.Value(ivalue=value_))])
         feature_union.dic.extend([dic])
-        
+
         self._logger.info(
             "Client vocab serialized")
 
@@ -327,7 +336,7 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
     def can_send_aggragated_vocab(self) -> bool:
         """
         Checks whether all the clients meet the necessary condition for the sending of the consensed vocabulary.
-        
+
         Returns
         -------
         boolean: bool
@@ -339,7 +348,7 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
             if not client.vocab_sent:
                 return False
         return True
-    
+
     def can_start_training(self) -> bool:
         """Checks the conditions that need to be fullfilled in order to start training phase
 
@@ -357,10 +366,10 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
         return True
 
     def trainFederatedModel(
-            self,
-            request:federated_pb2.Empty,
-            context:grpc.AuthMetadataContext
-        ) -> federated_pb2.Empty:
+        self,
+        request: federated_pb2.Empty,
+        context: grpc.AuthMetadataContext
+    ) -> federated_pb2.Empty:
         """
         Trains the federated model by requestnig the gradients from them.
 
@@ -376,7 +385,7 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
         request: federated_pb2.Empty()
             Empty request
         """
-        
+
         # Record clients waiting for the training phase to start
         self.record_client_waiting_or_consensus(context, True)
 
@@ -385,7 +394,7 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
             context.peer(),
             self._federation.federation_clients,
             True)
-        
+
         # Wait for all clients to be ready for training
         wait(lambda: self.can_start_training(), timeout_seconds=120,
              waiting_for="Training to start")
@@ -396,59 +405,74 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
             if not FederatedServer._is_federated_training_started:
                 threading.Thread(target=self.do_federated_training).start()
                 FederatedServer._is_federated_training_started = True
-        
+
         return federated_pb2.Empty()
-    
+
     def do_federated_training(self) -> None:
         """Trains the federated model by requesting the gradients from the clients.
         """
+        
+        def get_address_to_connect(client):
+            return self._client_server_addres + \
+                str(client.client_id) + ":" + \
+                str(self._base_port + client.client_id)
+        
+        
         # START SERVER AS 'CLIENT'
         # Open channel for communication with the ClientServer
         # Iter over max iters to train federated model
         for i in range(self._max_iters):
-            
+
             print("••••••••••••••••••••••••••")
             print("Global iteration: ", i)
             print("••••••••••••••••••••••••••")
-         
-            clients_s = [self._federation.federation_clients[client_pos] for client_pos in range(len(self._federation.federation_clients))]
 
-            # Ask for the gradient to clients
+            clients_s = [self._federation.federation_clients[client_pos]
+                         for client_pos in range(len(self._federation.federation_clients))]
+
+            ###############################################################
+            # Request gradients 
+            ###############################################################
             for client in clients_s:
-                
-                address_to_connect = self._client_server_addres + str(client.client_id) + ":" + str(self._base_port + client.client_id)
 
-                self._logger.info(f"Client id {str(client.client_id)}")
-                self._logger.info(f"Server connecting to {address_to_connect}")
-                
+                address_to_connect = get_address_to_connect(client)
+
+                self._logger.info(
+                    f"-- -- Requesting gradient from client id {str(client.client_id)} at address {address_to_connect}")
+
                 with grpc.insecure_channel(address_to_connect, options=self._opts_client) as channel:
                     stub = federated_pb2_grpc.FederationServerStub(channel)
 
                     # Request the gradient from the client i
-                    gradient_req = federated_pb2.ServerGetGradientRequest(
-                        iter=i)
+                    grad_req = federated_pb2.ServerGetGradientRequest(iter=i)
 
                     if stub:
-                        client_tensor_req = stub.getGradient(gradient_req)
+                        client_tensor_req = stub.getGradient(grad_req)
 
-                        # Deserialize gradient updates from the client and save then in the corresponding Client object as numpy array
+                        # Deserialize clients' gradient updates
                         gradients = {}
                         for update in client_tensor_req.updates:
                             deserialized_numpy = deserializeNumpy(
                                 update.tensor)
                             gradients[update.tensor_name] = deserialized_numpy
-                        # Save the gradient in the corresponding Client object
+                            
+                        # Save the gradients in the corresponding Client object
                         client.update_client_state(
                             gradients,
                             client_tensor_req.metadata.current_mb,
                             client_tensor_req.metadata.current_epoch, client_tensor_req.header.id_request)
-                        self._logger.info(f"Connecting to {address_to_connect} worked as expected")
-                
-                self._logger.info(f"Entering into sleep")
+                        self._logger.info(
+                            f"-- -- Connecting to {address_to_connect} worked as expected")
+
+                self._logger.info(
+                    f"-- -- Server entering into sleep mode before next client request...")
                 time.sleep(3)
 
-            # Aggregate gradients from clients
-            keys = client.tensors.keys()
+            ###############################################################
+            # Average gradients 
+            ###############################################################
+            #keys = client.tensors.keys()
+            keys = [key for key in client.tensors.keys() if key in ["prior_mean", "prior_variance", "beta"]]
             averages = {}
             for key in keys:
                 N = np.array(
@@ -459,27 +483,45 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
                     np.stack(clients_tensors), axis=0) / N.sum()
                 averages[key] = average_tensor
 
-            # Peform updates
-            self._global_model.optimize_on_minibatch_from_server(averages)
+            self._logger.info(f"Printing shape after averaging...")
+            for k, v in averages.items():
+                print(k, "\t", v.shape)
 
+            # Peform updates
+            # self._global_model.optimize_on_minibatch_from_server(averages)
+
+            # Create model update
+
+            # Set model parameters from a list of NumPy ndarrays
+            #self._global_model.model.train()
+            # params_dict = zip(self._global_model.model.state_dict().keys(), averages)
+            state_dict = OrderedDict({k: torch.tensor(v)
+                                     for k, v in averages.items()})
+            #self._global_model.model.load_state_dict(state_dict, strict=False)
+
+            # params_dict = dict(zip(self._global_model.model.state_dict().keys(), averages))
+            # modelUpdate_ = \
+            #    modelStateDict_to_proto(
+            #        params_dict, -1, self._model_type)
+
+            #modelUpdate_ = \
+            #     modelStateDict_to_proto(
+            #        self._global_model.model.state_dict(), -1, self._model_type)
             modelUpdate_ = \
                 modelStateDict_to_proto(
-                    self._global_model.model.state_dict(), -1, self._model_type)
-            #optUpdate_ = \
-            #    optStateDict_to_proto(
-            #        self._global_model.optimizer.state_dict())
+                    state_dict, -1, self._model_type)
+
             nNUpdate = federated_pb2.NNUpdate(
                 modelUpdate=modelUpdate_,
-                #optUpdate=optUpdate_
+                # optUpdate=optUpdate_
             )
 
             # Send Aggregated request to Server-Clients
             for client in clients_s:
-                                
-                address_to_connect = self._client_server_addres + str(client.client_id) + ":" + str(self._base_port + client.client_id)
-                    
-                self._logger.info(f"Client id {str(client.client_id)}")
-                self._logger.info(f"Server reconnecting to {address_to_connect}")
+
+                address_to_connect = get_address_to_connect(client)
+
+                self._logger.info(f"-- -- Sending aggragated request to client id {str(client.client_id)} at address {address_to_connect}")
 
                 # Create request
                 header = federated_pb2.MessageHeader(
@@ -495,35 +537,38 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
                     if stub:
                         # get ack confirming received ok
                         ack = stub.sendAggregatedTensor(agg_request)
-                self._logger.info(f"ACK received for iter {i}") 
-            
+                self._logger.info(f"ACK received for iter {i}")
+
         self._global_model.get_topics_in_server(self._save_server)
-        
-        self._logger.info(f"Server {self._id_server} finished training. Waiting for saving")
+
+        self._logger.info(
+            f"Server {self._id_server} finished training. Waiting for saving")
         time.sleep(10)
-        
-        self._logger.info(f"Server {self._id_server} sending stop training request to client servers...")
-        
+
+        self._logger.info(
+            f"Server {self._id_server} sending stop training request to client servers...")
+
         for client in clients_s:
-            address_to_connect = self._client_server_addres + str(client.client_id) + ":" + str(self._base_port + client.client_id)
-                    
+            address_to_connect = self._client_server_addres + \
+                str(client.client_id) + ":" + \
+                str(self._base_port + client.client_id)
+
             self._logger.info(f"Client id {str(client.client_id)}")
             self._logger.info(f"Server reconnecting to {address_to_connect}")
-            
+
             # Create request
             header = federated_pb2.MessageHeader(
                 id_response=str(self._id_server),
                 message_type=federated_pb2.MessageType.SERVER_STOP_TRAINING_REQUEST)
             stop_request = federated_pb2.ServerAggregatedTensorRequest(
-                    header=header)
-            
+                header=header)
+
             with grpc.insecure_channel(address_to_connect, options=self._opts_client) as channel:
                 stub = federated_pb2_grpc.FederationServerStub(channel)
 
                 if stub:
                     # get ack confirming received ok
                     ack = stub.sendAggregatedTensor(stop_request)
-                self._logger.info(f"ENDING ACK received") 
-        
-        
+                self._logger.info(f"ENDING ACK received")
+
         return

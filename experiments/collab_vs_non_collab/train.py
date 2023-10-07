@@ -70,7 +70,7 @@ def train(path_corpus: str,
         fos = df[fos_name].unique()
         for f in fos:
             
-            ntopics_nodes = [int(x) for x in ntopics_centralized.split(",")]
+            ntopics_nodes = ntopics_centralized
             
             for ntopic_node in ntopics_nodes:
             

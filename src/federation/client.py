@@ -30,7 +30,8 @@ from src.models.base.pytorchavitm.datasets.bow_dataset import BOWDataset
 from src.models.federated.federated_avitm import FederatedAVITM
 from src.models.federated.federated_ctm import FederatedCTM
 from src.protos import federated_pb2, federated_pb2_grpc
-from src.utils.auxiliary_functions import (proto_to_modelStateDict,
+from src.utils.auxiliary_functions import (proto_to_modelStateDict, 
+                                           proto_to_modelStateDict2,
                                            proto_to_optStateDict,
                                            serializeTensor)
 
@@ -102,7 +103,8 @@ class FederatedClientServer(federated_pb2_grpc.FederationServerServicer):
         for key in gr_upt.keys():
             # Get gradients i.e., keys "prior_mean", "prior_variance" and "beta"
             if key not in ["current_mb", "current_epoch", "num_epochs"]:
-                gradients_.append([key, gr_upt[key].grad.detach()])
+                #gradients_.append([key, gr_upt[key].grad.detach()])
+                gradients_.append([key, gr_upt[key]])
 
         # Generate response's header
         id_message = "ID" + str(self.id) + "_" + str(round(time.time()))
@@ -111,12 +113,11 @@ class FederatedClientServer(federated_pb2_grpc.FederationServerServicer):
             message_type=federated_pb2.MessageType.CLIENT_TENSOR_SEND)
 
         # Generate response's metadata
-        metadata = \
-            federated_pb2.MessageAdditionalData(
-                current_mb=gr_upt["current_mb"],
-                current_epoch=gr_upt["current_epoch"],
-                num_max_epochs=gr_upt["num_epochs"],
-                id_machine=int(self.id))
+        metadata = federated_pb2.MessageAdditionalData(
+            current_mb=gr_upt["current_mb"],
+            current_epoch=gr_upt["current_epoch"],
+            num_max_epochs=gr_upt["num_epochs"],
+            id_machine=int(self.id))
 
         # Generate Protos Update with the gradients
         updates_ = []
@@ -162,7 +163,7 @@ class FederatedClientServer(federated_pb2_grpc.FederationServerServicer):
                 'Client server %s received aggregated tensor for global epoch %s',
                 str(self.id), self.global_epoch)
             # Process request and update local model with server's weights
-            modelStateDict = proto_to_modelStateDict(
+            modelStateDict = proto_to_modelStateDict2(
                 request.nndata.modelUpdate)
 
             #optStateDict = proto_to_optStateDict(request.nndata.optUpdate)
@@ -494,7 +495,9 @@ class Client:
             # Initialize FederatedCTM
             self.local_model = \
                 FederatedCTM(self._model_parameters, self._logger)
-
+            self._logger.info(f"Printing shape info of client's state dict BEFORE initialization from server...")
+            for param_tensor in self.local_model.model.state_dict():
+                print(param_tensor, "\t", self.local_model.model.state_dict()[param_tensor].size())
         else:
             self._logger.error("Provided underlying model not supported")
 
@@ -507,6 +510,9 @@ class Client:
 
         self._logger.info(
             'Client %s initialized local model appropiately.', str(self.id))
+        self._logger.info(f"Printing shape info of client's state dict AFTER initialization from server...")
+        for param_tensor in self.local_model.model.state_dict():
+            print(param_tensor, "\t", self.local_model.model.state_dict()[param_tensor].size())
 
         return
 

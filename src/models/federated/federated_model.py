@@ -48,7 +48,7 @@ class FederatedModel(object):
         # Post-training parameters
         self.topics = None
         self.thetas = None
-        self.betas = None
+        self.betas = None        
 
     # ======================================================
     # Client-side training

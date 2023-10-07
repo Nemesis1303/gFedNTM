@@ -8,7 +8,7 @@ import datetime
 import torch
 from src.models.base.contextualized_topic_models.ctm_network.ctm import CTM
 from src.models.federated.federated_model import FederatedModel
-
+from collections import OrderedDict
 
 class FederatedCTM(CTM, FederatedModel):
     """Class for the Federated CTM model.
@@ -21,7 +21,6 @@ class FederatedCTM(CTM, FederatedModel):
     ) -> None:
 
         FederatedModel.__init__(self, tm_params, logger)
-
         CTM.__init__(
             self,
             logger=self.logger,
@@ -44,7 +43,7 @@ class FederatedCTM(CTM, FederatedModel):
             topic_prior_variance=tm_params["topic_prior_variance"],
             num_data_loader_workers=tm_params["num_data_loader_workers"],
             verbose=tm_params["verbose"])
-
+        
     # ======================================================
     # Client-side training
     # ======================================================
@@ -75,37 +74,57 @@ class FederatedCTM(CTM, FederatedModel):
 
         # Forward pass
         self.model.zero_grad()  # Update gradients to zero
-        prior_mean, prior_variance, \
-            posterior_mean, posterior_variance, posterior_log_variance, \
-            word_dists, estimated_labels = self.model(
-                self.X_bow, self.X_contextual, self.labels)
+        (
+            prior_mean,
+            prior_variance, 
+            posterior_mean, 
+            posterior_variance, 
+            posterior_log_variance, 
+            word_dists, 
+            estimated_labels
+        ) = self.model(self.X_bow, self.X_contextual, self.labels)
 
         # Backward pass: Compute gradients
         self.logger.info("-- -- Computing gradients")
-        kl_loss, rl_loss = self._loss(self.X_bow, word_dists, prior_mean,
-                                      prior_variance, posterior_mean,
-                                      posterior_variance, posterior_log_variance)
+        kl_loss, rl_loss = self._loss(
+            self.X_bow, 
+            word_dists, 
+            prior_mean,
+            prior_variance, 
+            posterior_mean,
+            posterior_variance, 
+            posterior_log_variance)
+        
         self.loss = self.weights["beta"] * kl_loss + rl_loss
         self.loss = self.loss.sum()
 
         if self.labels is not None:
             target_labels = torch.argmax(self.labels, 1)
-
             label_loss = torch.nn.CrossEntropyLoss()(estimated_labels, target_labels)
             loss += label_loss
 
         self.loss.backward()
+            
+        # Optimizer step
+        self.optimizer.step()
 
         # Create gradient update to be sent to the server
-        self.logger.info("-- -- Creating gradient update")
+        self.logger.info("-- -- Creating gradient update...")
         params = {
-            "prior_mean": self.model.prior_mean,
-            "prior_variance": self.model.prior_variance,
-            "beta": self.model.beta,
+            **self.model.state_dict(),
             "current_mb": self.current_mb,
-            "current_epoch": self.current_mb,
+            "current_epoch": self.current_epoch,
             "num_epochs": self.num_epochs
         }
+
+        #params = {
+        #    "prior_variance": self.model.prior_variance,
+        #    "prior_mean": self.model.prior_mean,
+        #    "beta": self.model.beta,
+        #    "current_mb": self.current_mb,
+        #    "num_epochs": self.num_epochs
+        #    "current_epoch": self.current_mb,
+        #}
 
         return params
 
@@ -128,13 +147,17 @@ class FederatedCTM(CTM, FederatedModel):
             "--- Updating local model's state dict after receiving aggregated gradient...")
         localStateDict = self.model.state_dict()
         localStateDict["prior_mean"] = modelStateDict["prior_mean"]
-        localStateDict["prior_variance"] = modelStateDict["prior_variance"]
         localStateDict["beta"] = modelStateDict["beta"]
+        localStateDict["prior_variance"] = modelStateDict["prior_variance"]
         self.model.load_state_dict(localStateDict)
+                
+        #state_dict = OrderedDict({k: torch.Tensor(v) for k, v in modelStateDict.items()})
+        #self.model.load_state_dict(state_dict, strict=False)
 
         # Calculate minibatch's train loss and samples processed
         self.samples_processed += self.X_bow.size()[0]
         self.train_loss += self.loss.item()
+        self.logger.info("-- -- Minibatch {} loss {} / samples processes {}".format(self.current_mb, self.loss.item(), self.samples_processed))
 
         # Minitbatch ends
         self.current_mb += 1
@@ -166,8 +189,8 @@ class FederatedCTM(CTM, FederatedModel):
                 len(self.train_data)*self.num_epochs, self.train_loss, datetime.datetime.now()))
 
             # Save best epoch results
-            # if self.current_epoch == 0:
-            #    self.best_components = self.model.beta
+            if self.current_epoch == 0:
+                self.best_components = self.model.beta
             if self.train_loss < self.best_loss_train:
                 #    self.best_components = self.model.beta
                 self.best_loss_train = self.train_loss
@@ -195,16 +218,16 @@ class FederatedCTM(CTM, FederatedModel):
         updates: dict
     ) -> None:
         # Update model's parameters from the forward pass carried at client's side
-        self.model.topic_word_matrix = self.model.beta
-        self.best_components = self.model.beta
+        #self.model.topic_word_matrix = self.model.beta
+        #self.best_components = self.model.beta
 
         # Upadate gradients
-        self.model.prior_mean.grad = torch.Tensor(updates["prior_mean"])
-        self.model.prior_variance.grad = torch.Tensor(
-            updates["prior_variance"])
-        self.model.beta.grad = torch.Tensor(updates["beta"])
+        #self.model.prior_mean.grad = torch.Tensor(updates["prior_mean"])
+        #self.model.prior_variance.grad = torch.Tensor(
+        #    updates["prior_variance"])
+        #self.model.beta.grad = torch.Tensor(updates["beta"])
 
         # Perform one step of the optimizer (SGD/Adam)
-        self.optimizer.step()
+        #self.optimizer.step()
 
         return

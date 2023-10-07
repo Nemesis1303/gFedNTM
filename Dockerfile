@@ -28,6 +28,4 @@ VOLUME /data
 
 COPY . /workspace
 
-RUN rm -rf /workspace/static/datasets/dataset_federated/iter_0
-
 RUN python3 -m pip install -r /workspace/requirements.txt
