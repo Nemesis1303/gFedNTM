@@ -46,6 +46,7 @@ max_ping_strikes = 0
 time_termination = 604800
 server_port = 50051
 client_sleep_time = 604800
+grads_to_share = prior_mean,prior_variance,beta
 
 [save_dir]
 save_client = /workspace/static/output_models/client

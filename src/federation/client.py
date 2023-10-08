@@ -30,13 +30,12 @@ from src.models.base.pytorchavitm.datasets.bow_dataset import BOWDataset
 from src.models.federated.federated_avitm import FederatedAVITM
 from src.models.federated.federated_ctm import FederatedCTM
 from src.protos import federated_pb2, federated_pb2_grpc
-from src.utils.auxiliary_functions import (proto_to_modelStateDict, 
-                                           proto_to_modelStateDict2,
+from src.utils.auxiliary_functions import (proto_to_modelStateDict,
                                            proto_to_optStateDict,
                                            serializeTensor)
 
 warnings.filterwarnings('ignore')
-GRPC_TRACE=all
+GRPC_TRACE = all
 
 # ======================================================
 # CLIENT-SERVER
@@ -46,21 +45,22 @@ class FederatedClientServer(federated_pb2_grpc.FederationServerServicer):
     """
 
     def __init__(
-            self,
-            local_model: Union[FederatedAVITM, FederatedCTM],
-            train_data: Union[BOWDataset, CTMDataset],
-            id: int,
-            save_client:str,
-            logger=None
-        ):
+        self,
+        local_model: Union[FederatedAVITM, FederatedCTM],
+        train_data: Union[BOWDataset, CTMDataset],
+        id: int,
+        save_client: str,
+        logger=None
+    ):
 
+        # Attributes
         self._local_model = local_model
         self.id = id
         self._save_client = save_client
-        
+
         # Initialize all parameters needed for the training of the local model
         self._local_model.preFit(train_data)
-        
+
         # Create logger object
         if logger:
             self._logger = logger
@@ -71,14 +71,14 @@ class FederatedClientServer(federated_pb2_grpc.FederationServerServicer):
                                 filename="logs_client-server.txt")
             self._logger = logging.getLogger('ClientServer')
             self._logger.setLevel(logging.DEBUG)
-            
+
         self._logger.info("FederatedClientServer object initialized")
 
     def getGradient(
-            self,
-            request: federated_pb2.ServerGetGradientRequest,
-            context: grpc.AuthMetadataContext
-        ) -> federated_pb2.ClientTensorRequest:
+        self,
+        request: federated_pb2.ServerGetGradientRequest,
+        context: grpc.AuthMetadataContext
+    ) -> federated_pb2.ClientTensorRequest:
         """Receives a request to send a minibatch's gradient from the server and generates the response.
 
         Parameters
@@ -93,18 +93,16 @@ class FederatedClientServer(federated_pb2_grpc.FederationServerServicer):
         response: federated_pb2.ClientTensorRequest
             Response with the minibatch's gradient
         """
-        
+
         # Get global epoch from the request
         self.global_epoch = request.iter
-      
+
         # Generate gradient update (train one minibatch of local model)
         gr_upt = self._local_model.train_mb_delta()
-        gradients_ = []
-        for key in gr_upt.keys():
-            # Get gradients i.e., keys "prior_mean", "prior_variance" and "beta"
-            if key not in ["current_mb", "current_epoch", "num_epochs"]:
-                #gradients_.append([key, gr_upt[key].grad.detach()])
-                gradients_.append([key, gr_upt[key]])
+
+        # Get gradients
+        gradients_ = [[key, gr_upt[key]] for key in gr_upt if key not in [
+            "current_mb", "current_epoch", "num_epochs"]]
 
         # Generate response's header
         id_message = "ID" + str(self.id) + "_" + str(round(time.time()))
@@ -120,29 +118,25 @@ class FederatedClientServer(federated_pb2_grpc.FederationServerServicer):
             id_machine=int(self.id))
 
         # Generate Protos Update with the gradients
-        updates_ = []
-        for gradient in gradients_:
-            tensor_protos = serializeTensor(gradient[1])
-            protos_update = federated_pb2.Update(
-                tensor_name=gradient[0],
-                tensor=tensor_protos
-            )
-            updates_.append(protos_update)
+        updates_ = [federated_pb2.Update(
+            tensor_name=gradient[0],
+            tensor=serializeTensor(gradient[1])
+        ) for gradient in gradients_]
 
         # Generate Protos ClientTensorRequest with the update
         response = federated_pb2.ClientTensorRequest(
             header=header, metadata=metadata, updates=updates_)
 
-        self._logger.info('Client %s sent update for global epoch %s',
-                          str(self.id), self.global_epoch)
+        self._logger.info(
+            '-- -- Client %s sent gradient update for global epoch %s', str(self.id), self.global_epoch)
 
         return response
 
     def sendAggregatedTensor(
-            self,
-            request: federated_pb2.ServerAggregatedTensorRequest,
-            context: grpc.AuthMetadataContext
-        ) -> federated_pb2.ClientReceivedResponse:
+        self,
+        request: federated_pb2.ServerAggregatedTensorRequest,
+        context: grpc.AuthMetadataContext
+    ) -> federated_pb2.ClientReceivedResponse:
         """Process the receival of the aggregated tensor from the server and generates an ACK message.
 
         Parameters
@@ -160,14 +154,12 @@ class FederatedClientServer(federated_pb2_grpc.FederationServerServicer):
 
         if request.header.message_type == federated_pb2.MessageType.SERVER_AGGREGATED_TENSOR_SEND:
             self._logger.info(
-                'Client server %s received aggregated tensor for global epoch %s',
+                '-- -- Client-server %s received aggregated tensor for global epoch %s',
                 str(self.id), self.global_epoch)
             # Process request and update local model with server's weights
-            modelStateDict = proto_to_modelStateDict2(
+            modelStateDict = proto_to_modelStateDict(
                 request.nndata.modelUpdate)
 
-            #optStateDict = proto_to_optStateDict(request.nndata.optUpdate)
-            
             # Update local model with server's weights
             self._local_model.deltaUpdateFit(
                 modelStateDict=modelStateDict,
@@ -177,21 +169,18 @@ class FederatedClientServer(federated_pb2_grpc.FederationServerServicer):
                 id_request=str(self.global_epoch),
                 message_type=federated_pb2.MessageType.CLIENT_CONFIRM_RECEIVED)
             response = federated_pb2.ClientReceivedResponse(header=header)
-            
+
         elif request.header.message_type == federated_pb2.MessageType.SERVER_STOP_TRAINING_REQUEST:
             self._logger.info(
-                'Client server %s received reququest for finished training',
+                '-- -- Client-server %s received reququest for finished training',
                 str(self.id))
-            
+
             header = federated_pb2.MessageHeader(
                 message_type=federated_pb2.MessageType.CLIENT_CONFIRM_RECEIVED)
             response = federated_pb2.ClientReceivedResponse(header=header)
-            
-            self._logger.info(f"Getting results at client side...")
+
+            self._logger.info(f"-- -- Getting results at client side...")
             self._local_model.get_results_model(self._save_client)
-            
-            #self._logger.info(f"Client {self.id} finished training. Waiting for #server...")
-            #time.sleep(10)
 
         return response
 
@@ -203,18 +192,19 @@ class Client:
     """
 
     def __init__(
-            self,
-            id: int,
-            stub: federated_pb2_grpc.FederationStub,
-            local_corpus: list,
-            data_type: str,
-            opts_server: dict,
-            save_client: str,
-            logs_client: str,
-            sleep_time: int,
-            base_port: int,
-            logger=None
-        ):
+        self,
+        id: int,
+        stub: federated_pb2_grpc.FederationStub,
+        local_corpus: list,
+        data_type: str,
+        opts_server: dict,
+        save_client: str,
+        logs_client: str,
+        sleep_time: int,
+        base_port: int,
+        grads_to_share: list[str] = ["prior_mean", "prior_variance", "beta"],
+        logger=None
+    ):
         """
         Object's initializer
 
@@ -245,25 +235,27 @@ class Client:
         self._save_client = save_client
         self._sleep_time = sleep_time
         self._base_port = base_port
+        self._grads_to_share = grads_to_share
 
         # Create logger object
         if logger:
             self._logger = logger
         else:
             import logging
-            FMT = logging.Formatter("%(asctime)s [%(threadName)-12.12s] [%(levelname)-5.5s]  %(message)s")
+            FMT = logging.Formatter(
+                "%(asctime)s [%(threadName)-12.12s] [%(levelname)-5.5s]  %(message)s")
 
             self._logger = logging.getLogger('Client')
             self._logger.setLevel(logging.DEBUG)
-            
+
             fileHandler = logging.FileHandler(filename=logs_client)
             fileHandler.setFormatter(FMT)
             self._logger.addHandler(fileHandler)
-            
+
             consoleHandler = logging.StreamHandler(sys.stdout)
             consoleHandler.setFormatter(FMT)
             self._logger.addHandler(consoleHandler)
-                    
+
         # Get local corpus and embeddings (if CTM)
         self._local_corpus, self._local_embeddings = \
             self.__get_local_corpus(data_type, local_corpus)
@@ -282,16 +274,16 @@ class Client:
         self.__wait_for_agreed_vocab_NN()
 
         # Create client_server in separate thread
-        self.__start_client_server(opts_server,save_client)
+        self.__start_client_server(opts_server, save_client)
 
         # Send ready for training after vocabulary consensus phase
         self.__send_ready_for_training()
 
     def __start_client_server(
-            self, 
-            opts_server: dict, 
-            save_client:str
-        ) -> None:
+        self,
+        opts_server: dict,
+        save_client: str
+    ) -> None:
         """Starts the client-server in a separate thread.
 
         Parameters
@@ -301,42 +293,46 @@ class Client:
         save_client : str
             Path to save the client's model
         """
-        
+
         # Create client-server
-        client_server = grpc.server(futures.ThreadPoolExecutor(), options=opts_server)
+        client_server = grpc.server(
+            futures.ThreadPoolExecutor(), options=opts_server)
         federated_server = FederatedClientServer(
             self.local_model, self.train_data, self.id, save_client, self._logger)
         federated_pb2_grpc.add_FederationServerServicer_to_server(
             federated_server, client_server)
-        client_server.add_insecure_port('[::]:' + str(self._base_port + self.id))
+        client_server.add_insecure_port(
+            '[::]:' + str(self._base_port + self.id))
         client_server.start()
-        
+
         # Start client-server thread
-        federated_server._logger.info(f"Client Server started at {str(self._base_port + self.id)}")
+        federated_server._logger.info(
+            f"-- -- Starting Client-server at {str(self._base_port + self.id)}...")
         try:
-            thread = threading.Thread(target=client_server.wait_for_termination)
+            thread = threading.Thread(
+                target=client_server.wait_for_termination)
             thread.daemon = True
             thread.start()
-            self._logger.info("Client-server thread started")
+            self._logger.info("-- -- Client-server thread started")
         except:
-            self._logger.info("Could not start client-server thread")
+            self._logger.info("-- -- Could not start client-server thread")
         return
 
     def __get_local_corpus(
-                self,
-                data_type:str,
-                corpus: pd.DataFrame,
-            ) -> Union[list, np.ndarray]:
+        self,
+        data_type: str,
+        corpus: pd.DataFrame,
+    ) -> Union[list, np.ndarray]:
         """
         Gets the the local training corpus based on whether the input provided is synthetic or real.
-        
+
         Parameters
         ----------
         data_type : str
             Type of data used for the training of the local model
         corpus : pd.DataFrame
             Dataframe with the local corpus
-            
+
         Returns
         -------
         local_corpus : list
@@ -362,7 +358,7 @@ class Client:
     def __prepare_vocab_to_send(self) -> dict:
         """
         Gets the vocabulary associated to the local corpus as a dictionary object.
-        
+
         Returns
         -------
         vocab_dict : dict
@@ -372,7 +368,7 @@ class Client:
         # Create a CountVectorizer object to convert a collection of text documents into a matrix of token counts
         cv = CountVectorizer(
             input='content', lowercase=True, stop_words='english', binary=False)
-        
+
         # Learn the vocabulary dictionary, bow = document-term matrix
         cv.fit_transform(self._local_corpus)
         vocab_dict = cv.vocabulary_
@@ -386,7 +382,7 @@ class Client:
 
         # Get vocabulary to sent
         vocab_dict = self.__prepare_vocab_to_send()
-        
+
         # Protofy vocabulary
         dic = federated_pb2.Dictionary()
         for key_, value_ in vocab_dict.items():
@@ -402,10 +398,10 @@ class Client:
         if self._stub:
             response = self._stub.sendLocalDic(req)
             self._logger.info(
-                'Client %s vocab is being sent to server.', str(self.id))
+                '-- -- Client %s vocab is being sent to server.', str(self.id))
             if response.length == len(vocab_dict):
                 self._logger.info(
-                    'Server received correctly vocab from client %s.', str(self.id))
+                    '-- -- Server received correctly vocab from client %s.', str(self.id))
 
         return
 
@@ -415,14 +411,14 @@ class Client:
         """
 
         self._logger.info(
-            'Client %s receiving consensus vocab and initial NN.',
+            '-- -- Client %s receiving consensus vocab and initial NN.',
             str(self.id))
 
         # Get global model_parameters, model_type, dictionary and initialized NN
         response = self._stub.sendGlobalDicAndInitialNN(federated_pb2.Empty())
 
         self._logger.info(
-            'Client %s response received.',
+            '-- -- Client %s response received.',
             str(self.id))
 
         # Unprotofy model params and model type
@@ -446,7 +442,7 @@ class Client:
         self._local_model_type = response.model_type
 
         self._logger.info(
-            'Client %s received model params and model type.',
+            '-- -- Client %s received model params and model type.',
             str(self.id))
 
         # Unprotofy global dictionary
@@ -458,7 +454,7 @@ class Client:
 
         self._global_vocab = CountVectorizer(vocabulary=vocabs[0])
         self._logger.info(
-            'Client %s model vocab unprotofied.',
+            '-- -- Client %s model vocab unprotofied.',
             str(self.id))
 
         # Local document-term matrix as function of the global vocabulary
@@ -478,7 +474,7 @@ class Client:
 
             # Initialize FederatedAVITM
             self.local_model = \
-                FederatedAVITM(self._model_parameters, self._logger)
+                FederatedAVITM(self._model_parameters, self._grads_to_share, self._logger)
 
         elif self._local_model_type == "ctm":
 
@@ -494,12 +490,10 @@ class Client:
 
             # Initialize FederatedCTM
             self.local_model = \
-                FederatedCTM(self._model_parameters, self._logger)
-            self._logger.info(f"Printing shape info of client's state dict BEFORE initialization from server...")
-            for param_tensor in self.local_model.model.state_dict():
-                print(param_tensor, "\t", self.local_model.model.state_dict()[param_tensor].size())
+                FederatedCTM(self._model_parameters, self._grads_to_share, self._logger)
+
         else:
-            self._logger.error("Provided underlying model not supported")
+            self._logger.error("-- -- Provided underlying model not supported")
 
         # Initialize local_model with initial NN
         modelStateDict = proto_to_modelStateDict(
@@ -509,11 +503,7 @@ class Client:
         self.local_model.optimizer.load_state_dict(optStateDict)
 
         self._logger.info(
-            'Client %s initialized local model appropiately.', str(self.id))
-        self._logger.info(f"Printing shape info of client's state dict AFTER initialization from server...")
-        for param_tensor in self.local_model.model.state_dict():
-            print(param_tensor, "\t", self.local_model.model.state_dict()[param_tensor].size())
-
+            '-- -- Client %s initialized local model appropiately.', str(self.id))
         return
 
     def __send_ready_for_training(self) -> None:
@@ -521,7 +511,7 @@ class Client:
         """
 
         self._logger.info(
-            'Client %s sending ready for training phase.',
+            '-- -- Client %s sending ready for training phase.',
             str(self.id))
 
         # Generate request
@@ -534,8 +524,9 @@ class Client:
         # Send request to the server and wait for his response
         if self._stub:
             _ = self._stub.trainFederatedModel(request)
-            
-            self._logger.info(f"Client {self.id} stop behaving as client. Waiting for training to finish...")
+
+            self._logger.info(
+                f"-- -- Client {self.id} stop behaving as client. Waiting for training to finish...")
             time.sleep(self._sleep_time)
-        
+
         return

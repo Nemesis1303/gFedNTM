@@ -13,8 +13,6 @@ from src.models.base.contextualized_topic_models.datasets.dataset import CTMData
 from src.utils.auxiliary_functions import save_model_as_npz
 from sklearn.preprocessing import normalize
 
-from pprint import pprint
-import inspect
 
 class FederatedModel(object):
     """
@@ -22,10 +20,11 @@ class FederatedModel(object):
     """
 
     def __init__(
-            self,
-            tm_params: dict,
-            logger=None
-        ) -> None:
+        self,
+        tm_params: dict,
+        grads_to_share: list[str],
+        logger=None
+    ) -> None:
 
         self.tm_params = tm_params
 
@@ -35,7 +34,9 @@ class FederatedModel(object):
             import logging
             logging.basicConfig(level='INFO')
             self.logger = logging.getLogger('FederatedModel')
-        
+
+        self.grads_to_share = grads_to_share
+
         # Parameters for tracking federated model
         self.model_dir = None
         self.train_data = None
@@ -48,16 +49,16 @@ class FederatedModel(object):
         # Post-training parameters
         self.topics = None
         self.thetas = None
-        self.betas = None        
+        self.betas = None
 
     # ======================================================
     # Client-side training
     # ======================================================
     def preFit(
-            self,
-            train_data: Union[BOWDataset,CTMDataset],
-            save_dir=None
-        ) -> None:
+        self,
+        train_data: Union[BOWDataset, CTMDataset],
+        save_dir=None
+    ) -> None:
         """Carries out the initialization of all parameters needed for training of a local model.
 
         Parameters
@@ -94,6 +95,41 @@ class FederatedModel(object):
 
         return
 
+    def get_gradients(self):
+        """Creates gradient update to be sent to the server.
+        """
+
+        self.logger.info("-- -- Creating gradient update...")
+
+        # Create gradient update to be sent to the server
+        params = {
+            # **self.model.state_dict(),
+            "current_mb": self.current_mb,
+            "current_epoch": self.current_epoch,
+            "num_epochs": self.num_epochs
+        }
+
+        for key in self.grads_to_share:
+            params[key] = self.model.state_dict()[key]
+
+        return params
+
+    def set_gradients(self):
+        """Updates gradient with aggregated gradient from server.
+        """
+
+        self.logger.info(
+            "--- Updating local model's state dict after receiving aggregated gradient...")
+        localStateDict = self.model.state_dict()
+        for key in self.grads_to_share:
+            localStateDict[key] = self.modelStateDict[key]
+        self.model.load_state_dict(localStateDict)
+
+        # state_dict = OrderedDict({k: torch.Tensor(v) for k, v in modelStateDict.items()})
+        # self.model.load_state_dict(state_dict, strict=False)
+
+        return
+
     @abstractmethod
     def train_mb_delta(self):
         pass
@@ -105,31 +141,31 @@ class FederatedModel(object):
     # ======================================================
     # Server-side training
     # ======================================================
-    @abstractmethod
-    def optimize_on_minibatch_from_server(self):
-        pass
+    # @abstractmethod
+    # def optimize_on_minibatch_from_server(self):
+    #    pass
 
     # ======================================================
     # Evaluation
     # ======================================================
     def get_results_model(
-            self,
-            save_dir:str
-        ) -> None:
+        self,
+        save_dir: str
+    ) -> None:
         """Gets the results of the model after training at the CLIENT side.
-        
+
         Parameters
         ----------
         save_dir: str
             Directory where the model will be saved.
         """
 
-        #pprint(inspect.getmembers(self))
-        
+        # pprint(inspect.getmembers(self))
+
         # Get topics
         self.topics = self.get_topics()
         print(self.topics)
-        
+
         # Get doc-topic distribution
         self.thetas = \
             np.asarray(self.get_doc_topic_distribution(self.train_data))
@@ -143,19 +179,19 @@ class FederatedModel(object):
         # Save model
         self.logger.info(f"-- -- Saving model at {save_dir} ")
         save_model_as_npz(save_dir, self)
-    
+
     def get_topics_in_server(
-            self,
-            save_dir:str
-        ) -> None:
+        self,
+        save_dir: str
+    ) -> None:
         """Gets the topics of the model after training at the SERVER side.
         The topics' chemical description cannot be inferred since the server does not have access to the training corpus. Inference is required in order to get the topic distribution.
         """
-        
+
         # Get word-topic distribution
         self.betas = self.get_topic_word_distribution()
-        
+
         self.logger.info(f"-- -- Saving global model...")
         save_model_as_npz(save_dir, self)
-        
+
         return

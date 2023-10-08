@@ -68,6 +68,7 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
         opts_client: dict,
         save_server: str,
         logs_server: str,
+        grads_to_share: list[str] = ["prior_mean", "prior_variance", "beta"],
         client_server_addres: str = "gfedntm-client",
         base_port: int = 50051,
         logger: logging.Logger = None
@@ -79,6 +80,7 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
         self._model_type = model_type
         self._max_iters = max_iters
         self._opts_client = opts_client
+        self._grads_to_share = grads_to_share
         self._client_server_addres = client_server_addres
         self._save_server = save_server
         self._logs_server = logs_server
@@ -129,7 +131,7 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
             """No-parameter callable to be called on RPC termination, that invokes the Federation's disconnect method when a client finishes a communication with the server.
             """
             self._logger.info(
-                f"Unregistering client{context.peer()} from consensus")
+                f"-- -- Unregistering client{context.peer()} from consensus")
             client = \
                 federation_client.FederationClient.get_pos_by_key(
                     context.peer(), self._federation.federation_clients)
@@ -162,7 +164,7 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
             """No-parameter callable to be called on RPC termination, that invokes the Federation's disconnect method when a client finishes a communication with the server.
             """
             self._logger.info(
-                f"Unregistering client{context.peer()} from waiting or consensus")
+                f"-- -- Unregistering client{context.peer()} from waiting or consensus")
             self._federation.disconnect(context.peer())
 
         context.add_callback(unregister_client)
@@ -286,22 +288,17 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
             {k: v for k, v in zip(range(0, len(idx2token)), idx2token)}
 
         # Create initial global federated topic models
-        self._logger.info("Server initializing global model")
+        self._logger.info("-- -- Server initializing global model")
         if self._model_type == "avitm":
             self._global_model = \
-                FederatedAVITM(self._model_parameters, self._logger)
-            self._logger.info("AVITM model initialized")
+                FederatedAVITM(self._model_parameters, self._grads_to_share. self._logger)
+            self._logger.info("-- -- AVITM model initialized")
         elif self._model_type == "ctm":
             self._global_model = \
-                FederatedCTM(self._model_parameters, self._logger)
-            self._logger.info("CTM model initialized")
+                FederatedCTM(self._model_parameters, self._grads_to_share, self._logger)
+            self._logger.info("-- -- CTM model initialized")
         else:
             self._logger.error("Provided underlying model not supported")
-
-        self._logger.info(f"Printing shape info of server's state dict.")
-        for param_tensor in self._global_model.model.state_dict():
-            print(param_tensor, "\t", self._global_model.model.state_dict()[
-                  param_tensor].size())
 
         modelUpdate_ = \
             modelStateDict_to_proto(
@@ -314,7 +311,7 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
         )
 
         self._logger.info(
-            "modelStateDict_to_proto and optStateDict created ")
+            "-- -- modelStateDict_to_proto and optStateDict created ")
 
         feature_union = federated_pb2.FeatureUnion(
             initialNN=nNUpdate,
@@ -329,7 +326,7 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
         feature_union.dic.extend([dic])
 
         self._logger.info(
-            "Client vocab serialized")
+            "-- -- Client vocab serialized")
 
         return feature_union
 
@@ -400,7 +397,7 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
              waiting_for="Training to start")
 
         # Start training phase
-        self._logger.info(f"Starting training phase")
+        self._logger.info(f"-- -- Starting training phase")
         with FederatedServer._start_federated_training_lock:
             if not FederatedServer._is_federated_training_started:
                 threading.Thread(target=self.do_federated_training).start()
@@ -411,13 +408,22 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
     def do_federated_training(self) -> None:
         """Trains the federated model by requesting the gradients from the clients.
         """
-        
+
         def get_address_to_connect(client):
             return self._client_server_addres + \
                 str(client.client_id) + ":" + \
                 str(self._base_port + client.client_id)
-        
-        
+
+        def sleep_until_next_client(time_sleep=3):
+            self._logger.info(
+                f"-- -- Server entering into sleep mode before next client request...")
+            time.sleep(time_sleep)
+
+        def sleep_until_stop(time_sleep=10):
+            self._logger.info(
+                f"-- -- Server {self._id_server} finished training. Waiting for saving")
+            time.sleep(time_sleep)
+
         # START SERVER AS 'CLIENT'
         # Open channel for communication with the ClientServer
         # Iter over max iters to train federated model
@@ -431,7 +437,7 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
                          for client_pos in range(len(self._federation.federation_clients))]
 
             ###############################################################
-            # Request gradients 
+            # Request gradients
             ###############################################################
             for client in clients_s:
 
@@ -447,15 +453,13 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
                     grad_req = federated_pb2.ServerGetGradientRequest(iter=i)
 
                     if stub:
+                        # Get the gradient from the client i
                         client_tensor_req = stub.getGradient(grad_req)
 
                         # Deserialize clients' gradient updates
-                        gradients = {}
-                        for update in client_tensor_req.updates:
-                            deserialized_numpy = deserializeNumpy(
-                                update.tensor)
-                            gradients[update.tensor_name] = deserialized_numpy
-                            
+                        gradients = {update.tensor_name: deserializeNumpy(
+                            update.tensor) for update in client_tensor_req.updates}
+
                         # Save the gradients in the corresponding Client object
                         client.update_client_state(
                             gradients,
@@ -464,15 +468,14 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
                         self._logger.info(
                             f"-- -- Connecting to {address_to_connect} worked as expected")
 
-                self._logger.info(
-                    f"-- -- Server entering into sleep mode before next client request...")
-                time.sleep(3)
+                # Sleep before next client request
+                sleep_until_next_client()
 
             ###############################################################
-            # Average gradients 
+            # Average gradients
             ###############################################################
-            #keys = client.tensors.keys()
-            keys = [key for key in client.tensors.keys() if key in ["prior_mean", "prior_variance", "beta"]]
+            keys = [key for key in client.tensors.keys(
+            ) if key in self._grads_to_share]
             averages = {}
             for key in keys:
                 N = np.array(
@@ -483,37 +486,14 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
                     np.stack(clients_tensors), axis=0) / N.sum()
                 averages[key] = average_tensor
 
-            self._logger.info(f"Printing shape after averaging...")
-            for k, v in averages.items():
-                print(k, "\t", v.shape)
-
-            # Peform updates
-            # self._global_model.optimize_on_minibatch_from_server(averages)
-
             # Create model update
-
-            # Set model parameters from a list of NumPy ndarrays
-            #self._global_model.model.train()
-            # params_dict = zip(self._global_model.model.state_dict().keys(), averages)
             state_dict = OrderedDict({k: torch.tensor(v)
                                      for k, v in averages.items()})
-            #self._global_model.model.load_state_dict(state_dict, strict=False)
-
-            # params_dict = dict(zip(self._global_model.model.state_dict().keys(), averages))
-            # modelUpdate_ = \
-            #    modelStateDict_to_proto(
-            #        params_dict, -1, self._model_type)
-
-            #modelUpdate_ = \
-            #     modelStateDict_to_proto(
-            #        self._global_model.model.state_dict(), -1, self._model_type)
-            modelUpdate_ = \
-                modelStateDict_to_proto(
-                    state_dict, -1, self._model_type)
+            modelUpdate_ = modelStateDict_to_proto(
+                state_dict, -1, self._model_type)
 
             nNUpdate = federated_pb2.NNUpdate(
                 modelUpdate=modelUpdate_,
-                # optUpdate=optUpdate_
             )
 
             # Send Aggregated request to Server-Clients
@@ -521,7 +501,8 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
 
                 address_to_connect = get_address_to_connect(client)
 
-                self._logger.info(f"-- -- Sending aggragated request to client id {str(client.client_id)} at address {address_to_connect}")
+                self._logger.info(
+                    f"-- -- Sending aggragated request to client id {str(client.client_id)} at address {address_to_connect}")
 
                 # Create request
                 header = federated_pb2.MessageHeader(
@@ -537,24 +518,22 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
                     if stub:
                         # get ack confirming received ok
                         ack = stub.sendAggregatedTensor(agg_request)
-                self._logger.info(f"ACK received for iter {i}")
+                self._logger.info(f"-- -- ACK received for iter {i}")
 
+        # Save global model
         self._global_model.get_topics_in_server(self._save_server)
 
-        self._logger.info(
-            f"Server {self._id_server} finished training. Waiting for saving")
-        time.sleep(10)
+        # Sleep before STOP request
+        sleep_until_stop()
 
         self._logger.info(
-            f"Server {self._id_server} sending stop training request to client servers...")
+            f"-- -- Server {self._id_server} sending stop training request to client servers...")
 
         for client in clients_s:
-            address_to_connect = self._client_server_addres + \
-                str(client.client_id) + ":" + \
-                str(self._base_port + client.client_id)
+            address_to_connect = get_address_to_connect(client)
 
-            self._logger.info(f"Client id {str(client.client_id)}")
-            self._logger.info(f"Server reconnecting to {address_to_connect}")
+            self._logger.info(
+                f"-- -- Sending stop request to client id {str(client.client_id)} at address {address_to_connect}")
 
             # Create request
             header = federated_pb2.MessageHeader(
@@ -569,6 +548,6 @@ class FederatedServer(federated_pb2_grpc.FederationServicer):
                 if stub:
                     # get ack confirming received ok
                     ack = stub.sendAggregatedTensor(stop_request)
-                self._logger.info(f"ENDING ACK received")
+                self._logger.info(f"-- -- ENDING ACK received")
 
         return

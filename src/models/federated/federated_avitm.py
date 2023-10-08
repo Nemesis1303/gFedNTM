@@ -6,7 +6,6 @@ Last updated on Aug 24, 2023
 """
 import datetime
 import numpy as np
-import torch
 from src.models.base.pytorchavitm.avitm_network.avitm import AVITM
 from src.models.federated.federated_model import FederatedModel
 from src.utils.auxiliary_functions import convert_topic_word_to_init_size
@@ -18,10 +17,11 @@ class FederatedAVITM(AVITM, FederatedModel):
     def __init__(
             self,
             tm_params: dict,
+            grads_to_share: list[str],
             logger=None
         ) -> None:
 
-        FederatedModel.__init__(self, tm_params, logger)
+        FederatedModel.__init__(self, tm_params, grads_to_share, logger)
 
         AVITM.__init__(
             self,
@@ -74,15 +74,11 @@ class FederatedAVITM(AVITM, FederatedModel):
                                posterior_mean, posterior_var, posterior_log_var)
         self.loss.backward()
 
+        # Optimizer step
+        self.optimizer.step()
+
         # Create gradient update to be sent to the server
-        params = {
-            "prior_mean": self.model.prior_mean,
-            "prior_variance": self.model.prior_variance,
-            "beta": self.model.beta,
-            "current_mb": self.current_mb,
-            "current_epoch": self.current_mb,
-            "num_epochs": self.num_epochs
-        }
+        params = self.get_gradients()
 
         return params
 
@@ -105,15 +101,12 @@ class FederatedAVITM(AVITM, FederatedModel):
         """
 
         # Update local model's state dict
-        localStateDict = self.model.state_dict()
-        localStateDict["prior_mean"] = modelStateDict["prior_mean"]
-        localStateDict["prior_variance"] = modelStateDict["prior_variance"]
-        localStateDict["beta"] = modelStateDict["beta"]
-        self.model.load_state_dict(localStateDict)
-
+        self.set_gradients(modelStateDict)
+        
         # Calculate minibatch's train loss and samples processed
-        self.samples_processed += self.X.size()[0]
+        self.samples_processed += self.X_bow.size()[0]
         self.train_loss += self.loss.item()
+        self.logger.info("-- -- Minibatch {} loss {} / samples processes {}".format(self.current_mb, self.loss.item(), self.samples_processed))
 
         # Minitbatch ends
         self.current_mb += 1
@@ -150,36 +143,6 @@ class FederatedAVITM(AVITM, FederatedModel):
             self.training_doc_topic_distributions = self.get_doc_topic_distribution(
                 self.train_data, n_samples)
             self.get_results_model(save_dir)
-
-        return
-
-    # ======================================================
-    # Server-side training
-    # ======================================================
-    def optimize_on_minibatch_from_server(
-            self,
-            updates: dict
-        ) -> None:
-        """Updates the gradients of the local model after aggregating the gradients from the clients.
-
-        Parameters
-        ----------
-        updates: dict
-            Dictionary with the gradients to be updated.
-        """
-
-        # Update model's parameters from the client's side' forward pass 
-        self.model.topic_word_matrix = self.model.beta
-        self.best_components = self.model.beta
-        
-        # Upadate gradients after averaging from the clients' gradients
-        self.model.prior_mean.grad = torch.Tensor(updates["prior_mean"])
-        self.model.prior_variance.grad = torch.Tensor(
-            updates["prior_variance"])
-        self.model.beta.grad = torch.Tensor(updates["beta"])
-
-        # Perform one step of the optimizer (SGD/Adam)
-        self.optimizer.step()
 
         return
 

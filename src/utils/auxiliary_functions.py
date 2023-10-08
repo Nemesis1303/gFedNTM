@@ -64,9 +64,9 @@ def pickler(file: str, ob):
 
 
 def save_model_as_npz(
-        npzfile,
-        federated_model,
-    ) -> None:
+    npzfile,
+    federated_model,
+) -> None:
     """Saves the matrixes that characterize a topic model in a numpy npz filel.
 
     Parameters
@@ -99,23 +99,19 @@ def save_model_as_npz(
     return
 
 
-def serializeTensor(tensor:torch.Tensor) -> federated_pb2.Tensor:
+def serializeTensor(tensor: torch.Tensor) -> federated_pb2.Tensor:
     """Serializes a tensor into a protobuf message.
-    
+
     Parameters
     ----------
     tensor: torch.Tensor
         Tensor to be serialized.
-    
+
     Returns
     -------
     serializedTensor: federated_pb2.Tensor
         Protobuf message containing the serialized tensor.
     """
-
-    # TODO: Check if this is necessary
-    #if tensor.requires_grad == True:
-    #    tensor = tensor.detatch()
 
     aux = tensor.cpu().numpy()
     content_bytes = aux.tobytes()
@@ -134,12 +130,12 @@ def serializeTensor(tensor:torch.Tensor) -> federated_pb2.Tensor:
 
 def deserializeTensor(protoTensor: federated_pb2.Tensor) -> torch.Tensor:
     """Deserializes a protobuf message into a tensor.
-    
+
     Parameters
     ----------
     protoTensor: federated_pb2.Tensor
         Protobuf message containing the serialized tensor.
-    
+
     Returns
     -------
     deserialized_tensor: torch.Tensor
@@ -147,48 +143,37 @@ def deserializeTensor(protoTensor: federated_pb2.Tensor) -> torch.Tensor:
     """
 
     deserialized_numpy = deserializeNumpy(protoTensor)
-    print("llega aquí")
-    print(deserialized_numpy.shape)
-    print(deserialized_numpy)
-    try:
-        deserialized_tensor = torch.Tensor(deserialized_numpy)
-    except Exception as e:
-        print(e)
-        print("Error deserializing tensor")
-        return None
-        
+    deserialized_tensor = torch.Tensor(deserialized_numpy)
+
     return deserialized_tensor
 
 
 def deserializeNumpy(protoTensor: federated_pb2.Tensor) -> np.ndarray:
     """Deserializes a protobuf message into a numpy array.
-    
+
     Parameters
     ----------
     protoTensor: federated_pb2.Tensor
         Protobuf message containing the serialized tensor.
-    
+
     Returns
     -------
     deserialized_numpy: np.ndarray
         Numpy array deserialized from the protobuf message.
     """
-    print("Deserializing tensor")
+
     dims = tuple(
         [dim.size for dim in protoTensor.tensor_shape.dim])
-    print(dims)
     dtype_send = get_type_from_string(protoTensor.dtype)
     deserialized_bytes = np.frombuffer(
         protoTensor.tensor_content, dtype=dtype_send)
-    print("Deserialized bytes")
     deserialized_numpy = np.reshape(
         deserialized_bytes, newshape=dims)
-    print("Deserialized numpy")
 
     return deserialized_numpy
 
 
-def optStateDict_to_proto(optStateDict:dict) -> federated_pb2.OptUpdate:
+def optStateDict_to_proto(optStateDict: dict) -> federated_pb2.OptUpdate:
     """Converts a dictionary containing the optimizer state into a protobuf message.
 
     Parameters
@@ -272,14 +257,14 @@ def optStateDict_to_proto(optStateDict:dict) -> federated_pb2.OptUpdate:
 
 def proto_to_optStateDict(optUpdate: federated_pb2.OptUpdate) -> dict:
     """Converts a protobuf message containing the optimizer state into a dictionary.
-    
+
     NOTE: Currently only works for Adam optimizer.
 
     Parameters
     ----------
     optUpdate: federated_pb2.OptUpdate
         Protobuf message containing the optimizer state.
-    
+
     Returns
     -------
     optStateDict: dict
@@ -314,25 +299,25 @@ def proto_to_optStateDict(optUpdate: federated_pb2.OptUpdate) -> dict:
 
 
 def modelStateDict_to_proto(
-        modelStateDict: dict,
-        current_epoch: int, 
-        model_type
-    ) -> federated_pb2.ModelUpdate:
+    modelStateDict: dict,
+    current_epoch: int,
+    model_type
+) -> federated_pb2.ModelUpdate:
     """Transforms a dictionary containing the model state of a certain epoch into a protobuf message.
-    
+
     Parameters
     ----------
     modelStateDict: dict
         Dictionary containing the model state.
     current_epoch: int
         Current epoch of the model.
-    
+
     Returns
     -------
     modelUpdate: federated_pb2.ModelUpdate
         Protobuf message containing the model state.
     """
-    
+
     new_dict = {}
     new_dict["current_epoch"] = current_epoch
     for key in list(modelStateDict.keys()):
@@ -343,115 +328,72 @@ def modelStateDict_to_proto(
         else:
             new_key = key.replace(".", "_")
         new_dict[new_key] = serializeTensor(
-                modelStateDict[key])
-        
-    return federated_pb2.ModelUpdate(**new_dict)    
+            modelStateDict[key])
+
+    return federated_pb2.ModelUpdate(**new_dict)
 
 
 def proto_to_modelStateDict(modelUpdate: federated_pb2.ModelUpdate) -> dict:
     """Transforms a protobuf message containing the model state into a dictionary.
-    
+
     Parameters
     ----------
     modelUpdate: federated_pb2.ModelUpdate
         Protobuf message containing the model state.
-    
+
     Returns
     -------
     modelStateDict: dict
         Dictionary containing the model state.
     """
 
-    inf_net_f_mu_batchnorm_num_batches_tracked = \
-        deserializeTensor(
-            modelUpdate.inf_net_f_mu_batchnorm_num_batches_tracked)
-    if inf_net_f_mu_batchnorm_num_batches_tracked.tolist() == []:
-        inf_net_f_mu_batchnorm_num_batches_tracked = torch.tensor(
-            0, dtype=torch.long)
-
-    inf_net_f_sigma_batchnorm_num_batches_tracked = \
-        deserializeTensor(
-            modelUpdate.inf_net_f_sigma_batchnorm_num_batches_tracked)
-    if inf_net_f_sigma_batchnorm_num_batches_tracked.tolist() == []:
-        inf_net_f_sigma_batchnorm_num_batches_tracked = torch.tensor(
-            0, dtype=torch.long)
-
-    beta_batchnorm_num_batches_tracked = \
-        deserializeTensor(modelUpdate.beta_batchnorm_num_batches_tracked)
-    if beta_batchnorm_num_batches_tracked.tolist() == []:
-        beta_batchnorm_num_batches_tracked = torch.tensor(0, dtype=torch.long)
-
-    modelStateDict = {
-        "prior_mean": deserializeTensor(modelUpdate.prior_mean),
-        "prior_variance": deserializeTensor(modelUpdate.prior_variance),
-        "beta":  deserializeTensor(modelUpdate.beta),
-        "inf_net.input_layer.weight": deserializeTensor(modelUpdate.inf_net_input_layer_weight),
-        "inf_net.input_layer.bias": deserializeTensor(modelUpdate.inf_net_input_layer_bias),
-        "inf_net.hiddens.l_0.0.weight": deserializeTensor(modelUpdate.inf_net_hiddens_l00_weight),
-        "inf_net.hiddens.l_0.0.bias": deserializeTensor(modelUpdate.inf_net_hiddens_l_00_bias),
-        "inf_net.f_mu.weight": deserializeTensor(modelUpdate.inf_net_f_mu_weight),
-        "inf_net.f_mu.bias": deserializeTensor(modelUpdate.inf_net_f_mu_bias),
-        "inf_net.f_mu_batchnorm.running_mean": deserializeTensor(modelUpdate.inf_net_f_mu_batchnorm_running_mean),
-        "inf_net.f_mu_batchnorm.running_var": deserializeTensor(modelUpdate.inf_net_f_mu_batchnorm_running_var),
-        "inf_net.f_mu_batchnorm.num_batches_tracked": inf_net_f_mu_batchnorm_num_batches_tracked,
-        "inf_net.f_sigma.weight": deserializeTensor(modelUpdate.inf_net_f_sigma_weight),
-        "inf_net.f_sigma.bias": deserializeTensor(modelUpdate.inf_net_f_sigma_bias),
-        "inf_net.f_sigma_batchnorm.running_mean": deserializeTensor(modelUpdate.inf_net_f_sigma_batchnorm_running_mean),
-        "inf_net.f_sigma_batchnorm.running_var": deserializeTensor(modelUpdate.inf_net_f_sigma_batchnorm_running_var),
-        "inf_net.f_sigma_batchnorm.num_batches_tracked": inf_net_f_sigma_batchnorm_num_batches_tracked,
-        "beta_batchnorm.running_mean": deserializeTensor(modelUpdate.beta_batchnorm_running_mean),
-        "beta_batchnorm.running_var": deserializeTensor(modelUpdate.beta_batchnorm_running_var),
-        "beta_batchnorm.num_batches_tracked": beta_batchnorm_num_batches_tracked
+    field_mappings = {
+        "inf_net_f_mu_batchnorm_num_batches_tracked": "inf_net.f_mu_batchnorm.num_batches_tracked",
+        "inf_net_f_sigma_batchnorm_num_batches_tracked": "inf_net.f_sigma_batchnorm.num_batches_tracked",
+        "beta_batchnorm_num_batches_tracked": "beta_batchnorm.num_batches_tracked",
+        "prior_mean": "prior_mean",
+        "prior_variance": "prior_variance",
+        "beta": "beta",
+        "inf_net_input_layer_weight": "inf_net.input_layer.weight",
+        "inf_net_input_layer_bias": "inf_net.input_layer.bias",
+        "inf_net_hiddens_l00_weight": "inf_net.hiddens.l_0.0.weight",
+        "inf_net_hiddens_l_00_bias": "inf_net.hiddens.l_0.0.bias",
+        "inf_net_f_mu_weight": "inf_net.f_mu.weight",
+        "inf_net_f_mu_bias": "inf_net.f_mu.bias",
+        "inf_net_f_mu_batchnorm_running_mean": "inf_net.f_mu_batchnorm.running_mean",
+        "inf_net_f_mu_batchnorm_running_var": "inf_net.f_mu_batchnorm.running_var",
+        "inf_net_f_sigma_weight": "inf_net.f_sigma.weight",
+        "inf_net_f_sigma_bias": "inf_net.f_sigma.bias",
+        "inf_net_f_sigma_batchnorm_running_mean": "inf_net.f_sigma_batchnorm.running_mean",
+        "inf_net_f_sigma_batchnorm_running_var": "inf_net.f_sigma_batchnorm.running_var",
+        "beta_batchnorm_running_mean": "beta_batchnorm.running_mean",
+        "beta_batchnorm_running_var": "beta_batchnorm.running_var",
+        "topic_word_matrix": "topic_word_matrix",
+        "inf_net_adapt_bert_weight": "inf_net.adapt_bert.weight",
+        "inf_net_adapt_bert_bias": "inf_net.adapt_bert.bias",
     }
 
-    if modelUpdate.HasField("topic_word_matrix"):
-        modelStateDict["topic_word_matrix"] = deserializeTensor(
-            modelUpdate.topic_word_matrix)
+    modelStateDict = {}
 
-    if modelUpdate.HasField("inf_net_adapt_bert_weight"):
-        modelStateDict["inf_net.adapt_bert.weight"] =\
-            deserializeTensor(
-            modelUpdate.inf_net_adapt_bert_weight)
-
-    if modelUpdate.HasField("inf_net_adapt_bert_bias"):
-        modelStateDict["inf_net.adapt_bert.bias"] =\
-            deserializeTensor(
-            modelUpdate.inf_net_adapt_bert_bias)
-
-    return modelStateDict
-
-def proto_to_modelStateDict2(modelUpdate: federated_pb2.ModelUpdate) -> dict:
-    """Transforms a protobuf message containing the model state into a dictionary.
-    
-    Parameters
-    ----------
-    modelUpdate: federated_pb2.ModelUpdate
-        Protobuf message containing the model state.
-    
-    Returns
-    -------
-    modelStateDict: dict
-        Dictionary containing the model state.
-    """
-
-    modelStateDict = {
-        "prior_mean": deserializeTensor(modelUpdate.prior_mean),
-        "prior_variance": deserializeTensor(modelUpdate.prior_variance),
-        "beta":  deserializeTensor(modelUpdate.beta),
-    }
+    for field_name, key_name in field_mappings.items():
+        if modelUpdate.HasField(field_name):
+            tensor = deserializeTensor(getattr(modelUpdate, field_name))
+            if tensor.tolist() == []:
+                tensor = torch.tensor(0, dtype=torch.long)
+            modelStateDict[key_name] = tensor
 
     return modelStateDict
 
 def read_config_experiments(file_path, skip=[]):
     """Reads the configuration file of the experiments.
-    
+
     Parameters
     ----------
     file_path: str
         Path to the configuration file.
     skip: list
         List of sections to skip.
-    
+
     Returns
     -------
     config_dict: dict
@@ -468,14 +410,14 @@ def read_config_experiments(file_path, skip=[]):
         if section not in skip:
             # Retrieve the options and values within each section
             options = config.options(section)
-        
+
             # Loop through each option in the section
             for option in options:
                 # Retrieve the value of each option
                 value = config.get(section, option)
                 # Store the option-value pair in the section dictionary
                 if option in ['n_components', 'num_iterations', 'batch_size', 'num_threads', 'optimize_interval', 'num_epochs', 'num_samples', 'num_data_loader_workers', 'contextual_size']:
-                    
+
                     config_dict[option] = int(value)
                 elif option in ['thetas_thr', 'doc_topic_thr',
                                 'alpha', 'dropout', 'lr',
@@ -488,21 +430,23 @@ def read_config_experiments(file_path, skip=[]):
                 elif option in ["learn_priors", "reduce_on_plateau", "verbose"]:
                     config_dict[option] = True if value == "True" else False
                 elif option == "hidden_sizes":
-                    config_dict[option] = tuple(map(int, value[1:-1].split(',')))
+                    config_dict[option] = tuple(
+                        map(int, value[1:-1].split(',')))
                 else:
                     config_dict[option] = value
-            
+
     return config_dict
 
-def convert_topic_word_to_init_size(vocab_size:int,
+
+def convert_topic_word_to_init_size(vocab_size: int,
                                     model,
-                                    model_type:str,
-                                    ntopics:int,
-                                    id2token:list[tuple],
-                                    all_words:list[str]):
+                                    model_type: str,
+                                    ntopics: int,
+                                    id2token: list[tuple],
+                                    all_words: list[str]):
     """It converts the topic-word distribution matrix obtained from the training of a model into a matrix with the dimensions of the original topic-word distribution, assigning zeros to those words that are not present in the corpus. 
     It is only of use in case we are training a model over a synthetic dataset, so as to later compare the performance of the attained model in what regards to the similarity between the original and the trained model.
-    
+
     Parameters
     ----------
     vocab_size: int
@@ -517,7 +461,7 @@ def convert_topic_word_to_init_size(vocab_size:int,
         Mappings with the content of the document-term matrix
     all_words: List[str]
         List of all the words of the vocabulary of size vocab_size
-    
+
     Returns
     -------
     np.ndarray: Topic-word distribution matrix of the trained model with the dimensions of the original topic-word distribution
@@ -529,10 +473,10 @@ def convert_topic_word_to_init_size(vocab_size:int,
         for i in np.arange(ntopics):
             for idx, word in id2token.items():
                 for j in np.arange(len(all_words)):
-                    if all_words[j] == word: #word.split("__")[1]: # word
+                    if all_words[j] == word:  # word.split("__")[1]: # word
                         w_t_distrib[i, j] = wd[i][idx]
                         break
-        normalized_array = normalize(w_t_distrib,axis=1,norm='l1')
+        normalized_array = normalize(w_t_distrib, axis=1, norm='l1')
         return normalized_array
     else:
         print("Method not impleemnted for the selected model type")

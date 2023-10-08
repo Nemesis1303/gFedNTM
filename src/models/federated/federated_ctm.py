@@ -8,7 +8,6 @@ import datetime
 import torch
 from src.models.base.contextualized_topic_models.ctm_network.ctm import CTM
 from src.models.federated.federated_model import FederatedModel
-from collections import OrderedDict
 
 class FederatedCTM(CTM, FederatedModel):
     """Class for the Federated CTM model.
@@ -17,10 +16,11 @@ class FederatedCTM(CTM, FederatedModel):
     def __init__(
         self,
         tm_params: dict,
+        grads_to_share: list[str],
         logger=None
     ) -> None:
 
-        FederatedModel.__init__(self, tm_params, logger)
+        FederatedModel.__init__(self, tm_params, grads_to_share, logger)
         CTM.__init__(
             self,
             logger=self.logger,
@@ -109,22 +109,7 @@ class FederatedCTM(CTM, FederatedModel):
         self.optimizer.step()
 
         # Create gradient update to be sent to the server
-        self.logger.info("-- -- Creating gradient update...")
-        params = {
-            **self.model.state_dict(),
-            "current_mb": self.current_mb,
-            "current_epoch": self.current_epoch,
-            "num_epochs": self.num_epochs
-        }
-
-        #params = {
-        #    "prior_variance": self.model.prior_variance,
-        #    "prior_mean": self.model.prior_mean,
-        #    "beta": self.model.beta,
-        #    "current_mb": self.current_mb,
-        #    "num_epochs": self.num_epochs
-        #    "current_epoch": self.current_mb,
-        #}
+        params = self.get_gradients()
 
         return params
 
@@ -143,17 +128,8 @@ class FederatedCTM(CTM, FederatedModel):
         """
 
         # Update local model's state dict
-        self.logger.info(
-            "--- Updating local model's state dict after receiving aggregated gradient...")
-        localStateDict = self.model.state_dict()
-        localStateDict["prior_mean"] = modelStateDict["prior_mean"]
-        localStateDict["beta"] = modelStateDict["beta"]
-        localStateDict["prior_variance"] = modelStateDict["prior_variance"]
-        self.model.load_state_dict(localStateDict)
-                
-        #state_dict = OrderedDict({k: torch.Tensor(v) for k, v in modelStateDict.items()})
-        #self.model.load_state_dict(state_dict, strict=False)
-
+        self.set_gradients(modelStateDict)
+        
         # Calculate minibatch's train loss and samples processed
         self.samples_processed += self.X_bow.size()[0]
         self.train_loss += self.loss.item()
@@ -210,24 +186,5 @@ class FederatedCTM(CTM, FederatedModel):
             self.training_doc_topic_distributions = self.get_doc_topic_distribution(
                 self.train_data, n_samples)
             self.get_results_model(save_dir)
-
-        return
-
-    def optimize_on_minibatch_from_server(
-        self,
-        updates: dict
-    ) -> None:
-        # Update model's parameters from the forward pass carried at client's side
-        #self.model.topic_word_matrix = self.model.beta
-        #self.best_components = self.model.beta
-
-        # Upadate gradients
-        #self.model.prior_mean.grad = torch.Tensor(updates["prior_mean"])
-        #self.model.prior_variance.grad = torch.Tensor(
-        #    updates["prior_variance"])
-        #self.model.beta.grad = torch.Tensor(updates["beta"])
-
-        # Perform one step of the optimizer (SGD/Adam)
-        #self.optimizer.step()
 
         return
