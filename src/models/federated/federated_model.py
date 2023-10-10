@@ -114,7 +114,7 @@ class FederatedModel(object):
 
         return params
 
-    def set_gradients(self):
+    def set_gradients(self, modelStateDict):
         """Updates gradient with aggregated gradient from server.
         """
 
@@ -122,7 +122,7 @@ class FederatedModel(object):
             "--- Updating local model's state dict after receiving aggregated gradient...")
         localStateDict = self.model.state_dict()
         for key in self.grads_to_share:
-            localStateDict[key] = self.modelStateDict[key]
+            localStateDict[key] = modelStateDict[key]
         self.model.load_state_dict(localStateDict)
 
         # state_dict = OrderedDict({k: torch.Tensor(v) for k, v in modelStateDict.items()})

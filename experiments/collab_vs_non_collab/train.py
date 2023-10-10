@@ -84,7 +84,7 @@ def train(path_corpus: str,
                 name = f"non_collaborative_{f}_{str(ntopic_node)}_{str(iter_)}_{DT.datetime.now().strftime('%Y%m%d')}"
                 logger.info("-- -- Training non-collaborative model: " + name)
                 
-                training_params['ntopics'] = ntopics_nodes
+                training_params['ntopics'] = ntopic_node
                 model_path = tm_wrapper.train_root_model(
                     models_folder=models_folder,
                     name=name,

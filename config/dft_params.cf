@@ -34,9 +34,9 @@ dropout_in = 0.2
 dropout_out = 0.2
 
 [grpc]
-max_message_length = 125829120
-max_inbound_message_size = 125829120
-max_inbound_metadata_size = 125829120
+max_message_length = 262144000
+max_inbound_message_size = 262144000
+max_inbound_metadata_size = 262144000
 keepalive_time_ms = 10000
 keepalive_timeout_ms = 5000
 keepalive_permit_without_calls = True
@@ -46,7 +46,7 @@ max_ping_strikes = 0
 time_termination = 604800
 server_port = 50051
 client_sleep_time = 604800
-grads_to_share = prior_mean,prior_variance,beta
+grads_to_share = prior_mean,prior_variance,beta,inf_net.f_mu_batchnorm.num_batches_tracked,inf_net.f_sigma_batchnorm.num_batches_tracked,beta_batchnorm.num_batches_tracked,inf_net.input_layer.weight,inf_net.input_layer.bias,inf_net.hiddens.l_0.0.weight,inf_net.hiddens.l_0.0.bias,inf_net.f_mu.weight,inf_net.f_mu.bias,inf_net.f_mu_batchnorm.running_mean,inf_net.f_mu_batchnorm.running_var,inf_net.f_sigma.weight,inf_net.f_sigma.bias,inf_net.f_sigma_batchnorm.running_mean,inf_net.f_sigma_batchnorm.running_var,beta_batchnorm.running_mean,beta_batchnorm.running_var,inf_net.adapt_bert.weight,inf_net.adapt_bert.bias
 
 [save_dir]
 save_client = /workspace/static/output_models/client
