@@ -147,4 +147,4 @@ experiments/collab_vs_non_collab/results/wmd_dfs
 aux_scripts/evaluation/.venv_pot
 corpus.parquet
 .venv_kumo
-.venv_kumo1
+.venv_kumo01
