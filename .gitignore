@@ -142,6 +142,9 @@ static/datasets/dataset_federated
 experiments/centralized/results/models_
 experiments/centralized/results/models_v2
 experiments/collab_vs_non_collab/results/models
+experiments/collab_vs_non_collab/results/models_max_features
+experiments/collab_vs_non_collab/results/wmd_dfs
+aux_scripts/evaluation/.venv_pot
 corpus.parquet
 .venv_kumo
 .venv_kumo1

@@ -106,7 +106,7 @@ def main():
                         default="/export/usuarios_ml4ds/lbartolome/Repos/my_repos/gFedNTM/static/datasets/dataset_federated/iter_1/corpus.parquet",
                         help="Path to the training data.")
     parser.add_argument('--models_folder', type=str,
-                        default="/export/usuarios_ml4ds/lbartolome/Repos/my_repos/gFedNTM/experiments/collab_vs_non_collab/results/models",
+                        default="/export/usuarios_ml4ds/lbartolome/Repos/my_repos/gFedNTM/experiments/collab_vs_non_collab/results/models_max_features",
                         help="Path where the models are going to be saved.")
     parser.add_argument('--trainer', type=str,
                         default="ctm",
